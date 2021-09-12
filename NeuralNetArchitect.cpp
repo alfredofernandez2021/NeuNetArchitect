@@ -516,7 +516,12 @@ public:
 		return previousLayer == nullptr ? "Input" : neurons[0].getNeuronType();
 	}
 };
-
+//double DerivedMSECost(double targetValue, double estimatedValue, int outputCount)
+//double (*derivedCostFunction)(double,double,int);
+double derivedMSECost(double targetValue, double estimatedValue, int outputCount)
+{
+	return (-2 / outputCount) * (targetValue - estimatedValue);
+}
 
 struct layerCreationInfo
 {
@@ -555,10 +560,11 @@ private:
 	NeuralLayer* neuralLayers;
 	double learningRate;
 	int batchSize;
+	double (*derivedCostFunction)(double, double, int);
 
 public:
 	//constructor for creating NeuralNetworks
-	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, layerCreationInfo* layerDetails)
+	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerCreationInfo* layerDetails)
 	{
 		this->layerCount = layerCount;
 		this->inputLength = inputLength;
@@ -566,6 +572,16 @@ public:
 		this->outputCount = outputCount;
 		this->learningRate = learningRate;
 		this->batchSize = batchSize;
+		
+		switch (costSelection) 
+		{
+		case 1: 
+			this->derivedCostFunction = derivedMSECost;
+			break;
+		default: 
+			this->derivedCostFunction = derivedMSECost;
+			break;
+		}
 
 		neuralLayers = new NeuralLayer[layerCount];
 		if (neuralLayers == nullptr) throw std::bad_alloc();
@@ -627,6 +643,11 @@ public:
 		learningRate = newLearningRate;
 	}
 
+	double getOutputRespectiveCost(double targetValue, int outputIndex)
+	{
+		return derivedCostFunction(targetValue, getOutputs()[outputIndex], outputCount);
+	}
+
 };
 
 
@@ -664,7 +685,7 @@ int main()
 	for(auto i = 0; i<outputLayer->getNeuronArrayCount(); i++)
 		std::cout << outputArray[i] << std::endl;*/
 
-	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize;
+	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
 
 	std::cout << "What is the length of inputs that this neural network will accept? ";
 	std::cin >> inputLength;
@@ -687,6 +708,11 @@ int main()
 	//std::cout << "What is the current batch size that this network will train on? ";
 	//std::cin >> batchSize;
 	batchSize = 1;
+	//std::cout << std::endl;
+
+	//std::cout << "What is the current batch size that this network will train on? ";
+	//std::cin >> batchSize;
+	costSelection = 1;
 	//std::cout << std::endl;
 
 	layerDetails[0].type = "1";
@@ -720,7 +746,7 @@ int main()
 	}
 
 	//create network
-	NeuralNetwork network = NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, layerDetails);
+	NeuralNetwork network = NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
 	//todo: learning rate heuristics?
 
 	//load inputs with dummy data
@@ -744,7 +770,7 @@ int main()
 	double* errorVector = new double[outputCount];
 	for (auto i = 0; i < outputCount; i++)
 	{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-		errorVector[i] = (2/outputCount)*(20 - network.getOutputs()[i])*(-1);
+		errorVector[i] = network.getOutputRespectiveCost(20,i);
 	}
 
 	network.propagateBackwards(errorVector);
@@ -761,6 +787,6 @@ int main()
 
 	return 0;
 }// 2 1 1 4 1 1 1 0 1 2 0 1 1
-// 2 2 4 1 1 0 1 2 0 1 0 without inputWidth or batchSize
-//1 1 2 1 0 single non-input neuron
-//1 1 3 1 1 0 1 0
+// 2 2 4 1 1 0 1 2 0 1 0 without inputWidth or batchSize, todo:track this one's backprop
+// 1 1 2 1 0 single non-input neuron
+// 1 1 3 1 1 0 1 0
