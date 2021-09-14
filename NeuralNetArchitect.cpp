@@ -516,8 +516,8 @@ public:
 		return previousLayer == nullptr ? "Input" : neurons[0].getNeuronType();
 	}
 };
-//double DerivedMSECost(double targetValue, double estimatedValue, int outputCount)
-//double (*derivedCostFunction)(double,double,int);
+
+//the derivation of the mean-squared-error function in respect to the activation of an output neuron
 double derivedMSECost(double targetValue, double estimatedValue, int outputCount)
 {
 	return (-2 / outputCount) * (targetValue - estimatedValue);
@@ -525,14 +525,14 @@ double derivedMSECost(double targetValue, double estimatedValue, int outputCount
 
 struct layerCreationInfo
 {
-	std::string type;
+	int type;
 	int neuronCount;
 	double momentumRetention;
 };
 
 struct layerLoadInfo
 {
-	std::string type;
+	int type;
 	int neuronCount;
 	double momentumRetention;
 	std::vector<std::vector<double>> weightsOfNeurons;
@@ -573,12 +573,12 @@ public:
 		this->learningRate = learningRate;
 		this->batchSize = batchSize;
 		
-		switch (costSelection) 
+		switch (costSelection)
 		{
-		case 1: 
+		case 1:
 			this->derivedCostFunction = derivedMSECost;
 			break;
-		default: 
+		default:
 			this->derivedCostFunction = derivedMSECost;
 			break;
 		}
@@ -589,14 +589,14 @@ public:
 
 		for (auto i = 1; i < layerCount; i++)
 		{
-
-			if (false)
+			switch (layerDetails[i].type)
 			{
-				//no other layer types yet, default to linear layer for now
-			}
-			else
-			{
-				neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].momentumRetention);
+			case 1:
+				this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].momentumRetention);
+				break;
+			default:
+				this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].momentumRetention);
+				break;
 			}
 		}
 	}
@@ -653,37 +653,6 @@ public:
 
 int main()
 {
-	/*Neuron** inputNeurons = new Neuron * [1];
-	inputNeurons[0] = new Neuron();
-
-	Neuron** hiddenNeurons = new Neuron * [2];
-	hiddenNeurons[0] = new Neuron(1, inputNeurons);
-	hiddenNeurons[1] = new Neuron(1, inputNeurons);
-
-	Neuron** outputNeurons = new Neuron * [1];
-	outputNeurons[0] = new Neuron(2, hiddenNeurons);
-
-	inputNeurons[0]->activate(600.0);
-	hiddenNeurons[0]->activate();
-	hiddenNeurons[1]->activate();
-	outputNeurons[0]->activate();
-
-	std::cout << outputNeurons[0]->getActivation();*/
-
-	/*NeuralLayer* inputLayer = new NeuralLayer(11, 1);
-	NeuralLayer* hiddenLayer = new NeuralLayer(10, inputLayer, 0.5);
-	NeuralLayer* outputLayer = new NeuralLayer(11, hiddenLayer);
-
-	double inputArray[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-	inputLayer->propagateForward(inputArray);
-	hiddenLayer->propagateForward();
-	outputLayer->propagateForward();
-
-	std::vector<double> inputVector = inputLayer->getNeuronActivations();
-	std::vector<double> hiddenArray = hiddenLayer->getNeuronActivations();
-	std::vector<double> outputArray = outputLayer->getNeuronActivations();
-	for(auto i = 0; i<outputLayer->getNeuronArrayCount(); i++)
-		std::cout << outputArray[i] << std::endl;*/
 
 	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
 
@@ -710,12 +679,12 @@ int main()
 	batchSize = 1;
 	//std::cout << std::endl;
 
-	//std::cout << "What is the current batch size that this network will train on? ";
-	//std::cin >> batchSize;
+	//std::cout << "Which cost function should be used to calculate error? ;
+	//std::cin >> costSelection;
 	costSelection = 1;
 	//std::cout << std::endl;
 
-	layerDetails[0].type = "1";
+	layerDetails[0].type = 1;
 	layerDetails[0].neuronCount = inputLength * inputWidth;
 	layerDetails[0].momentumRetention = 0;
 
@@ -786,7 +755,8 @@ int main()
 	}
 
 	return 0;
-}// 2 1 1 4 1 1 1 0 1 2 0 1 1
+}
+// 2 1 1 4 1 1 1 0 1 2 0 1 1
 // 2 2 4 1 1 0 1 2 0 1 0 without inputWidth or batchSize, todo:track this one's backprop
 // 1 1 2 1 0 single non-input neuron
 // 1 1 3 1 1 0 1 0
