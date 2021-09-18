@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <assert.h>
+#include <boost/property_tree/ptree.hpp>
 
 /**********************************************************************************************************************************************
  Neuron's activation is the sumOfproducts(weights, inputActivations) + bias, or the given input if it is in the input layer
@@ -687,6 +688,16 @@ public:
 		return derivedCostFunction(targetValue, getOutputs()[outputIndex], outputCount);
 	}
 
+	int getInputCount()
+	{
+		return inputLength * inputWidth;
+	}
+
+	int getOutputCount()
+	{
+		return outputCount;
+	}
+
 	int getLayerCount()
 	{
 		return layerCount;
@@ -703,16 +714,26 @@ public:
 			parameterCheckpoint[i].biasOfNeurons = neuralLayers->getNeuronBiases();
 		}
 	}
+
+	layerLoadingInfo* getParameterCheckpoint()
+	{
+		return parameterCheckpoint;
+	}
 };
 
-/*struct layerLoadInfo
+void storeNetwork(NeuralNetwork network)
 {
-	int type;
-	int neuronCount;
-	double momentumRetention;
-	std::vector<std::vector<double>> weightsOfNeurons;
-	std::vector<double> biasOfNeurons;
-};*/
+	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
+
+	inputLength = network.getInputCount();
+	outputLength = network.getOutputCount();
+	networkDepth = network.getLayerCount();
+	optimizationAlgorithm = 0;
+	errorFunction = 0;
+
+	network.createParameterCheckpoint();
+	layerLoadingInfo* layerStates = network.getParameterCheckpoint();
+}
 
 int main()
 {
