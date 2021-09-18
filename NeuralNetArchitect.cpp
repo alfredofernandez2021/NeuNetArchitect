@@ -7,6 +7,7 @@
 #include <vector>
 #include <assert.h>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 /**********************************************************************************************************************************************
  Neuron's activation is the sumOfproducts(weights, inputActivations) + bias, or the given input if it is in the input layer
@@ -721,7 +722,7 @@ public:
 	}
 };
 
-void storeNetwork(NeuralNetwork network)
+void storeNetwork(NeuralNetwork network, std::string &fileName)
 {
 	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
 
@@ -733,6 +734,38 @@ void storeNetwork(NeuralNetwork network)
 
 	network.createParameterCheckpoint();
 	layerLoadingInfo* layerStates = network.getParameterCheckpoint();
+
+	boost::property_tree::ptree networkPropertyTree, layerPropertySubTree, neuronPropertySubTree;
+
+	networkPropertyTree.put("network.inputLength", inputLength);
+	networkPropertyTree.put("network.outputLength", outputLength);
+	networkPropertyTree.put("network.networkDepth", networkDepth);
+	networkPropertyTree.put("network.optimizationAlgorithm", optimizationAlgorithm);
+	networkPropertyTree.put("network.errorFunction", errorFunction);
+
+	for (auto i = 0; i < networkDepth; i++)
+	{
+		layerPropertySubTree.put("layer.activationType", layerStates[i].type);
+		layerPropertySubTree.put("layer.neuronCount", layerStates[i].neuronCount);
+		layerPropertySubTree.put("layer.momentumRetention", layerStates[i].momentumRetention);
+		
+		for (auto j = 0; j < layerStates[i].neuronCount; i++)
+		{
+			neuronPropertySubTree.put("neuron.bias", layerStates[i].biasOfNeurons[j]);
+
+			for (std::vector<double>::iterator it = layerStates[i].weightsOfNeurons[j].begin(); it < layerStates[i].weightsOfNeurons[j].end(); it++)
+			{
+				neuronPropertySubTree.add("neuron.weight", (*it));
+			}
+			
+			layerPropertySubTree.add_child("layer.neurons", neuronPropertySubTree);
+			neuronPropertySubTree.clear();
+		}
+
+		networkPropertyTree.add_child("network.layers", layerPropertySubTree);
+		layerPropertySubTree.clear();
+	}
+
 }
 
 int main()
