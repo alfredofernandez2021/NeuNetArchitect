@@ -269,6 +269,18 @@ public:
 		return weights[inputNeuronIndex];
 	}
 
+	std::vector<double> getWeights() const
+	{
+		std::vector<double> weights;
+
+		for (auto i = 0; i < neuronInputListCount; i++)
+		{
+			weights.push_back(getWeight(i));
+		}
+
+		return weights;
+	}
+
 	//returns bias of this neuron
 	double getBias() const
 	{
@@ -510,10 +522,34 @@ public:
 		return neuronActivations;
 	}
 
-	//returns the activation type of the neurons contained within layer
-	virtual std::string getNeuralLayerType() const
+	std::vector<std::vector<double>> getNeuronWeights() const
 	{
-		return previousLayer == nullptr ? "Input" : neurons[0].getNeuronType();
+		std::vector<std::vector<double>> neuronWeights;
+
+		for (auto i = 0; i < getNeuronArrayCount(); i++)
+		{
+			neuronWeights.push_back(getNeurons()[i].getWeights());
+		}
+
+		return neuronWeights;
+	}
+
+	std::vector<double> getNeuronBiases() const
+	{
+		std::vector<double> neuronBiases;
+
+		for (auto i = 0; i < getNeuronArrayCount(); i++)
+		{
+			neuronBiases.push_back(getNeurons()[i].getBias());
+		}
+
+		return neuronBiases;
+	}
+
+	//returns the activation type of the neurons contained within layer
+	virtual int getNeuralLayerType() const
+	{
+		return 1;
 	}
 };
 
@@ -530,7 +566,7 @@ struct layerCreationInfo
 	double momentumRetention;
 };
 
-struct layerLoadInfo
+struct layerLoadingInfo
 {
 	int type;
 	int neuronCount;
@@ -561,6 +597,7 @@ private:
 	double learningRate;
 	int batchSize;
 	double (*derivedCostFunction)(double, double, int);
+	layerLoadingInfo* parameterCheckpoint;
 
 public:
 	//constructor for creating NeuralNetworks
@@ -599,6 +636,8 @@ public:
 				break;
 			}
 		}
+
+		parameterCheckpoint = new layerLoadingInfo[layerCount];
 	}
 
 	//todo: create load constructor
@@ -648,8 +687,32 @@ public:
 		return derivedCostFunction(targetValue, getOutputs()[outputIndex], outputCount);
 	}
 
+	int getLayerCount()
+	{
+		return layerCount;
+	}
+
+	void createParameterCheckpoint()
+	{
+		for (auto i = 0; i < getLayerCount(); i++)
+		{
+			parameterCheckpoint[i].type = neuralLayers->getNeuralLayerType();
+			parameterCheckpoint[i].neuronCount = neuralLayers->getNeuronArrayCount();
+			parameterCheckpoint[i].momentumRetention = 0;
+			parameterCheckpoint[i].weightsOfNeurons = neuralLayers->getNeuronWeights();
+			parameterCheckpoint[i].biasOfNeurons = neuralLayers->getNeuronBiases();
+		}
+	}
 };
 
+/*struct layerLoadInfo
+{
+	int type;
+	int neuronCount;
+	double momentumRetention;
+	std::vector<std::vector<double>> weightsOfNeurons;
+	std::vector<double> biasOfNeurons;
+};*/
 
 int main()
 {
@@ -756,7 +819,7 @@ int main()
 
 	return 0;
 }
-// 2 1 1 4 1 1 1 0 1 2 0 1 1
-// 2 2 4 1 1 0 1 2 0 1 0 without inputWidth or batchSize, todo:track this one's backprop
+// 2 1 4 1 1 0 1 2 0 1 0
+// 2 2 4 1 1 0 1 2 0 1 0
 // 1 1 2 1 0 single non-input neuron
-// 1 1 3 1 1 0 1 0
+// 1 1 3 1 1 0 1 0 series
