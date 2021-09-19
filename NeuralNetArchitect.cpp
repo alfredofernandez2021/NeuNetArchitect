@@ -599,7 +599,7 @@ private:
 	double learningRate;
 	int batchSize;
 	double (*derivedCostFunction)(double, double, int);
-	layerLoadingInfo* parameterCheckpoint;
+	layerLoadingInfo* layerStates;
 
 public:
 	//constructor for creating NeuralNetworks
@@ -639,7 +639,7 @@ public:
 			}
 		}
 
-		parameterCheckpoint = new layerLoadingInfo[layerCount];
+		layerStates = new layerLoadingInfo[layerCount];
 	}
 
 	//todo: create load constructor
@@ -684,88 +684,108 @@ public:
 		learningRate = newLearningRate;
 	}
 
+	//gives the partial derivative value of the cost function in respect to an output activation
 	double getOutputRespectiveCost(double targetValue, int outputIndex)
 	{
 		return derivedCostFunction(targetValue, getOutputs()[outputIndex], outputCount);
 	}
 
+	//gives the number of inputs that network accepts
 	int getInputCount()
 	{
 		return inputLength * inputWidth;
 	}
 
+	//gives the number of outputs that the network produces
 	int getOutputCount()
 	{
 		return outputCount;
 	}
 
+	//gives the depth of the network
 	int getLayerCount()
 	{
 		return layerCount;
 	}
 
-	void createParameterCheckpoint()
+	//saves all necessary layer data necessary to recreate the network layers exactly upon loading
+	void saveLayerStates()
 	{
 		for (auto i = 0; i < getLayerCount(); i++)
 		{
-			parameterCheckpoint[i].type = neuralLayers->getNeuralLayerType();
-			parameterCheckpoint[i].neuronCount = neuralLayers->getNeuronArrayCount();
-			parameterCheckpoint[i].momentumRetention = 0;
-			parameterCheckpoint[i].weightsOfNeurons = neuralLayers->getNeuronWeights();
-			parameterCheckpoint[i].biasOfNeurons = neuralLayers->getNeuronBiases();
+			layerStates[i].type = neuralLayers[i].getNeuralLayerType();
+			layerStates[i].neuronCount = neuralLayers[i].getNeuronArrayCount();
+			layerStates[i].momentumRetention = 0;
+			layerStates[i].weightsOfNeurons = neuralLayers[i].getNeuronWeights();
+			layerStates[i].biasOfNeurons = neuralLayers[i].getNeuronBiases();
 		}
 	}
 
-	layerLoadingInfo* getParameterCheckpoint()
+	//gives array of layer state details that may be used to recreate layers
+	layerLoadingInfo* getLayerStates()
 	{
-		return parameterCheckpoint;
+		return layerStates;
 	}
 };
 
+//saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
 void storeNetwork(NeuralNetwork network, std::string &fileName)
 {
 	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
 
+	//saves network details that are not specific to the layers
 	inputLength = network.getInputCount();
 	outputLength = network.getOutputCount();
 	networkDepth = network.getLayerCount();
 	optimizationAlgorithm = 0;
 	errorFunction = 0;
 
-	network.createParameterCheckpoint();
-	layerLoadingInfo* layerStates = network.getParameterCheckpoint();
+	//initializes array of fully defined layer states
+	network.saveLayerStates();
+	layerLoadingInfo* layerStates = network.getLayerStates();
 
+	//defines property trees and subtrees
 	boost::property_tree::ptree networkPropertyTree, layerPropertySubTree, neuronPropertySubTree;
 
+	//adds non-layer network details as children to property tree root
 	networkPropertyTree.put("network.inputLength", inputLength);
 	networkPropertyTree.put("network.outputLength", outputLength);
 	networkPropertyTree.put("network.networkDepth", networkDepth);
 	networkPropertyTree.put("network.optimizationAlgorithm", optimizationAlgorithm);
 	networkPropertyTree.put("network.errorFunction", errorFunction);
 
+	//defines and inserts layer detail subtrees as children to network ptree's 'layers' member
 	for (auto i = 0; i < networkDepth; i++)
 	{
-		layerPropertySubTree.put("layer.activationType", layerStates[i].type);
-		layerPropertySubTree.put("layer.neuronCount", layerStates[i].neuronCount);
-		layerPropertySubTree.put("layer.momentumRetention", layerStates[i].momentumRetention);
-		
-		for (auto j = 0; j < layerStates[i].neuronCount; i++)
-		{
-			neuronPropertySubTree.put("neuron.bias", layerStates[i].biasOfNeurons[j]);
+		//adds non-neuron layer details as chidlren to property subtree root
+		layerPropertySubTree.put("activationType", layerStates[i].type);
+		layerPropertySubTree.put("neuronCount", layerStates[i].neuronCount);
+		layerPropertySubTree.put("momentumRetention", layerStates[i].momentumRetention);
 
+		//defines and inserts neuron detail subtrees as children to layer ptree's 'neurons' member
+		for (auto j = 0; j < layerStates[i].neuronCount; j++)
+		{
+			//adds neuron's current bias parameter value as a child to its property subtree root
+			neuronPropertySubTree.put("bias", layerStates[i].biasOfNeurons[j]);
+
+			//adds neuron's current weight parameter values as children to its property subtree root
 			for (std::vector<double>::iterator it = layerStates[i].weightsOfNeurons[j].begin(); it < layerStates[i].weightsOfNeurons[j].end(); it++)
 			{
-				neuronPropertySubTree.add("neuron.weight", (*it));
+				neuronPropertySubTree.add("weights.weight", (*it));
 			}
 			
-			layerPropertySubTree.add_child("layer.neurons", neuronPropertySubTree);
+			//inserts fully-defined neuron subtree as child to layer subtree's 'neurons' member and clears neuron subtree
+			layerPropertySubTree.add_child("neurons.neuron", neuronPropertySubTree);
 			neuronPropertySubTree.clear();
 		}
 
-		networkPropertyTree.add_child("network.layers", layerPropertySubTree);
+		//inserts fully-defined layer subtree as child to network tree's 'layers' member and clears layer subtree
+		networkPropertyTree.add_child("network.layers.layer", layerPropertySubTree);
 		layerPropertySubTree.clear();
 	}
 
+	//creates xml file of fully-defined neural network structure and parameters
+	boost::property_tree::write_xml(fileName, networkPropertyTree);
 }
 
 int main()
@@ -870,6 +890,9 @@ int main()
 	{
 		std::cout << (*it) << " ";
 	}
+
+	std::string xmlName = "test0.xml";
+	storeNetwork(network,xmlName);
 
 	return 0;
 }
