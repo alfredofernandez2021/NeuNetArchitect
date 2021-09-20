@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/foreach.hpp>
 
 /**********************************************************************************************************************************************
  Neuron's activation is the sumOfproducts(weights, inputActivations) + bias, or the given input if it is in the input layer
@@ -405,7 +406,6 @@ public:
 		{
 			neurons[i] = Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i], momentumRetention);
 		}
-
 	}
 
 	//copy constructor for layers
@@ -643,6 +643,44 @@ public:
 	}
 
 	//todo: create load constructor
+	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerLoadingInfo* layerDetails)
+	{
+		this->layerCount = layerCount;
+		this->inputLength = inputLength;
+		this->inputWidth = inputWidth;
+		this->outputCount = outputCount;
+		this->learningRate = learningRate;
+		this->batchSize = batchSize;
+
+		switch (costSelection)
+		{
+		case 1:
+			this->derivedCostFunction = derivedMSECost;
+			break;
+		default:
+			this->derivedCostFunction = derivedMSECost;
+			break;
+		}
+
+		neuralLayers = new NeuralLayer[layerCount];
+		if (neuralLayers == nullptr) throw std::bad_alloc();
+		neuralLayers[0] = NeuralLayer(inputLength, inputWidth);
+
+		for (auto i = 1; i < layerCount; i++)
+		{
+			switch (layerDetails[i].type)
+			{
+			case 1:
+				this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].momentumRetention, layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
+				break;
+			default:
+				this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].momentumRetention, layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
+				break;
+			}
+		}
+
+		layerStates = new layerLoadingInfo[layerCount];
+	}
 
 	//returns a vector of the activation values of the final layer of the network
 	std::vector<double> getOutputs()
@@ -788,6 +826,58 @@ void storeNetwork(NeuralNetwork network, std::string &fileName)
 	boost::property_tree::write_xml(fileName, networkPropertyTree);
 }
 
+//saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
+NeuralNetwork loadNetwork(const std::string& fileName)
+{
+	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
+	boost::property_tree::ptree networkPropertyTree;
+	boost::property_tree::read_xml(fileName, networkPropertyTree);
+
+	//saves network details that are not specific to the layers
+	inputLength = networkPropertyTree.get("network.inputLength", 0);
+	outputLength = networkPropertyTree.get("network.outputLength", 0);
+	networkDepth = networkPropertyTree.get("network.networkDepth", 0);
+	optimizationAlgorithm = networkPropertyTree.get("network.optimizationAlgorithm", 0);
+	errorFunction = networkPropertyTree.get("network.errorFunction", 0);
+
+	layerLoadingInfo* layerStates = new layerLoadingInfo[networkDepth];
+
+	int i = 0;
+	std::vector<double> neuronWeights;
+
+	//defines array of layer details by extracting values from the network property tree
+	BOOST_FOREACH(const boost::property_tree::ptree::value_type &layer, networkPropertyTree.get_child("network.layers"))
+	{
+		//defines non-neuron layer state details
+		layerStates[i].type = layer.second.get<int>("layer.activationType");
+		layerStates[i].neuronCount = layer.second.get<int>("layer.layerNeuronCount");
+		layerStates[i].momentumRetention = layer.second.get<int>("layer.layerMomentumRetention");
+
+		//defines neuron state details
+		BOOST_FOREACH(const boost::property_tree::ptree::value_type & neuron, layer.second.get_child("layer.neurons"))
+		{
+			//define neuron's saved bias parameter
+			layerStates[i].biasOfNeurons.push_back(neuron.second.get<double>("neuron.bias"));
+
+			//define neuron's saved weight parameters
+			BOOST_FOREACH(const boost::property_tree::ptree::value_type & weight, neuron.second.get_child("neuron.weights"))
+			{
+				neuronWeights.push_back(weight.second.get_value<double>());
+			}
+
+			//store neuron weight parameter array and clear temporary weight value vector for next iteration
+			layerStates[i].weightsOfNeurons.push_back(neuronWeights);
+			neuronWeights.clear();
+		}
+
+		//proceed to defining the next layer's state
+		i++;
+	}
+
+	//returns fully-defined neural network... todo: might need to overload = operator for NeuralNetwork
+	return NeuralNetwork(networkDepth, inputLength, 1, outputLength, 0.0001, 1, errorFunction, layerStates);
+}
+
 int main()
 {
 
@@ -891,7 +981,7 @@ int main()
 		std::cout << (*it) << " ";
 	}
 
-	std::string xmlName = "test0.xml";
+	std::string xmlName = "test1.xml";
 	storeNetwork(network,xmlName);
 
 	return 0;
