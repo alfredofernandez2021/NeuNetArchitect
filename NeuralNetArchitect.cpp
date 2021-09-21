@@ -834,11 +834,13 @@ NeuralNetwork loadNetwork(const std::string& fileName)
 	boost::property_tree::read_xml(fileName, networkPropertyTree);
 
 	//saves network details that are not specific to the layers
-	inputLength = networkPropertyTree.get("network.inputLength", 0);
-	outputLength = networkPropertyTree.get("network.outputLength", 0);
-	networkDepth = networkPropertyTree.get("network.networkDepth", 0);
-	optimizationAlgorithm = networkPropertyTree.get("network.optimizationAlgorithm", 0);
-	errorFunction = networkPropertyTree.get("network.errorFunction", 0);
+	inputLength = networkPropertyTree.get<int>("network.inputLength");
+	outputLength = networkPropertyTree.get<int>("network.outputLength");
+	networkDepth = networkPropertyTree.get<int>("network.networkDepth");
+	optimizationAlgorithm = networkPropertyTree.get<int>("network.optimizationAlgorithm");
+	errorFunction = networkPropertyTree.get<int>("network.errorFunction");
+
+	//double test = networkPropertyTree.get<double>("network.layers.layer.activationType");
 
 	layerLoadingInfo* layerStates = new layerLoadingInfo[networkDepth];
 
@@ -846,21 +848,24 @@ NeuralNetwork loadNetwork(const std::string& fileName)
 	std::vector<double> neuronWeights;
 
 	//defines array of layer details by extracting values from the network property tree
-	BOOST_FOREACH(const boost::property_tree::ptree::value_type &layer, networkPropertyTree.get_child("network.layers"))
+	//BOOST_FOREACH(const boost::property_tree::ptree::value_type &layer, networkPropertyTree.get_child("network.layers"))
+	for(const boost::property_tree::ptree::value_type& layer : networkPropertyTree.get_child("network.layers"))
 	{
 		//defines non-neuron layer state details
-		layerStates[i].type = layer.second.get<int>("layer.activationType");
-		layerStates[i].neuronCount = layer.second.get<int>("layer.layerNeuronCount");
-		layerStates[i].momentumRetention = layer.second.get<int>("layer.layerMomentumRetention");
+		layerStates[i].type = layer.second.get<int>("activationType");
+		layerStates[i].neuronCount = layer.second.get<int>("neuronCount");
+		layerStates[i].momentumRetention = layer.second.get<int>("momentumRetention");
 
 		//defines neuron state details
-		BOOST_FOREACH(const boost::property_tree::ptree::value_type & neuron, layer.second.get_child("layer.neurons"))
+		//BOOST_FOREACH(const boost::property_tree::ptree::value_type &neuron, layer.second.get_child("layer.neurons"))
+		for (const boost::property_tree::ptree::value_type& neuron : layer.second.get_child("neurons"))
 		{
 			//define neuron's saved bias parameter
-			layerStates[i].biasOfNeurons.push_back(neuron.second.get<double>("neuron.bias"));
+			layerStates[i].biasOfNeurons.push_back(neuron.second.get<double>("bias"));
 
-			//define neuron's saved weight parameters
-			BOOST_FOREACH(const boost::property_tree::ptree::value_type & weight, neuron.second.get_child("neuron.weights"))
+			//define neuron's saved weight parameters, skipping the first layer's weights to avoid get_child exception
+			//BOOST_FOREACH(const boost::property_tree::ptree::value_type & weight, neuron.second.get_child("weights"))
+			if(i > 0) for (const boost::property_tree::ptree::value_type& weight : neuron.second.get_child("weights"))
 			{
 				neuronWeights.push_back(weight.second.get_value<double>());
 			}
@@ -942,7 +947,9 @@ int main()
 	}
 
 	//create network
-	NeuralNetwork network = NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
+	//NeuralNetwork network = NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
+	std::string xmlName = "test1.xml";
+	NeuralNetwork network = loadNetwork(xmlName);
 	//todo: learning rate heuristics?
 
 	//load inputs with dummy data
@@ -981,7 +988,7 @@ int main()
 		std::cout << (*it) << " ";
 	}
 
-	std::string xmlName = "test1.xml";
+	xmlName = "test1.xml";
 	storeNetwork(network,xmlName);
 
 	return 0;
