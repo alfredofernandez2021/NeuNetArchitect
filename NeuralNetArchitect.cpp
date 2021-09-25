@@ -650,54 +650,96 @@ public:
 
 };
 
+enum class MenuStates : unsigned int
+{
+	Exit = 0,
+	Main = 1,
+	Intro = 2,
+	Create = 3,
+	Load = 4,
+	Manage = 5,
+	Dataset = 6,
+	Training = 7,
+	Testing = 8,
+	Help = 9,
+};
+
 void manageNeuralNetwork()
 {
-	enum Menu { Exit, Main, Intro, Create, Load, Manage, Dataset, Training, Testing, Help };
-	Menu menuFSMState = Main;
+	MenuStates menuFSMState = MenuStates::Main;
+	int selection;
 
-	while (menuFSMState > 0)
+	while (menuFSMState != MenuStates::Exit)
 	{
 		switch (menuFSMState)
 		{
-		case Exit:
+		case MenuStates::Exit:
+			std::cout << std::endl;
 			std::cout << "Exiting Manager..." << std::endl;
 			return;
 
-		case Main:
+		case MenuStates::Main:
+			std::cout << std::endl;
 			std::cout << "Welcome to the Main Menu!" << std::endl;
+			std::cout << "1) Create Neural Network" << std::endl;
+			std::cout << "2) Load Neural Network" << std::endl;
+			std::cout << "3) Introduction and Info" << std::endl;
+			std::cout << "4) Exit Network Manager" << std::endl;
+			std::cout << "Selection: ";
+			std::cin >> selection;
 
-		case Intro:
+			switch (selection)
+			{
+			case 1:
+				menuFSMState = MenuStates::Create;
+			case 2:
+				menuFSMState = MenuStates::Load;
+			case 3:
+				menuFSMState = MenuStates::Intro;
+			case 4:
+				menuFSMState = MenuStates::Exit;
+			default:
+				std::cout << std::endl;
+				std::cout << "Invalid entry, try again";
+			}
+			//end MenuStates::Main case
+
+		case MenuStates::Intro:
+			std::cout << std::endl;
+			std::cout << "Introduction:" << std::endl;
+			std::cout << "Type 0 to exit:" << std::endl;
+			std::cin >> selection;
+			menuFSMState = MenuStates::Main;
+			break;
+		
+		case MenuStates::Create:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+		
+		case MenuStates::Load:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+		
+		case MenuStates::Manage:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+		
+		case MenuStates::Dataset:
 			std::cout << "Welcome to the Main Menu!" << std::endl;
 			break;
 		
-		case Create:
-			std::cout << "Welcome to the Main Menu!" << std::endl;
-		
-		case Load:
-			std::cout << "Welcome to the Main Menu!" << std::endl;
-		
-		case Manage:
-			std::cout << "Welcome to the Main Menu!" << std::endl;
-		
-		case Dataset:
+		case MenuStates::Training:
 			std::cout << "Welcome to the Main Menu!" << std::endl;
 			break;
 		
-		case Training:
+		case MenuStates::Testing:
 			std::cout << "Welcome to the Main Menu!" << std::endl;
 			break;
 		
-		case Testing:
-			std::cout << "Welcome to the Main Menu!" << std::endl;
-			break;
-		
-		case Help:
+		case MenuStates::Help:
 			std::cout << "Welcome to the Main Menu!" << std::endl;
 			break;
 		
 		default:
 			std::cout << "How did you get here? Returning to Main Menu..." << std::endl;
-			menuFSMState = Main;
+			menuFSMState = MenuStates::Main;
 		}
 	}
 }
