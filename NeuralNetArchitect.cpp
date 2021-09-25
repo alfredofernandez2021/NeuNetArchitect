@@ -767,7 +767,7 @@ public:
 };
 
 //saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
-void storeNetwork(NeuralNetwork network, std::string& fileName)
+void storeNetwork(NeuralNetwork network, std::string &fileName)
 {
 	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
 
@@ -849,7 +849,7 @@ NeuralNetwork loadNetwork(const std::string& fileName)
 
 	//defines array of layer details by extracting values from the network property tree
 	//BOOST_FOREACH(const boost::property_tree::ptree::value_type &layer, networkPropertyTree.get_child("network.layers"))
-	for (const boost::property_tree::ptree::value_type& layer : networkPropertyTree.get_child("network.layers"))
+	for(const boost::property_tree::ptree::value_type& layer : networkPropertyTree.get_child("network.layers"))
 	{
 		//defines non-neuron layer state details
 		layerStates[i].type = layer.second.get<int>("activationType");
@@ -865,7 +865,7 @@ NeuralNetwork loadNetwork(const std::string& fileName)
 
 			//define neuron's saved weight parameters, skipping the first layer's weights to avoid get_child exception
 			//BOOST_FOREACH(const boost::property_tree::ptree::value_type & weight, neuron.second.get_child("weights"))
-			if (i > 0) for (const boost::property_tree::ptree::value_type& weight : neuron.second.get_child("weights"))
+			if(i > 0) for (const boost::property_tree::ptree::value_type& weight : neuron.second.get_child("weights"))
 			{
 				neuronWeights.push_back(weight.second.get_value<double>());
 			}
@@ -981,7 +981,6 @@ void manageNeuralNetwork()
 	}
 }
 
-
 int main()
 {
 
@@ -1088,7 +1087,7 @@ int main()
 	}
 
 	xmlName = "test1.xml";
-	storeNetwork(network, xmlName);
+	storeNetwork(network,xmlName);
 
 	return 0;
 }
