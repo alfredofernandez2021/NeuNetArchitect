@@ -650,6 +650,57 @@ public:
 
 };
 
+void manageNeuralNetwork()
+{
+	enum Menu { Exit, Main, Intro, Create, Load, Manage, Dataset, Training, Testing, Help };
+	Menu menuFSMState = Main;
+
+	while (menuFSMState > 0)
+	{
+		switch (menuFSMState)
+		{
+		case Exit:
+			std::cout << "Exiting Manager..." << std::endl;
+			return;
+
+		case Main:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+
+		case Intro:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+			break;
+		
+		case Create:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+		
+		case Load:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+		
+		case Manage:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+		
+		case Dataset:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+			break;
+		
+		case Training:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+			break;
+		
+		case Testing:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+			break;
+		
+		case Help:
+			std::cout << "Welcome to the Main Menu!" << std::endl;
+			break;
+		
+		default:
+			std::cout << "How did you get here? Returning to Main Menu..." << std::endl;
+			menuFSMState = Main;
+		}
+	}
+}
 
 int main()
 {
