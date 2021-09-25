@@ -8,7 +8,6 @@
 #include <assert.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
-#include <boost/foreach.hpp>
 
 /**********************************************************************************************************************************************
  Neuron's activation is the sumOfproducts(weights, inputActivations) + bias, or the given input if it is in the input layer
@@ -602,6 +601,19 @@ private:
 	layerLoadingInfo* layerStates;
 
 public:
+	//default constructor for NeuralNetworks
+	NeuralNetwork()
+	{
+		this->layerCount = -1;
+		this->inputLength = -1;
+		this->inputWidth = -1;
+		this->outputCount = -1;
+		this->neuralLayers = nullptr;
+		this->learningRate = -1;
+		this->batchSize = -1;
+		this->derivedCostFunction = nullptr;
+		this->layerStates = nullptr;
+	}
 	//constructor for creating NeuralNetworks
 	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerCreationInfo* layerDetails)
 	{
@@ -611,7 +623,7 @@ public:
 		this->outputCount = outputCount;
 		this->learningRate = learningRate;
 		this->batchSize = batchSize;
-
+		
 		switch (costSelection)
 		{
 		case 1:
