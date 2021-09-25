@@ -981,6 +981,7 @@ void manageNeuralNetwork()
 	}
 }
 
+
 int main()
 {
 
