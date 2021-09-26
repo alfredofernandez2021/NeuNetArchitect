@@ -895,6 +895,63 @@ NeuralNetwork loadNetwork(const std::string& fileName)
 	return NeuralNetwork(networkDepth, inputLength, 1, outputLength, 0.0001, 1, errorFunction, layerStates);
 }
 
+//saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
+NeuralNetwork* loadNetworkPointer(const std::string& fileName)
+{
+	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
+	boost::property_tree::ptree networkPropertyTree;
+	boost::property_tree::read_xml(fileName, networkPropertyTree);
+
+	//saves network details that are not specific to the layers
+	inputLength = networkPropertyTree.get<int>("network.inputLength");
+	outputLength = networkPropertyTree.get<int>("network.outputLength");
+	networkDepth = networkPropertyTree.get<int>("network.networkDepth");
+	optimizationAlgorithm = networkPropertyTree.get<int>("network.optimizationAlgorithm");
+	errorFunction = networkPropertyTree.get<int>("network.errorFunction");
+
+	//double test = networkPropertyTree.get<double>("network.layers.layer.activationType");
+
+	layerLoadingInfo* layerStates = new layerLoadingInfo[networkDepth];
+
+	int i = 0;
+	std::vector<double> neuronWeights;
+
+	//defines array of layer details by extracting values from the network property tree
+	//BOOST_FOREACH(const boost::property_tree::ptree::value_type &layer, networkPropertyTree.get_child("network.layers"))
+	for (const boost::property_tree::ptree::value_type& layer : networkPropertyTree.get_child("network.layers"))
+	{
+		//defines non-neuron layer state details
+		layerStates[i].type = layer.second.get<int>("activationType");
+		layerStates[i].neuronCount = layer.second.get<int>("neuronCount");
+		layerStates[i].momentumRetention = layer.second.get<int>("momentumRetention");
+
+		//defines neuron state details
+		//BOOST_FOREACH(const boost::property_tree::ptree::value_type &neuron, layer.second.get_child("layer.neurons"))
+		for (const boost::property_tree::ptree::value_type& neuron : layer.second.get_child("neurons"))
+		{
+			//define neuron's saved bias parameter
+			layerStates[i].biasOfNeurons.push_back(neuron.second.get<double>("bias"));
+
+			//define neuron's saved weight parameters, skipping the first layer's weights to avoid get_child exception
+			//BOOST_FOREACH(const boost::property_tree::ptree::value_type & weight, neuron.second.get_child("weights"))
+			if (i > 0) for (const boost::property_tree::ptree::value_type& weight : neuron.second.get_child("weights"))
+			{
+				neuronWeights.push_back(weight.second.get_value<double>());
+			}
+
+			//store neuron weight parameter array and clear temporary weight value vector for next iteration
+			layerStates[i].weightsOfNeurons.push_back(neuronWeights);
+			neuronWeights.clear();
+		}
+
+		//proceed to defining the next layer's state
+		i++;
+	}
+
+	//returns fully-defined neural network... todo: might need to overload = operator for NeuralNetwork
+	return new NeuralNetwork(networkDepth, inputLength, 1, outputLength, 0.0001, 1, errorFunction, layerStates);
+}
+
 enum class MenuStates : unsigned int
 {
 	Exit = 0,
@@ -911,7 +968,8 @@ enum class MenuStates : unsigned int
 
 void manageNeuralNetwork()
 {
-	NeuralNetwork network;
+	NeuralNetwork* network;
+	layerCreationInfo* layerDetails;
 	MenuStates menuFSMState = MenuStates::Main;
 	int selection;
 	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
@@ -979,7 +1037,7 @@ void manageNeuralNetwork()
 
 			std::cout << "How many layers will this neural network contain? ";
 			std::cin >> numberOfLayers;
-			layerCreationInfo* layerDetails = new layerCreationInfo[numberOfLayers];
+			layerDetails = new layerCreationInfo[numberOfLayers];
 			std::cout << std::endl;
 
 			//std::cout << "What is the current batch size that this network will train on? ";
@@ -1023,7 +1081,7 @@ void manageNeuralNetwork()
 			}
 
 			//create network
-			network = NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
+			network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
 
 			menuFSMState = MenuStates::Manage;
 			//end MenuStates::Create case
@@ -1033,7 +1091,7 @@ void manageNeuralNetwork()
 			std::cout << "Enter XML file name to load from:" << std::endl;
 			std::cin >> xmlName;
 			//load network
-			NeuralNetwork network = loadNetwork(xmlName);
+			network = loadNetworkPointer(xmlName);
 			menuFSMState = MenuStates::Manage;
 
 		case MenuStates::Manage:
