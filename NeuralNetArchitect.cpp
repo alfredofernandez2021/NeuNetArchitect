@@ -601,7 +601,7 @@ private:
 	layerLoadingInfo* layerStates;
 
 public:
-	//default constructor for NeuralNetworks
+	//default constructor for NeuralNetworks with invalid values
 	NeuralNetwork()
 	{
 		this->layerCount = -1;
@@ -911,10 +911,11 @@ enum class MenuStates : unsigned int
 
 void manageNeuralNetwork()
 {
-	NeuralNetwork Network;
+	NeuralNetwork network;
 	MenuStates menuFSMState = MenuStates::Main;
 	int selection;
 	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
+	std::string xmlName;
 
 	while (menuFSMState != MenuStates::Exit)
 	{
@@ -963,9 +964,77 @@ void manageNeuralNetwork()
 		case MenuStates::Create:
 			std::cout << std::endl;
 			std::cout << "Creation:" << std::endl;
+			std::cout << "What is the length of inputs that this neural network will accept? ";
+			std::cin >> inputLength;
+			std::cout << std::endl;
+
+			//std::cout << "What is the width of inputs that this neural network will accept? ";
+			//std::cin >> inputWidth;
+			inputWidth = 1;
+			//std::cout << std::endl;
+
+			std::cout << "What is the number of outputs that this neural network will produce? ";
+			std::cin >> outputCount;
+			std::cout << std::endl;
+
+			std::cout << "How many layers will this neural network contain? ";
+			std::cin >> numberOfLayers;
+			layerCreationInfo* layerDetails = new layerCreationInfo[numberOfLayers];
+			std::cout << std::endl;
+
+			//std::cout << "What is the current batch size that this network will train on? ";
+			//std::cin >> batchSize;
+			batchSize = 1;
+			//std::cout << std::endl;
+
+			//std::cout << "Which cost function should be used to calculate error? ;
+			//std::cin >> costSelection;
+			costSelection = 1;
+			//std::cout << std::endl;
+
+			layerDetails[0].type = 1;
+			layerDetails[0].neuronCount = inputLength * inputWidth;
+			layerDetails[0].momentumRetention = 0;
+
+			for (int i = 1; i < numberOfLayers; i++)
+			{
+				std::cout << std::endl << "Define neural layer " << i + 1 << ":\n";
+
+				std::cout << "\tActivation type: ";
+				std::cin >> layerDetails[i].type;
+				std::cout << std::endl;
+
+				if (i + 1 < numberOfLayers)
+				{
+					std::cout << "\tNeuron count: ";
+					std::cin >> layerDetails[i].neuronCount;
+					std::cout << std::endl;
+				}
+				else
+				{
+					layerDetails[i].neuronCount = outputCount;
+				}
+
+
+				std::cout << "\tMomentum retention: ";
+				std::cin >> layerDetails[i].momentumRetention;
+				layerDetails[i].momentumRetention = 0;
+				std::cout << std::endl;
+			}
+
+			//create network
+			network = NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
+
+			menuFSMState = MenuStates::Manage;
+			//end MenuStates::Create case
 
 		case MenuStates::Load:
-			std::cout << "Welcome to the Main Menu!" << std::endl;
+			std::cout << "Loading:" << std::endl;
+			std::cout << "Enter XML file name to load from:" << std::endl;
+			std::cin >> xmlName;
+			//load network
+			NeuralNetwork network = loadNetwork(xmlName);
+			menuFSMState = MenuStates::Manage;
 
 		case MenuStates::Manage:
 			std::cout << "Welcome to the Main Menu!" << std::endl;
