@@ -1087,6 +1087,7 @@ void manageNeuralNetwork()
 			//end MenuStates::Create case
 
 		case MenuStates::Load:
+			std::cout << std::endl;
 			std::cout << "Loading:" << std::endl;
 			std::cout << "Enter XML file name to load from:" << std::endl;
 			std::cin >> xmlName;
@@ -1095,25 +1096,75 @@ void manageNeuralNetwork()
 			menuFSMState = MenuStates::Manage;
 
 		case MenuStates::Manage:
-			std::cout << "Welcome to the Main Menu!" << std::endl;
+			std::cout << std::endl;
+			std::cout << "Manage:" << std::endl;
+			std::cout << "1) Select DataSets" << std::endl;
+			std::cout << "2) Run Training" << std::endl;
+			std::cout << "3) Run Testing" << std::endl;
+			std::cout << "4) Save Solution" << std::endl;
+			std::cout << "5) Help" << std::endl;
+			std::cout << "6) Exit" << std::endl;
+			std::cout << "Selection: ";
+			std::cin >> selection;
+
+			switch (selection)
+			{
+			case 1:
+				menuFSMState = MenuStates::Dataset;
+			case 2:
+				menuFSMState = MenuStates::Training;
+			case 3:
+				menuFSMState = MenuStates::Testing;
+			case 4: //todo: left off here
+				menuFSMState = MenuStates::Exit;
+			case 5:
+				menuFSMState = MenuStates::Intro;
+			case 6:
+				menuFSMState = MenuStates::Exit;
+			default:
+				std::cout << std::endl;
+				std::cout << "Invalid entry, try again";
+			}
+			//end MenuStates::Main case
 
 		case MenuStates::Dataset:
-			std::cout << "Welcome to the Main Menu!" << std::endl;
+			std::cout << std::endl;
+			std::cout << "Dataset:" << std::endl;
+			std::cout << "Type 0 to exit:" << std::endl;
+			std::cin >> selection;
+			menuFSMState = MenuStates::Manage;
 			break;
+			//end MenuStates::Dataset case
 
 		case MenuStates::Training:
-			std::cout << "Welcome to the Main Menu!" << std::endl;
+			std::cout << std::endl;
+			std::cout << "Training:" << std::endl;
+			std::cout << "Type 0 to exit:" << std::endl;
+			std::cin >> selection;
+			menuFSMState = MenuStates::Manage;
 			break;
+			//end MenuStates::Training case
 
 		case MenuStates::Testing:
-			std::cout << "Welcome to the Main Menu!" << std::endl;
+			std::cout << std::endl;
+			std::cout << "Testing:" << std::endl;
+			std::cout << "Type 0 to exit:" << std::endl;
+			std::cin >> selection;
+			menuFSMState = MenuStates::Manage;
 			break;
+			//end MenuStates::Testing case
 
 		case MenuStates::Help:
-			std::cout << "Welcome to the Main Menu!" << std::endl;
+			std::cout << std::endl;
+			std::cout << "Help:" << std::endl;
+			std::cout << "Type 0 to exit:" << std::endl;
+			std::cin >> selection;
+			menuFSMState = MenuStates::Manage;
 			break;
+			//end MenuStates::Help case
 
 		default:
+			std::cout << std::endl;
 			std::cout << "How did you get here? Returning to Main Menu..." << std::endl;
 			menuFSMState = MenuStates::Main;
 		}
