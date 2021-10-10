@@ -1186,7 +1186,7 @@ MenuStates defaultSelection()
 
 void manageNeuralNetwork()
 {
-	NeuralNetwork* network;
+	NeuralNetwork* network = nullptr;
 	MenuStates menuFSMState = MenuStates::Main;
 
 	while (menuFSMState != MenuStates::Exit)
