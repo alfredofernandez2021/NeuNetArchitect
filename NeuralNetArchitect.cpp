@@ -970,13 +970,14 @@ enum class MenuStates : unsigned int
 void exitSelection()
 {
 	std::cout << std::endl;
-	std::cout << "Exiting Manager..." << std::endl;
+	std::cout << "Exiting manager..." << std::endl;
 }
 
 MenuStates mainSelection()
 {
 	int selection;
 
+	//initial menu state prompt to user
 	std::cout << std::endl;
 	std::cout << "Welcome to the Main Menu!" << std::endl;
 	std::cout << "1) Create Neural Network" << std::endl;
@@ -986,6 +987,7 @@ MenuStates mainSelection()
 	std::cout << "Selection: ";
 	std::cin >> selection;
 
+	//return next menu state
 	switch (selection)
 	{
 	case 1:
@@ -1009,8 +1011,15 @@ MenuStates introSelection()
 
 	std::cout << std::endl;
 	std::cout << "Introduction:" << std::endl;
-	std::cout << "Type 0 to exit:" << std::endl;
+	std::cout << "Welcome to NeuralNetArchitect! In this pre-alpha console application you can create your own linear ";
+	std::cout << "neural network with full model structure and optimization algorithm customizability. Currently, only the ";
+	std::cout << "MSE cost function and linear neuron activation functions are available. Datasets can manually input into ";
+	std::cout << "the network and learning can only be achieved through the editing of the main method. The menu is a ";
+	std::cout << "work in progress:)" << std::endl;
+
+	std::cout << "Type any integer to exit:" << std::endl;
 	std::cin >> selection;
+
 	return MenuStates::Main;
 }
 
@@ -1018,40 +1027,48 @@ MenuStates createSelection( NeuralNetwork* network)
 {
 	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
 
+	//define input length
 	std::cout << std::endl;
 	std::cout << "Creation:" << std::endl;
 	std::cout << "What is the length of inputs that this neural network will accept? ";
 	std::cin >> inputLength;
 	std::cout << std::endl;
 
+	//define input width
 	//std::cout << "What is the width of inputs that this neural network will accept? ";
 	//std::cin >> inputWidth;
 	inputWidth = 1;
 	//std::cout << std::endl;
 
+	//define output length
 	std::cout << "What is the number of outputs that this neural network will produce? ";
 	std::cin >> outputCount;
 	std::cout << std::endl;
 
+	//define network depth
 	std::cout << "How many layers will this neural network contain? ";
 	std::cin >> numberOfLayers;
 	layerCreationInfo* layerDetails = new layerCreationInfo[numberOfLayers];
 	std::cout << std::endl;
 
+	//define batch size hyperparameter, the number of samples that will be processed before learning takes place
 	//std::cout << "What is the current batch size that this network will train on? ";
 	//std::cin >> batchSize;
 	batchSize = 1;
 	//std::cout << std::endl;
 
+	//define cost function that will calculate network's error upon calculating an output
 	//std::cout << "Which cost function should be used to calculate error? ;
 	//std::cin >> costSelection;
 	costSelection = 1;
 	//std::cout << std::endl;
 
+	//initialize first (input) layer
 	layerDetails[0].type = 1;
 	layerDetails[0].neuronCount = inputLength * inputWidth;
 	layerDetails[0].momentumRetention = 0;
 
+	//define each layer
 	for (int i = 1; i < numberOfLayers; i++)
 	{
 		std::cout << std::endl << "Define neural layer " << i + 1 << ":\n";
@@ -1071,16 +1088,17 @@ MenuStates createSelection( NeuralNetwork* network)
 			layerDetails[i].neuronCount = outputCount;
 		}
 
-
+		//define optimization algorithm
 		std::cout << "\tMomentum retention: ";
 		std::cin >> layerDetails[i].momentumRetention;
 		layerDetails[i].momentumRetention = 0;
 		std::cout << std::endl;
 	}
 
-	//create network
+	//create network and point to intialized NeuralNetwork
 	network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
 
+	//return next menu state
 	return MenuStates::Manage;
 }
 
@@ -1088,12 +1106,16 @@ MenuStates loadSelection(NeuralNetwork* network)
 {
 	std::string xmlName;
 
+	//acquire name of file to load and initialize NeuralNetwork from
 	std::cout << std::endl;
 	std::cout << "Loading:" << std::endl;
 	std::cout << "Enter XML file name to load from:" << std::endl;
 	std::cin >> xmlName;
-	//load network
+
+	//load network by intializing and pointing to it
 	network = loadNetworkPointer(xmlName);
+
+	//return next menu state
 	return MenuStates::Manage;
 }
 
@@ -1101,6 +1123,7 @@ MenuStates manageSelection()
 {
 	int selection;
 
+	//initial menu state prompt to user
 	std::cout << std::endl;
 	std::cout << "Manage:" << std::endl;
 	std::cout << "1) Select DataSets" << std::endl;
@@ -1112,6 +1135,7 @@ MenuStates manageSelection()
 	std::cout << "Selection: ";
 	std::cin >> selection;
 
+	//return next menu state
 	switch (selection)
 	{
 	case 1:
@@ -1120,7 +1144,7 @@ MenuStates manageSelection()
 		return MenuStates::Training;
 	case 3:
 		return MenuStates::Testing;
-	case 4: //todo: left off here
+	case 4:
 		return MenuStates::Exit;
 	case 5:
 		return MenuStates::Intro;
@@ -1139,6 +1163,7 @@ MenuStates datasetSelection()
 
 	std::cout << std::endl;
 	std::cout << "Dataset:" << std::endl;
+	std::cout << "Dataset functionalities not written, dead end on menu" << std::endl;
 	std::cout << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;
 	return MenuStates::Manage;
@@ -1150,6 +1175,7 @@ MenuStates trainingSelection(NeuralNetwork* network)
 
 	std::cout << std::endl;
 	std::cout << "Training:" << std::endl;
+	std::cout << "Training functionalities not written, dead end on menu" << std::endl;
 	std::cout << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;
 	return MenuStates::Manage;
@@ -1161,6 +1187,7 @@ MenuStates testingSelection()
 
 	std::cout << std::endl;
 	std::cout << "Testing:" << std::endl;
+	std::cout << "Testing functionalities not written, dead end on menu" << std::endl;
 	std::cout << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;
 	return MenuStates::Manage;
@@ -1172,6 +1199,7 @@ MenuStates helpSelection()
 
 	std::cout << std::endl;
 	std::cout << "Help:" << std::endl;
+	std::cout << "Help of 'manage' options not yet written, dead end on menu" << std::endl;
 	std::cout << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;
 	return MenuStates::Manage;
@@ -1180,7 +1208,7 @@ MenuStates helpSelection()
 MenuStates defaultSelection()
 {
 	std::cout << std::endl;
-	std::cout << "How did you get here? Returning to Main Menu..." << std::endl;
+	std::cout << "If you got here, it's a bug. Returning to Main Menu..." << std::endl;
 	return MenuStates::Main;
 }
 
@@ -1194,7 +1222,8 @@ void manageNeuralNetwork()
 		switch (menuFSMState)
 		{
 		case MenuStates::Exit:
-			exitSelection();
+			std::cout << std::endl;
+			std::cout << "Exiting manager..." << std::endl;
 			return;
 
 		case MenuStates::Main:
