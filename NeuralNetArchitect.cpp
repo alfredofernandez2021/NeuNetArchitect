@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include "NeuralNetArchitect.h"
 
 /**********************************************************************************************************************************************
  Neuron's activation is the sumOfproducts(weights, inputActivations) + bias, or the given input if it is in the input layer
@@ -966,207 +967,270 @@ enum class MenuStates : unsigned int
 	Help = 9,
 };
 
+void exitSelection()
+{
+	std::cout << std::endl;
+	std::cout << "Exiting Manager..." << std::endl;
+}
+
+MenuStates mainSelection()
+{
+	int selection;
+
+	std::cout << std::endl;
+	std::cout << "Welcome to the Main Menu!" << std::endl;
+	std::cout << "1) Create Neural Network" << std::endl;
+	std::cout << "2) Load Neural Network" << std::endl;
+	std::cout << "3) Introduction and Info" << std::endl;
+	std::cout << "4) Exit Network Manager" << std::endl;
+	std::cout << "Selection: ";
+	std::cin >> selection;
+
+	switch (selection)
+	{
+	case 1:
+		return MenuStates::Create;
+	case 2:
+		return MenuStates::Load;
+	case 3:
+		return MenuStates::Intro;
+	case 4:
+		return MenuStates::Exit;
+	default:
+		std::cout << std::endl;
+		std::cout << "Invalid entry, try again";
+		return MenuStates::Main;
+	}
+}
+
+MenuStates introSelection()
+{
+	int selection;
+
+	std::cout << std::endl;
+	std::cout << "Introduction:" << std::endl;
+	std::cout << "Type 0 to exit:" << std::endl;
+	std::cin >> selection;
+	return MenuStates::Main;
+}
+
+MenuStates createSelection( NeuralNetwork* network)
+{
+	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
+
+	std::cout << std::endl;
+	std::cout << "Creation:" << std::endl;
+	std::cout << "What is the length of inputs that this neural network will accept? ";
+	std::cin >> inputLength;
+	std::cout << std::endl;
+
+	//std::cout << "What is the width of inputs that this neural network will accept? ";
+	//std::cin >> inputWidth;
+	inputWidth = 1;
+	//std::cout << std::endl;
+
+	std::cout << "What is the number of outputs that this neural network will produce? ";
+	std::cin >> outputCount;
+	std::cout << std::endl;
+
+	std::cout << "How many layers will this neural network contain? ";
+	std::cin >> numberOfLayers;
+	layerCreationInfo* layerDetails = new layerCreationInfo[numberOfLayers];
+	std::cout << std::endl;
+
+	//std::cout << "What is the current batch size that this network will train on? ";
+	//std::cin >> batchSize;
+	batchSize = 1;
+	//std::cout << std::endl;
+
+	//std::cout << "Which cost function should be used to calculate error? ;
+	//std::cin >> costSelection;
+	costSelection = 1;
+	//std::cout << std::endl;
+
+	layerDetails[0].type = 1;
+	layerDetails[0].neuronCount = inputLength * inputWidth;
+	layerDetails[0].momentumRetention = 0;
+
+	for (int i = 1; i < numberOfLayers; i++)
+	{
+		std::cout << std::endl << "Define neural layer " << i + 1 << ":\n";
+
+		std::cout << "\tActivation type: ";
+		std::cin >> layerDetails[i].type;
+		std::cout << std::endl;
+
+		if (i + 1 < numberOfLayers)
+		{
+			std::cout << "\tNeuron count: ";
+			std::cin >> layerDetails[i].neuronCount;
+			std::cout << std::endl;
+		}
+		else
+		{
+			layerDetails[i].neuronCount = outputCount;
+		}
+
+
+		std::cout << "\tMomentum retention: ";
+		std::cin >> layerDetails[i].momentumRetention;
+		layerDetails[i].momentumRetention = 0;
+		std::cout << std::endl;
+	}
+
+	//create network
+	network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
+
+	return MenuStates::Manage;
+}
+
+MenuStates loadSelection(NeuralNetwork* network)
+{
+	std::string xmlName;
+
+	std::cout << std::endl;
+	std::cout << "Loading:" << std::endl;
+	std::cout << "Enter XML file name to load from:" << std::endl;
+	std::cin >> xmlName;
+	//load network
+	network = loadNetworkPointer(xmlName);
+	return MenuStates::Manage;
+}
+
+MenuStates manageSelection()
+{
+	int selection;
+
+	std::cout << std::endl;
+	std::cout << "Manage:" << std::endl;
+	std::cout << "1) Select DataSets" << std::endl;
+	std::cout << "2) Run Training" << std::endl;
+	std::cout << "3) Run Testing" << std::endl;
+	std::cout << "4) Save Solution" << std::endl;
+	std::cout << "5) Help" << std::endl;
+	std::cout << "6) Exit" << std::endl;
+	std::cout << "Selection: ";
+	std::cin >> selection;
+
+	switch (selection)
+	{
+	case 1:
+		return MenuStates::Dataset;
+	case 2:
+		return MenuStates::Training;
+	case 3:
+		return MenuStates::Testing;
+	case 4: //todo: left off here
+		return MenuStates::Exit;
+	case 5:
+		return MenuStates::Intro;
+	case 6:
+		return MenuStates::Exit;
+	default:
+		std::cout << std::endl;
+		std::cout << "Invalid entry, try again";
+		return MenuStates::Manage;
+	}
+}
+
+MenuStates datasetSelection()
+{
+	int selection;
+
+	std::cout << std::endl;
+	std::cout << "Dataset:" << std::endl;
+	std::cout << "Type 0 to exit:" << std::endl;
+	std::cin >> selection;
+	return MenuStates::Manage;
+}
+
+MenuStates trainingSelection(NeuralNetwork* network)
+{
+	int selection;
+
+	std::cout << std::endl;
+	std::cout << "Training:" << std::endl;
+	std::cout << "Type 0 to exit:" << std::endl;
+	std::cin >> selection;
+	return MenuStates::Manage;
+}
+
+MenuStates testingSelection()
+{
+	int selection;
+
+	std::cout << std::endl;
+	std::cout << "Testing:" << std::endl;
+	std::cout << "Type 0 to exit:" << std::endl;
+	std::cin >> selection;
+	return MenuStates::Manage;
+}
+
+MenuStates helpSelection()
+{
+	int selection;
+
+	std::cout << std::endl;
+	std::cout << "Help:" << std::endl;
+	std::cout << "Type 0 to exit:" << std::endl;
+	std::cin >> selection;
+	return MenuStates::Manage;
+}
+
+MenuStates defaultSelection()
+{
+	std::cout << std::endl;
+	std::cout << "How did you get here? Returning to Main Menu..." << std::endl;
+	return MenuStates::Main;
+}
+
 void manageNeuralNetwork()
 {
 	NeuralNetwork* network;
-	layerCreationInfo* layerDetails;
 	MenuStates menuFSMState = MenuStates::Main;
-	int selection;
-	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
-	std::string xmlName;
 
 	while (menuFSMState != MenuStates::Exit)
 	{
 		switch (menuFSMState)
 		{
 		case MenuStates::Exit:
-			std::cout << std::endl;
-			std::cout << "Exiting Manager..." << std::endl;
+			exitSelection();
 			return;
 
 		case MenuStates::Main:
-			std::cout << std::endl;
-			std::cout << "Welcome to the Main Menu!" << std::endl;
-			std::cout << "1) Create Neural Network" << std::endl;
-			std::cout << "2) Load Neural Network" << std::endl;
-			std::cout << "3) Introduction and Info" << std::endl;
-			std::cout << "4) Exit Network Manager" << std::endl;
-			std::cout << "Selection: ";
-			std::cin >> selection;
-
-			switch (selection)
-			{
-			case 1:
-				menuFSMState = MenuStates::Create;
-			case 2:
-				menuFSMState = MenuStates::Load;
-			case 3:
-				menuFSMState = MenuStates::Intro;
-			case 4:
-				menuFSMState = MenuStates::Exit;
-			default:
-				std::cout << std::endl;
-				std::cout << "Invalid entry, try again";
-			}
-			//end MenuStates::Main case
+			menuFSMState = mainSelection();
 
 		case MenuStates::Intro:
-			std::cout << std::endl;
-			std::cout << "Introduction:" << std::endl;
-			std::cout << "Type 0 to exit:" << std::endl;
-			std::cin >> selection;
-			menuFSMState = MenuStates::Main;
+			menuFSMState = introSelection();
 			break;
-			//end MenuStates::Intro case
 
 		case MenuStates::Create:
-			std::cout << std::endl;
-			std::cout << "Creation:" << std::endl;
-			std::cout << "What is the length of inputs that this neural network will accept? ";
-			std::cin >> inputLength;
-			std::cout << std::endl;
-
-			//std::cout << "What is the width of inputs that this neural network will accept? ";
-			//std::cin >> inputWidth;
-			inputWidth = 1;
-			//std::cout << std::endl;
-
-			std::cout << "What is the number of outputs that this neural network will produce? ";
-			std::cin >> outputCount;
-			std::cout << std::endl;
-
-			std::cout << "How many layers will this neural network contain? ";
-			std::cin >> numberOfLayers;
-			layerDetails = new layerCreationInfo[numberOfLayers];
-			std::cout << std::endl;
-
-			//std::cout << "What is the current batch size that this network will train on? ";
-			//std::cin >> batchSize;
-			batchSize = 1;
-			//std::cout << std::endl;
-
-			//std::cout << "Which cost function should be used to calculate error? ;
-			//std::cin >> costSelection;
-			costSelection = 1;
-			//std::cout << std::endl;
-
-			layerDetails[0].type = 1;
-			layerDetails[0].neuronCount = inputLength * inputWidth;
-			layerDetails[0].momentumRetention = 0;
-
-			for (int i = 1; i < numberOfLayers; i++)
-			{
-				std::cout << std::endl << "Define neural layer " << i + 1 << ":\n";
-
-				std::cout << "\tActivation type: ";
-				std::cin >> layerDetails[i].type;
-				std::cout << std::endl;
-
-				if (i + 1 < numberOfLayers)
-				{
-					std::cout << "\tNeuron count: ";
-					std::cin >> layerDetails[i].neuronCount;
-					std::cout << std::endl;
-				}
-				else
-				{
-					layerDetails[i].neuronCount = outputCount;
-				}
-
-
-				std::cout << "\tMomentum retention: ";
-				std::cin >> layerDetails[i].momentumRetention;
-				layerDetails[i].momentumRetention = 0;
-				std::cout << std::endl;
-			}
-
-			//create network
-			network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
-
-			menuFSMState = MenuStates::Manage;
-			//end MenuStates::Create case
+			menuFSMState = createSelection(network);
 
 		case MenuStates::Load:
-			std::cout << std::endl;
-			std::cout << "Loading:" << std::endl;
-			std::cout << "Enter XML file name to load from:" << std::endl;
-			std::cin >> xmlName;
-			//load network
-			network = loadNetworkPointer(xmlName);
-			menuFSMState = MenuStates::Manage;
+			menuFSMState = loadSelection(network);
 
 		case MenuStates::Manage:
-			std::cout << std::endl;
-			std::cout << "Manage:" << std::endl;
-			std::cout << "1) Select DataSets" << std::endl;
-			std::cout << "2) Run Training" << std::endl;
-			std::cout << "3) Run Testing" << std::endl;
-			std::cout << "4) Save Solution" << std::endl;
-			std::cout << "5) Help" << std::endl;
-			std::cout << "6) Exit" << std::endl;
-			std::cout << "Selection: ";
-			std::cin >> selection;
-
-			switch (selection)
-			{
-			case 1:
-				menuFSMState = MenuStates::Dataset;
-			case 2:
-				menuFSMState = MenuStates::Training;
-			case 3:
-				menuFSMState = MenuStates::Testing;
-			case 4: //todo: left off here
-				menuFSMState = MenuStates::Exit;
-			case 5:
-				menuFSMState = MenuStates::Intro;
-			case 6:
-				menuFSMState = MenuStates::Exit;
-			default:
-				std::cout << std::endl;
-				std::cout << "Invalid entry, try again";
-			}
-			//end MenuStates::Main case
+			menuFSMState = manageSelection();
 
 		case MenuStates::Dataset:
-			std::cout << std::endl;
-			std::cout << "Dataset:" << std::endl;
-			std::cout << "Type 0 to exit:" << std::endl;
-			std::cin >> selection;
-			menuFSMState = MenuStates::Manage;
+			menuFSMState = datasetSelection();
 			break;
-			//end MenuStates::Dataset case
 
 		case MenuStates::Training:
-			std::cout << std::endl;
-			std::cout << "Training:" << std::endl;
-			std::cout << "Type 0 to exit:" << std::endl;
-			std::cin >> selection;
-			menuFSMState = MenuStates::Manage;
+			menuFSMState = trainingSelection(network);
 			break;
-			//end MenuStates::Training case
 
 		case MenuStates::Testing:
-			std::cout << std::endl;
-			std::cout << "Testing:" << std::endl;
-			std::cout << "Type 0 to exit:" << std::endl;
-			std::cin >> selection;
-			menuFSMState = MenuStates::Manage;
+			menuFSMState = testingSelection();
 			break;
-			//end MenuStates::Testing case
 
 		case MenuStates::Help:
-			std::cout << std::endl;
-			std::cout << "Help:" << std::endl;
-			std::cout << "Type 0 to exit:" << std::endl;
-			std::cin >> selection;
-			menuFSMState = MenuStates::Manage;
+			menuFSMState = helpSelection();
 			break;
-			//end MenuStates::Help case
 
 		default:
-			std::cout << std::endl;
-			std::cout << "How did you get here? Returning to Main Menu..." << std::endl;
-			menuFSMState = MenuStates::Main;
+			menuFSMState = defaultSelection();
 		}
 	}
 }
