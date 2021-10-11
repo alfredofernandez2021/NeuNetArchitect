@@ -8,7 +8,7 @@
 #include <assert.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
-#include <boost/foreach.hpp>
+#include "NeuralNetArchitect.h"
 
 /**********************************************************************************************************************************************
  Neuron's activation is the sumOfproducts(weights, inputActivations) + bias, or the given input if it is in the input layer
@@ -602,6 +602,19 @@ private:
 	layerLoadingInfo* layerStates;
 
 public:
+	//default constructor for NeuralNetworks with invalid values
+	NeuralNetwork()
+	{
+		this->layerCount = -1;
+		this->inputLength = -1;
+		this->inputWidth = -1;
+		this->outputCount = -1;
+		this->neuralLayers = nullptr;
+		this->learningRate = -1;
+		this->batchSize = -1;
+		this->derivedCostFunction = nullptr;
+		this->layerStates = nullptr;
+	}
 	//constructor for creating NeuralNetworks
 	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerCreationInfo* layerDetails)
 	{
@@ -767,20 +780,20 @@ public:
 };
 
 //saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
-void storeNetwork(NeuralNetwork network, std::string &fileName)
+void storeNetwork(NeuralNetwork* network, std::string &fileName)
 {
 	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
 
 	//saves network details that are not specific to the layers
-	inputLength = network.getInputCount();
-	outputLength = network.getOutputCount();
-	networkDepth = network.getLayerCount();
+	inputLength = network->getInputCount();
+	outputLength = network->getOutputCount();
+	networkDepth = network->getLayerCount();
 	optimizationAlgorithm = 0;
 	errorFunction = 0;
 
 	//initializes array of fully defined layer states
-	network.saveLayerStates();
-	layerLoadingInfo* layerStates = network.getLayerStates();
+	network->saveLayerStates();
+	layerLoadingInfo* layerStates = network->getLayerStates();
 
 	//defines property trees and subtrees
 	boost::property_tree::ptree networkPropertyTree, layerPropertySubTree, neuronPropertySubTree;
@@ -811,7 +824,7 @@ void storeNetwork(NeuralNetwork network, std::string &fileName)
 			{
 				neuronPropertySubTree.add("weights.weight", (*it));
 			}
-			
+
 			//inserts fully-defined neuron subtree as child to layer subtree's 'neurons' member and clears neuron subtree
 			layerPropertySubTree.add_child("neurons.neuron", neuronPropertySubTree);
 			neuronPropertySubTree.clear();
@@ -883,9 +896,437 @@ NeuralNetwork loadNetwork(const std::string& fileName)
 	return NeuralNetwork(networkDepth, inputLength, 1, outputLength, 0.0001, 1, errorFunction, layerStates);
 }
 
+//saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
+NeuralNetwork* loadNetworkPointer(const std::string& fileName)
+{
+	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
+	boost::property_tree::ptree networkPropertyTree;
+	boost::property_tree::read_xml(fileName, networkPropertyTree);
+
+	//saves network details that are not specific to the layers
+	inputLength = networkPropertyTree.get<int>("network.inputLength");
+	outputLength = networkPropertyTree.get<int>("network.outputLength");
+	networkDepth = networkPropertyTree.get<int>("network.networkDepth");
+	optimizationAlgorithm = networkPropertyTree.get<int>("network.optimizationAlgorithm");
+	errorFunction = networkPropertyTree.get<int>("network.errorFunction");
+
+	//double test = networkPropertyTree.get<double>("network.layers.layer.activationType");
+
+	layerLoadingInfo* layerStates = new layerLoadingInfo[networkDepth];
+
+	int i = 0;
+	std::vector<double> neuronWeights;
+
+	//defines array of layer details by extracting values from the network property tree
+	//BOOST_FOREACH(const boost::property_tree::ptree::value_type &layer, networkPropertyTree.get_child("network.layers"))
+	for (const boost::property_tree::ptree::value_type& layer : networkPropertyTree.get_child("network.layers"))
+	{
+		//defines non-neuron layer state details
+		layerStates[i].type = layer.second.get<int>("activationType");
+		layerStates[i].neuronCount = layer.second.get<int>("neuronCount");
+		layerStates[i].momentumRetention = layer.second.get<int>("momentumRetention");
+
+		//defines neuron state details
+		//BOOST_FOREACH(const boost::property_tree::ptree::value_type &neuron, layer.second.get_child("layer.neurons"))
+		for (const boost::property_tree::ptree::value_type& neuron : layer.second.get_child("neurons"))
+		{
+			//define neuron's saved bias parameter
+			layerStates[i].biasOfNeurons.push_back(neuron.second.get<double>("bias"));
+
+			//define neuron's saved weight parameters, skipping the first layer's weights to avoid get_child exception
+			//BOOST_FOREACH(const boost::property_tree::ptree::value_type & weight, neuron.second.get_child("weights"))
+			if (i > 0) for (const boost::property_tree::ptree::value_type& weight : neuron.second.get_child("weights"))
+			{
+				neuronWeights.push_back(weight.second.get_value<double>());
+			}
+
+			//store neuron weight parameter array and clear temporary weight value vector for next iteration
+			layerStates[i].weightsOfNeurons.push_back(neuronWeights);
+			neuronWeights.clear();
+		}
+
+		//proceed to defining the next layer's state
+		i++;
+	}
+
+	//returns fully-defined neural network... todo: might need to overload = operator for NeuralNetwork
+	return new NeuralNetwork(networkDepth, inputLength, 1, outputLength, 0.0001, 1, errorFunction, layerStates);
+}
+
+enum class MenuStates : unsigned int
+{
+	Exit = 0,
+	Main = 1,
+	Intro = 2,
+	Create = 3,
+	Load = 4,
+	Manage = 5,
+	Dataset = 6,
+	Training = 7,
+	Testing = 8,
+	Save = 9,
+	Help = 10,
+};
+
+void exitSelection()
+{
+	std::cout << std::endl;
+	std::cout << "Exiting manager..." << std::endl;
+}
+
+MenuStates mainSelection()
+{
+	int selection;
+
+	//initial menu state prompt to user
+	std::cout << std::endl;
+	std::cout << "Welcome to the Main Menu!" << std::endl;
+	std::cout << "1) Create Neural Network" << std::endl;
+	std::cout << "2) Load Neural Network" << std::endl;
+	std::cout << "3) Introduction and Info" << std::endl;
+	std::cout << "4) Exit Network Manager" << std::endl;
+	std::cout << "Selection: ";
+	std::cin >> selection;
+
+	//return next menu state
+	switch (selection)
+	{
+	case 1:
+		return MenuStates::Create;
+	case 2:
+		return MenuStates::Load;
+	case 3:
+		return MenuStates::Intro;
+	case 4:
+		return MenuStates::Exit;
+	default:
+		std::cout << std::endl;
+		std::cout << "Invalid entry, try again";
+		return MenuStates::Main;
+	}
+}
+
+MenuStates introSelection()
+{
+	int selection;
+
+	std::cout << std::endl;
+	std::cout << "Introduction:" << std::endl;
+	std::cout << "Welcome to NeuralNetArchitect! In this pre-alpha console application you can create your own linear ";
+	std::cout << "neural network with full model structure and optimization algorithm customizability. Currently, only the ";
+	std::cout << "MSE cost function and linear neuron activation functions are available. Datasets can manually input into ";
+	std::cout << "the network and learning can only be achieved through the editing of the main method. The menu is a ";
+	std::cout << "work in progress:)" << std::endl;
+
+	std::cout << "Type any integer to exit: ";
+	std::cin >> selection;
+
+	return MenuStates::Main;
+}
+
+MenuStates createSelection( NeuralNetwork** network)
+{
+	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
+
+	//define input length
+	std::cout << std::endl;
+	std::cout << "Creation:" << std::endl;
+	std::cout << "What is the length of inputs that this neural network will accept? ";
+	std::cin >> inputLength;
+	std::cout << std::endl;
+
+	//define input width
+	//std::cout << "What is the width of inputs that this neural network will accept? ";
+	//std::cin >> inputWidth;
+	inputWidth = 1;
+	//std::cout << std::endl;
+
+	//define output length
+	std::cout << "What is the number of outputs that this neural network will produce? ";
+	std::cin >> outputCount;
+	std::cout << std::endl;
+
+	//define network depth
+	std::cout << "How many layers will this neural network contain? ";
+	std::cin >> numberOfLayers;
+	layerCreationInfo* layerDetails = new layerCreationInfo[numberOfLayers];
+	std::cout << std::endl;
+
+	//define batch size hyperparameter, the number of samples that will be processed before learning takes place
+	//std::cout << "What is the current batch size that this network will train on? ";
+	//std::cin >> batchSize;
+	batchSize = 1;
+	//std::cout << std::endl;
+
+	//define cost function that will calculate network's error upon calculating an output
+	//std::cout << "Which cost function should be used to calculate error? ;
+	//std::cin >> costSelection;
+	costSelection = 1;
+	//std::cout << std::endl;
+
+	//initialize first (input) layer
+	layerDetails[0].type = 1;
+	layerDetails[0].neuronCount = inputLength * inputWidth;
+	layerDetails[0].momentumRetention = 0;
+
+	//define each layer
+	for (int i = 1; i < numberOfLayers; i++)
+	{
+		std::cout << std::endl << "Define neural layer " << i + 1 << ":\n";
+
+		std::cout << "\tActivation type: ";
+		std::cin >> layerDetails[i].type;
+		std::cout << std::endl;
+
+		if (i + 1 < numberOfLayers)
+		{
+			std::cout << "\tNeuron count: ";
+			std::cin >> layerDetails[i].neuronCount;
+			std::cout << std::endl;
+		}
+		else
+		{
+			layerDetails[i].neuronCount = outputCount;
+		}
+
+		//define optimization algorithm
+		std::cout << "\tMomentum retention: ";
+		std::cin >> layerDetails[i].momentumRetention;
+		layerDetails[i].momentumRetention = 0;
+		std::cout << std::endl;
+	}
+
+	//create network and point to intialized NeuralNetwork
+	*network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
+
+	//return next menu state
+	return MenuStates::Manage;
+}
+
+MenuStates loadSelection(NeuralNetwork** network)
+{
+	std::string xmlName;
+
+	//acquire name of file to load and initialize NeuralNetwork from
+	std::cout << std::endl;
+	std::cout << "Loading:" << std::endl;
+	std::cout << "Enter XML file name to load from: ";
+	std::cin >> xmlName;
+
+	//load network by intializing and pointing to it
+	*network = loadNetworkPointer(xmlName);
+
+	//return next menu state
+	return MenuStates::Manage;
+}
+
+MenuStates manageSelection()
+{
+	int selection;
+
+	//initial menu state prompt to user
+	std::cout << std::endl;
+	std::cout << "Manage:" << std::endl;
+	std::cout << "1) Select DataSets" << std::endl;
+	std::cout << "2) Run Training" << std::endl;
+	std::cout << "3) Run Testing" << std::endl;
+	std::cout << "4) Save Solution" << std::endl;
+	std::cout << "5) Help" << std::endl;
+	std::cout << "6) Back" << std::endl;
+	std::cout << "Selection: ";
+	std::cin >> selection;
+
+	//return next menu state
+	switch (selection)
+	{
+	case 1:
+		return MenuStates::Dataset;
+	case 2:
+		return MenuStates::Training;
+	case 3:
+		return MenuStates::Testing;
+	case 4:
+		return MenuStates::Save;
+	case 5:
+		return MenuStates::Help;
+	case 6:
+		return MenuStates::Main;
+	default:
+		std::cout << std::endl;
+		std::cout << "Invalid entry, try again";
+		return MenuStates::Manage;
+	}
+}
+
+MenuStates datasetSelection()
+{
+	int selection;
+
+	std::cout << std::endl;
+	std::cout << "Dataset:" << std::endl;
+	std::cout << "Dataset functionalities not written, dead end on menu" << std::endl;
+	std::cout << "Type any integer to exit: ";
+	std::cin >> selection;
+	return MenuStates::Manage;
+}
+
+MenuStates trainingSelection(NeuralNetwork* network)
+{
+	int selection;
+
+	std::cout << std::endl;
+	std::cout << "Training:" << std::endl;
+	std::cout << "Training functionalities not written, dead end on menu" << std::endl;
+	std::cout << "Type any integer to exit: ";
+	std::cin >> selection;
+	return MenuStates::Manage;
+}
+
+MenuStates testingSelection(NeuralNetwork* network)
+{
+	int selection;
+
+	/*std::cout << std::endl;
+	std::cout << "Testing:" << std::endl;
+	std::cout << "Testing functionalities not written, dead end on menu" << std::endl;
+	std::cout << "Type 0 to exit:" << std::endl;
+	std::cin >> selection;*/
+
+	//load inputs with dummy data
+	double* inputGrid = new double[network->getInputCount()];
+	for (auto i = 0; i < network->getInputCount(); i++)
+	{
+		inputGrid[i] = 15;
+	}
+
+	//propagate forwards
+	network->propagateForwards(inputGrid);
+
+	//get outputs
+	auto outputVector = network->getOutputs();
+	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
+	{
+		std::cout << (*it) << " ";
+	}
+
+	//calculate error vector
+	double* errorVector = new double[network->getOutputCount()];
+	for (auto i = 0; i < network->getOutputCount(); i++)
+	{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
+		errorVector[i] = network->getOutputRespectiveCost(20, i);
+	}
+
+	network->propagateBackwards(errorVector);
+
+	//propagate forwards
+	network->propagateForwards(inputGrid);
+
+	//get outputs
+	outputVector = network->getOutputs();
+	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
+	{
+		std::cout << (*it) << " ";
+	}
+
+	std::cout << std::endl;
+
+	return MenuStates::Manage;
+}
+
+MenuStates saveSelection(NeuralNetwork* network)
+{
+	std::string xmlFileName;
+
+	std::cout << std::endl;
+	std::cout << "Save:" << std::endl;
+	std::cout << "Enter name of file to save network as: ";
+	std::cin >> xmlFileName;
+	storeNetwork(network, xmlFileName);
+	return MenuStates::Manage;
+}
+
+MenuStates helpSelection()
+{
+	int selection;
+
+	std::cout << std::endl;
+	std::cout << "Help:" << std::endl;
+	std::cout << "Help of 'manage' options not yet written, dead end on menu" << std::endl;
+	std::cout << "Type any integer to exit: ";
+	std::cin >> selection;
+	return MenuStates::Manage;
+}
+
+MenuStates defaultSelection()
+{
+	std::cout << std::endl;
+	std::cout << "If you got here, it's a bug. Returning to Main Menu..." << std::endl;
+	return MenuStates::Main;
+}
+
+void manageNeuralNetwork()
+{
+	NeuralNetwork* network = nullptr;
+	MenuStates menuFSMState = MenuStates::Main;
+
+	while (menuFSMState != MenuStates::Exit)
+	{
+		switch (menuFSMState)
+		{
+		case MenuStates::Exit:
+			exitSelection();
+			return;
+
+		case MenuStates::Main:
+			menuFSMState = mainSelection();
+			break;
+
+		case MenuStates::Intro:
+			menuFSMState = introSelection();
+			break;
+
+		case MenuStates::Create:
+			menuFSMState = createSelection(&network);
+			break;
+
+		case MenuStates::Load:
+			menuFSMState = loadSelection(&network);
+			break;
+
+		case MenuStates::Manage:
+			menuFSMState = manageSelection();
+			break;
+
+		case MenuStates::Dataset:
+			menuFSMState = datasetSelection();
+			break;
+
+		case MenuStates::Training:
+			menuFSMState = trainingSelection(network);
+			break;
+
+		case MenuStates::Testing:
+			menuFSMState = testingSelection(network);
+			break;
+
+		case MenuStates::Save:
+			menuFSMState = saveSelection(network);
+			break;
+
+		case MenuStates::Help:
+			menuFSMState = helpSelection();
+			break;
+
+		default:
+			menuFSMState = defaultSelection();
+			break;
+		}
+	}
+}
+
 int main()
 {
-
+/*
 	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
 
 	std::cout << "What is the length of inputs that this neural network will accept? ";
@@ -939,7 +1380,6 @@ int main()
 			layerDetails[i].neuronCount = outputCount;
 		}
 
-
 		std::cout << "\tMomentum retention: ";
 		std::cin >> layerDetails[i].momentumRetention;
 		layerDetails[i].momentumRetention = 0;
@@ -973,7 +1413,7 @@ int main()
 	double* errorVector = new double[outputCount];
 	for (auto i = 0; i < outputCount; i++)
 	{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-		errorVector[i] = network.getOutputRespectiveCost(20,i);
+		errorVector[i] = network.getOutputRespectiveCost(20, i);
 	}
 
 	network.propagateBackwards(errorVector);
@@ -989,11 +1429,13 @@ int main()
 	}
 
 	xmlName = "test1.xml";
-	storeNetwork(network,xmlName);
+	storeNetwork(network,xmlName);*/
+
+	manageNeuralNetwork();
 
 	return 0;
 }
 // 2 1 4 1 1 0 1 2 0 1 0
-// 2 2 4 1 1 0 1 2 0 1 0
+// 2 2 4 1 1 0 1 2 0 1 0 the usual
 // 1 1 2 1 0 single non-input neuron
 // 1 1 3 1 1 0 1 0 series
