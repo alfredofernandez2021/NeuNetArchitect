@@ -1165,7 +1165,7 @@ MenuStates datasetSelection()
 	std::cout << std::endl;
 	std::cout << "Dataset:" << std::endl;
 	std::cout << "Dataset functionalities not written, dead end on menu" << std::endl;
-	std::cout << "Type 0 to exit:" << std::endl;
+	std::cout << "Type any integer to exit:" << std::endl;
 	std::cin >> selection;
 	return MenuStates::Manage;
 }
@@ -1177,7 +1177,7 @@ MenuStates trainingSelection(NeuralNetwork* network)
 	std::cout << std::endl;
 	std::cout << "Training:" << std::endl;
 	std::cout << "Training functionalities not written, dead end on menu" << std::endl;
-	std::cout << "Type 0 to exit:" << std::endl;
+	std::cout << "Type any integer to exit:" << std::endl;
 	std::cin >> selection;
 	return MenuStates::Manage;
 }
@@ -1228,6 +1228,8 @@ MenuStates testingSelection(NeuralNetwork* network)
 		std::cout << (*it) << " ";
 	}
 
+	std::cout << std::endl;
+
 	return MenuStates::Manage;
 }
 
@@ -1239,7 +1241,6 @@ MenuStates saveSelection(NeuralNetwork* network)
 	std::cout << "Save:" << std::endl;
 	std::cout << "Enter name of file to save network as:" << std::endl;
 	std::cin >> xmlFileName;
-	xmlFileName = "test2.xml";
 	storeNetwork(network, xmlFileName);
 	return MenuStates::Manage;
 }
@@ -1251,7 +1252,7 @@ MenuStates helpSelection()
 	std::cout << std::endl;
 	std::cout << "Help:" << std::endl;
 	std::cout << "Help of 'manage' options not yet written, dead end on menu" << std::endl;
-	std::cout << "Type 0 to exit:" << std::endl;
+	std::cout << "Type any integer to exit:" << std::endl;
 	std::cin >> selection;
 	return MenuStates::Manage;
 }
