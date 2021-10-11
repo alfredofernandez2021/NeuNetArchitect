@@ -1018,7 +1018,7 @@ MenuStates introSelection()
 	std::cout << "the network and learning can only be achieved through the editing of the main method. The menu is a ";
 	std::cout << "work in progress:)" << std::endl;
 
-	std::cout << "Type any integer to exit:" << std::endl;
+	std::cout << "Type any integer to exit: ";
 	std::cin >> selection;
 
 	return MenuStates::Main;
@@ -1110,7 +1110,7 @@ MenuStates loadSelection(NeuralNetwork** network)
 	//acquire name of file to load and initialize NeuralNetwork from
 	std::cout << std::endl;
 	std::cout << "Loading:" << std::endl;
-	std::cout << "Enter XML file name to load from:" << std::endl;
+	std::cout << "Enter XML file name to load from: ";
 	std::cin >> xmlName;
 
 	//load network by intializing and pointing to it
@@ -1132,7 +1132,7 @@ MenuStates manageSelection()
 	std::cout << "3) Run Testing" << std::endl;
 	std::cout << "4) Save Solution" << std::endl;
 	std::cout << "5) Help" << std::endl;
-	std::cout << "6) Exit" << std::endl;
+	std::cout << "6) Back" << std::endl;
 	std::cout << "Selection: ";
 	std::cin >> selection;
 
@@ -1165,7 +1165,7 @@ MenuStates datasetSelection()
 	std::cout << std::endl;
 	std::cout << "Dataset:" << std::endl;
 	std::cout << "Dataset functionalities not written, dead end on menu" << std::endl;
-	std::cout << "Type any integer to exit:" << std::endl;
+	std::cout << "Type any integer to exit: ";
 	std::cin >> selection;
 	return MenuStates::Manage;
 }
@@ -1177,7 +1177,7 @@ MenuStates trainingSelection(NeuralNetwork* network)
 	std::cout << std::endl;
 	std::cout << "Training:" << std::endl;
 	std::cout << "Training functionalities not written, dead end on menu" << std::endl;
-	std::cout << "Type any integer to exit:" << std::endl;
+	std::cout << "Type any integer to exit: ";
 	std::cin >> selection;
 	return MenuStates::Manage;
 }
@@ -1239,7 +1239,7 @@ MenuStates saveSelection(NeuralNetwork* network)
 
 	std::cout << std::endl;
 	std::cout << "Save:" << std::endl;
-	std::cout << "Enter name of file to save network as:" << std::endl;
+	std::cout << "Enter name of file to save network as: ";
 	std::cin >> xmlFileName;
 	storeNetwork(network, xmlFileName);
 	return MenuStates::Manage;
@@ -1252,7 +1252,7 @@ MenuStates helpSelection()
 	std::cout << std::endl;
 	std::cout << "Help:" << std::endl;
 	std::cout << "Help of 'manage' options not yet written, dead end on menu" << std::endl;
-	std::cout << "Type any integer to exit:" << std::endl;
+	std::cout << "Type any integer to exit: ";
 	std::cin >> selection;
 	return MenuStates::Manage;
 }
