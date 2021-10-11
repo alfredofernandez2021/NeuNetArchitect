@@ -1146,11 +1146,11 @@ MenuStates manageSelection()
 	case 3:
 		return MenuStates::Testing;
 	case 4:
-		return MenuStates::Exit;
+		return MenuStates::Save;
 	case 5:
-		return MenuStates::Intro;
+		return MenuStates::Help;
 	case 6:
-		return MenuStates::Exit;
+		return MenuStates::Main;
 	default:
 		std::cout << std::endl;
 		std::cout << "Invalid entry, try again";
@@ -1239,7 +1239,7 @@ MenuStates saveSelection(NeuralNetwork* network)
 	std::cout << "Save:" << std::endl;
 	std::cout << "Enter name of file to save network as:" << std::endl;
 	std::cin >> xmlFileName;
-	//xmlFileName = "test2.xml";
+	xmlFileName = "test2.xml";
 	storeNetwork(network, xmlFileName);
 	return MenuStates::Manage;
 }
@@ -1273,8 +1273,7 @@ void manageNeuralNetwork()
 		switch (menuFSMState)
 		{
 		case MenuStates::Exit:
-			std::cout << std::endl;
-			std::cout << "Exiting manager..." << std::endl;
+			exitSelection();
 			return;
 
 		case MenuStates::Main:
