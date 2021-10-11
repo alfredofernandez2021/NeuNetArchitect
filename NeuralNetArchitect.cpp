@@ -780,20 +780,20 @@ public:
 };
 
 //saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
-void storeNetwork(NeuralNetwork network, std::string &fileName)
+void storeNetwork(NeuralNetwork* network, std::string &fileName)
 {
 	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
 
 	//saves network details that are not specific to the layers
-	inputLength = network.getInputCount();
-	outputLength = network.getOutputCount();
-	networkDepth = network.getLayerCount();
+	inputLength = network->getInputCount();
+	outputLength = network->getOutputCount();
+	networkDepth = network->getLayerCount();
 	optimizationAlgorithm = 0;
 	errorFunction = 0;
 
 	//initializes array of fully defined layer states
-	network.saveLayerStates();
-	layerLoadingInfo* layerStates = network.getLayerStates();
+	network->saveLayerStates();
+	layerLoadingInfo* layerStates = network->getLayerStates();
 
 	//defines property trees and subtrees
 	boost::property_tree::ptree networkPropertyTree, layerPropertySubTree, neuronPropertySubTree;
@@ -964,7 +964,8 @@ enum class MenuStates : unsigned int
 	Dataset = 6,
 	Training = 7,
 	Testing = 8,
-	Help = 9,
+	Save = 9,
+	Help = 10,
 };
 
 void exitSelection()
@@ -1023,7 +1024,7 @@ MenuStates introSelection()
 	return MenuStates::Main;
 }
 
-MenuStates createSelection( NeuralNetwork* network)
+MenuStates createSelection( NeuralNetwork** network)
 {
 	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
 
@@ -1096,13 +1097,13 @@ MenuStates createSelection( NeuralNetwork* network)
 	}
 
 	//create network and point to intialized NeuralNetwork
-	network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
+	*network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
 
 	//return next menu state
 	return MenuStates::Manage;
 }
 
-MenuStates loadSelection(NeuralNetwork* network)
+MenuStates loadSelection(NeuralNetwork** network)
 {
 	std::string xmlName;
 
@@ -1113,7 +1114,7 @@ MenuStates loadSelection(NeuralNetwork* network)
 	std::cin >> xmlName;
 
 	//load network by intializing and pointing to it
-	network = loadNetworkPointer(xmlName);
+	*network = loadNetworkPointer(xmlName);
 
 	//return next menu state
 	return MenuStates::Manage;
@@ -1181,15 +1182,65 @@ MenuStates trainingSelection(NeuralNetwork* network)
 	return MenuStates::Manage;
 }
 
-MenuStates testingSelection()
+MenuStates testingSelection(NeuralNetwork* network)
 {
 	int selection;
 
-	std::cout << std::endl;
+	/*std::cout << std::endl;
 	std::cout << "Testing:" << std::endl;
 	std::cout << "Testing functionalities not written, dead end on menu" << std::endl;
 	std::cout << "Type 0 to exit:" << std::endl;
-	std::cin >> selection;
+	std::cin >> selection;*/
+
+	//load inputs with dummy data
+	double* inputGrid = new double[network->getInputCount()];
+	for (auto i = 0; i < network->getInputCount(); i++)
+	{
+		inputGrid[i] = 15;
+	}
+
+	//propagate forwards
+	network->propagateForwards(inputGrid);
+
+	//get outputs
+	auto outputVector = network->getOutputs();
+	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
+	{
+		std::cout << (*it) << " ";
+	}
+
+	//calculate error vector
+	double* errorVector = new double[network->getOutputCount()];
+	for (auto i = 0; i < network->getOutputCount(); i++)
+	{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
+		errorVector[i] = network->getOutputRespectiveCost(20, i);
+	}
+
+	network->propagateBackwards(errorVector);
+
+	//propagate forwards
+	network->propagateForwards(inputGrid);
+
+	//get outputs
+	outputVector = network->getOutputs();
+	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
+	{
+		std::cout << (*it) << " ";
+	}
+
+	return MenuStates::Manage;
+}
+
+MenuStates saveSelection(NeuralNetwork* network)
+{
+	std::string xmlFileName;
+
+	std::cout << std::endl;
+	std::cout << "Save:" << std::endl;
+	std::cout << "Enter name of file to save network as:" << std::endl;
+	std::cin >> xmlFileName;
+	//xmlFileName = "test2.xml";
+	storeNetwork(network, xmlFileName);
 	return MenuStates::Manage;
 }
 
@@ -1228,19 +1279,23 @@ void manageNeuralNetwork()
 
 		case MenuStates::Main:
 			menuFSMState = mainSelection();
+			break;
 
 		case MenuStates::Intro:
 			menuFSMState = introSelection();
 			break;
 
 		case MenuStates::Create:
-			menuFSMState = createSelection(network);
+			menuFSMState = createSelection(&network);
+			break;
 
 		case MenuStates::Load:
-			menuFSMState = loadSelection(network);
+			menuFSMState = loadSelection(&network);
+			break;
 
 		case MenuStates::Manage:
 			menuFSMState = manageSelection();
+			break;
 
 		case MenuStates::Dataset:
 			menuFSMState = datasetSelection();
@@ -1251,7 +1306,11 @@ void manageNeuralNetwork()
 			break;
 
 		case MenuStates::Testing:
-			menuFSMState = testingSelection();
+			menuFSMState = testingSelection(network);
+			break;
+
+		case MenuStates::Save:
+			menuFSMState = saveSelection(network);
 			break;
 
 		case MenuStates::Help:
@@ -1260,13 +1319,14 @@ void manageNeuralNetwork()
 
 		default:
 			menuFSMState = defaultSelection();
+			break;
 		}
 	}
 }
 
 int main()
 {
-
+/*
 	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
 
 	std::cout << "What is the length of inputs that this neural network will accept? ";
@@ -1320,7 +1380,6 @@ int main()
 			layerDetails[i].neuronCount = outputCount;
 		}
 
-
 		std::cout << "\tMomentum retention: ";
 		std::cin >> layerDetails[i].momentumRetention;
 		layerDetails[i].momentumRetention = 0;
@@ -1370,11 +1429,13 @@ int main()
 	}
 
 	xmlName = "test1.xml";
-	storeNetwork(network,xmlName);
+	storeNetwork(network,xmlName);*/
+
+	manageNeuralNetwork();
 
 	return 0;
 }
 // 2 1 4 1 1 0 1 2 0 1 0
-// 2 2 4 1 1 0 1 2 0 1 0
+// 2 2 4 1 1 0 1 2 0 1 0 the usual
 // 1 1 2 1 0 single non-input neuron
 // 1 1 3 1 1 0 1 0 series
