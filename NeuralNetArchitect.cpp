@@ -1326,116 +1326,12 @@ void manageNeuralNetwork()
 
 int main()
 {
-/*
-	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
-
-	std::cout << "What is the length of inputs that this neural network will accept? ";
-	std::cin >> inputLength;
-	std::cout << std::endl;
-
-	//std::cout << "What is the width of inputs that this neural network will accept? ";
-	//std::cin >> inputWidth;
-	inputWidth = 1;
-	//std::cout << std::endl;
-
-	std::cout << "What is the number of outputs that this neural network will produce? ";
-	std::cin >> outputCount;
-	std::cout << std::endl;
-
-	std::cout << "How many layers will this neural network contain? ";
-	std::cin >> numberOfLayers;
-	layerCreationInfo* layerDetails = new layerCreationInfo[numberOfLayers];
-	std::cout << std::endl;
-
-	//std::cout << "What is the current batch size that this network will train on? ";
-	//std::cin >> batchSize;
-	batchSize = 1;
-	//std::cout << std::endl;
-
-	//std::cout << "Which cost function should be used to calculate error? ;
-	//std::cin >> costSelection;
-	costSelection = 1;
-	//std::cout << std::endl;
-
-	layerDetails[0].type = 1;
-	layerDetails[0].neuronCount = inputLength * inputWidth;
-	layerDetails[0].momentumRetention = 0;
-
-	for (int i = 1; i < numberOfLayers; i++)
-	{
-		std::cout << std::endl << "Define neural layer " << i + 1 << ":\n";
-
-		std::cout << "\tActivation type: ";
-		std::cin >> layerDetails[i].type;
-		std::cout << std::endl;
-
-		if (i + 1 < numberOfLayers)
-		{
-			std::cout << "\tNeuron count: ";
-			std::cin >> layerDetails[i].neuronCount;
-			std::cout << std::endl;
-		}
-		else
-		{
-			layerDetails[i].neuronCount = outputCount;
-		}
-
-		std::cout << "\tMomentum retention: ";
-		std::cin >> layerDetails[i].momentumRetention;
-		layerDetails[i].momentumRetention = 0;
-		std::cout << std::endl;
-	}
-
-	//create network
-	//NeuralNetwork network = NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
-	std::string xmlName = "test1.xml";
-	NeuralNetwork network = loadNetwork(xmlName);
-	//todo: learning rate heuristics?
-
-	//load inputs with dummy data
-	double* inputGrid = new double[inputLength * inputWidth];
-	for (auto i = 0; i < inputLength * inputWidth; i++)
-	{
-		inputGrid[i] = 15;
-	}
-
-	//propagate forwards
-	network.propagateForwards(inputGrid);
-
-	//get outputs
-	auto outputVector = network.getOutputs();
-	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
-	{
-		std::cout << (*it) << " ";
-	}
-
-	//calculate error vector
-	double* errorVector = new double[outputCount];
-	for (auto i = 0; i < outputCount; i++)
-	{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-		errorVector[i] = network.getOutputRespectiveCost(20, i);
-	}
-
-	network.propagateBackwards(errorVector);
-
-	//propagate forwards
-	network.propagateForwards(inputGrid);
-
-	//get outputs
-	outputVector = network.getOutputs();
-	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
-	{
-		std::cout << (*it) << " ";
-	}
-
-	xmlName = "test1.xml";
-	storeNetwork(network,xmlName);*/
 
 	manageNeuralNetwork();
 
 	return 0;
 }
-// 2 1 4 1 1 0 1 2 0 1 0
+// 2 1 4 1 1 0 1 2 0 1 0 
 // 2 2 4 1 1 0 1 2 0 1 0 the usual
 // 1 1 2 1 0 single non-input neuron
 // 1 1 3 1 1 0 1 0 series
