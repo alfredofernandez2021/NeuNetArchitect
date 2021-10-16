@@ -1324,10 +1324,40 @@ void manageNeuralNetwork()
 	}
 }
 
+//flips byte ordering of input integer
+unsigned int flipIntegerByteOrdering(int original)
+{
+	char firstByte, secondByte, thirdByte, fourthByte;
+
+	firstByte = (0xFF000000 & original)>>24;
+	secondByte = (0x00FF0000 & original)>>16;
+	thirdByte = (0x0000FF00 & original)>>8;
+	fourthByte = 0x000000FF & original;
+
+	return (((int)fourthByte << 24)&0xFF000000) | (((int)thirdByte << 16)&0x00FF0000) | (((int)secondByte << 8)&0x0000FF00) | (((int)firstByte << 0)&0x000000FF);
+	//return ((int)fourthByte << 24) | ((int)thirdByte << 16) | ((int)secondByte << 8) | ((int)firstByte << 0);
+}
+
+std::vector<char> getMNISTLabelVector()
+{
+	std::vector<char> labels;
+
+	return labels;
+}
+
+std::vector<std::vector<std::vector<char>>> getMNISTImageVector()
+{
+	std::vector<std::vector<std::vector<char>>> images;
+
+	return images;
+}
+
 int main()
 {
-
-	manageNeuralNetwork();
+	//manageNeuralNetwork();
+	 
+	std::cout << UINT32_MAX << std::endl;
+	std::cout << (flipIntegerByteOrdering(UINT32_MAX)) << std::endl;
 
 	return 0;
 }
