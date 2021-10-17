@@ -1362,14 +1362,14 @@ std::vector<int> getMNISTLabelVector()
 	return labels;
 }
 
-std::vector<std::vector<std::vector<char>>> getMNISTImageVector()
+std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector()
 {
-	std::vector<std::vector<std::vector<char>>> images;
-	std::vector<std::vector<char>> columnsOfAnImage;
-	std::vector<char> pixelsOfAColumn;
+	std::vector<std::vector<std::vector<unsigned char>>> images;
+	std::vector<std::vector<unsigned char>> columnsOfAnImage;
+	std::vector<unsigned char> pixelsOfAColumn;
 
 	int magicNumber, numberOfImages, rowsPerImage, columnsPerImage;
-	char currentPixel;
+	unsigned char currentPixel;
 
 	std::ifstream file("t10k-images.idx3-ubyte");
 	if (file.is_open())
@@ -1395,7 +1395,7 @@ std::vector<std::vector<std::vector<char>>> getMNISTImageVector()
 			{
 				for (auto k = 0; k < columnsPerImage; k++)
 				{
-					file.read(&currentPixel, sizeof(currentPixel));
+					file.read((char *)&currentPixel, sizeof(currentPixel));
 					pixelsOfAColumn.push_back(currentPixel);
 					if(i==0)std::cout << (int)currentPixel << std::endl;
 				}
