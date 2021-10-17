@@ -580,20 +580,20 @@ struct layerLoadingInfo
 //flips byte ordering of input integer
 unsigned int flipIntegerByteOrdering(int original)
 {
-	char firstByte, secondByte, thirdByte, fourthByte;
+	unsigned char firstByte, secondByte, thirdByte, fourthByte;
 
 	firstByte = (0xFF000000 & original) >> 24;
 	secondByte = (0x00FF0000 & original) >> 16;
 	thirdByte = (0x0000FF00 & original) >> 8;
 	fourthByte = 0x000000FF & original;
 
-	return ((int)fourthByte << 24) | ((int)thirdByte << 16) | ((int)secondByte << 8) | ((int)firstByte << 0);
+	return ((unsigned int)fourthByte << 24) | ((unsigned int)thirdByte << 16) | ((unsigned int)secondByte << 8) | ((unsigned int)firstByte << 0);
 }
 
 std::vector<unsigned char> getMNISTLabelVector(bool testing)
 {
 	std::vector<unsigned char> labels;
-	int magicNumber, labelCount;
+	unsigned int magicNumber, labelCount;
 	unsigned char currentLabel;
 
 	std::string fullPath = "train-labels.idx1-ubyte";
@@ -612,7 +612,6 @@ std::vector<unsigned char> getMNISTLabelVector(bool testing)
 		{
 			file.read((char*)&currentLabel, sizeof(currentLabel));
 			labels.push_back(currentLabel);
-			std::cout << (int)currentLabel << std::endl;
 		}
 	}
 
@@ -628,7 +627,7 @@ std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool te
 	std::string fullPath = "train-images.idx3-ubyte";
 	if (testing) fullPath = "t10k-images.idx3-ubyte";
 
-	int magicNumber, numberOfImages, rowsPerImage, columnsPerImage;
+	unsigned int magicNumber, numberOfImages, rowsPerImage, columnsPerImage;
 	unsigned char currentPixel;
 
 	std::ifstream file(fullPath);
@@ -692,8 +691,8 @@ private:
 	double (*derivedCostFunction)(double, double, int);
 	layerLoadingInfo* layerStates;
 	std::vector<std::vector<std::vector<unsigned char>>> trainingSamples;
-	std::vector<std::vector<std::vector<unsigned char>>> testingSamples;
 	std::vector<unsigned char> trainingLabels;
+	std::vector<std::vector<std::vector<unsigned char>>> testingSamples;
 	std::vector<unsigned char> testingLabels;
 
 
@@ -836,14 +835,14 @@ public:
 		trainingSamples = getMNISTImageVector(false);
 	}
 
-	void updateTestingSamples()
-	{
-		testingSamples = getMNISTImageVector(true);
-	}
-
 	void updateTrainingLabels()
 	{
 		trainingLabels = getMNISTLabelVector(false);
+	}
+
+	void updateTestingSamples()
+	{
+		testingSamples = getMNISTImageVector(true);
 	}
 
 	void updateTestingLabels()
@@ -1284,11 +1283,11 @@ MenuStates datasetSelection(NeuralNetwork* network)
 	std::cout << "Dataset:" << std::endl;
 	std::cout << "Training set image file path: ";
 	std::cin >> trainingImageFilePath;
-	std::cout << std::endl << "Training set label file path: ";
+	std::cout << "Training set label file path: ";
 	std::cin >> trainingLabelFilePath;
-	std::cout << std::endl << "Testing set image file path: ";
+	std::cout << "Testing set image file path: ";
 	std::cin >> testingImageFilePath;
-	std::cout << std::endl << "Testing set label file path: ";
+	std::cout << "Testing set label file path: ";
 	std::cin >> testingLabelFilePath;
 
 	network->updateTrainingSamples();
