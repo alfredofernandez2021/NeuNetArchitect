@@ -1334,13 +1334,30 @@ unsigned int flipIntegerByteOrdering(int original)
 	thirdByte = (0x0000FF00 & original)>>8;
 	fourthByte = 0x000000FF & original;
 
-	return (((int)fourthByte << 24)&0xFF000000) | (((int)thirdByte << 16)&0x00FF0000) | (((int)secondByte << 8)&0x0000FF00) | (((int)firstByte << 0)&0x000000FF);
-	//return ((int)fourthByte << 24) | ((int)thirdByte << 16) | ((int)secondByte << 8) | ((int)firstByte << 0);
+	return ((int)fourthByte << 24) | ((int)thirdByte << 16) | ((int)secondByte << 8) | ((int)firstByte << 0);
 }
 
 std::vector<char> getMNISTLabelVector()
 {
 	std::vector<char> labels;
+	int magicNumber, labelCount;
+	char currentLabel;
+
+	std::ifstream file("t10k-labels.idx1-ubyte");
+	if (file.is_open())
+	{
+		file.read((char*)&magicNumber, sizeof(magicNumber));
+		file.read((char*)&labelCount, sizeof(labelCount));
+
+		magicNumber = flipIntegerByteOrdering(magicNumber);
+		labelCount = flipIntegerByteOrdering(labelCount);
+
+		for (auto i = 0; i < labelCount; i++)
+		{
+			file.read(&currentLabel, sizeof(currentLabel));
+			labels.push_back(currentLabel);
+		}
+	}
 
 	return labels;
 }
@@ -1356,8 +1373,9 @@ int main()
 {
 	//manageNeuralNetwork();
 	 
-	std::cout << UINT32_MAX << std::endl;
-	std::cout << (flipIntegerByteOrdering(UINT32_MAX)) << std::endl;
+	auto labelVector = getMNISTLabelVector();
+
+	std::cout << labelVector[1] << std::endl;
 
 	return 0;
 }
