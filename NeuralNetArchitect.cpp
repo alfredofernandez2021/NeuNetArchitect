@@ -577,6 +577,97 @@ struct layerLoadingInfo
 	std::vector<double> biasOfNeurons;
 };
 
+//flips byte ordering of input integer
+unsigned int flipIntegerByteOrdering(int original)
+{
+	char firstByte, secondByte, thirdByte, fourthByte;
+
+	firstByte = (0xFF000000 & original) >> 24;
+	secondByte = (0x00FF0000 & original) >> 16;
+	thirdByte = (0x0000FF00 & original) >> 8;
+	fourthByte = 0x000000FF & original;
+
+	return ((int)fourthByte << 24) | ((int)thirdByte << 16) | ((int)secondByte << 8) | ((int)firstByte << 0);
+}
+
+std::vector<unsigned char> getMNISTLabelVector(bool testing)
+{
+	std::vector<unsigned char> labels;
+	int magicNumber, labelCount;
+	unsigned char currentLabel;
+
+	std::string fullPath = "train-labels.idx1-ubyte";
+	if (testing) fullPath = "t10k-labels.idx1-ubyte";
+
+	std::ifstream file(fullPath);
+	if (file.is_open())
+	{
+		file.read((char*)&magicNumber, sizeof(magicNumber));
+		file.read((char*)&labelCount, sizeof(labelCount));
+
+		magicNumber = flipIntegerByteOrdering(magicNumber);
+		labelCount = flipIntegerByteOrdering(labelCount);
+
+		for (auto i = 0; i < labelCount; i++)
+		{
+			file.read((char*)&currentLabel, sizeof(currentLabel));
+			labels.push_back(currentLabel);
+			std::cout << (int)currentLabel << std::endl;
+		}
+	}
+
+	return labels;
+}
+
+std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool testing)
+{
+	std::vector<std::vector<std::vector<unsigned char>>> images;
+	std::vector<std::vector<unsigned char>> columnsOfAnImage;
+	std::vector<unsigned char> pixelsOfAColumn;
+
+	std::string fullPath = "train-images.idx3-ubyte";
+	if (testing) fullPath = "t10k-images.idx3-ubyte";
+
+	int magicNumber, numberOfImages, rowsPerImage, columnsPerImage;
+	unsigned char currentPixel;
+
+	std::ifstream file(fullPath);
+
+	if (file.is_open())
+	{
+		file.read((char*)&magicNumber, sizeof(magicNumber));
+		file.read((char*)&numberOfImages, sizeof(numberOfImages));
+		file.read((char*)&rowsPerImage, sizeof(rowsPerImage));
+		file.read((char*)&columnsPerImage, sizeof(columnsPerImage));
+
+		magicNumber = flipIntegerByteOrdering(magicNumber);
+		numberOfImages = flipIntegerByteOrdering(numberOfImages);
+		rowsPerImage = flipIntegerByteOrdering(rowsPerImage);
+		columnsPerImage = flipIntegerByteOrdering(columnsPerImage);
+
+		for (auto i = 0; i < numberOfImages; i++)
+		{
+			for (auto j = 0; j < rowsPerImage; j++)
+			{
+				for (auto k = 0; k < columnsPerImage; k++)
+				{
+					file.read((char*)&currentPixel, sizeof(currentPixel));
+					pixelsOfAColumn.push_back(currentPixel);
+				}
+
+				columnsOfAnImage.push_back(pixelsOfAColumn);
+				pixelsOfAColumn.clear();
+			}
+
+			images.push_back(columnsOfAnImage);
+			columnsOfAnImage.clear();
+		}
+	}
+
+	return images;
+}
+
+
 /**********************************************************************************************************************************************
  NeuralNetworks's activation is a function of all weights and bias parameters held within the neurons of each layer
 
@@ -600,6 +691,11 @@ private:
 	int batchSize;
 	double (*derivedCostFunction)(double, double, int);
 	layerLoadingInfo* layerStates;
+	std::vector<std::vector<std::vector<unsigned char>>> trainingSamples;
+	std::vector<std::vector<std::vector<unsigned char>>> testingSamples;
+	std::vector<unsigned char> trainingLabels;
+	std::vector<unsigned char> testingLabels;
+
 
 public:
 	//default constructor for NeuralNetworks with invalid values
@@ -733,6 +829,26 @@ public:
 	void updateLearningRate(int newLearningRate)
 	{
 		learningRate = newLearningRate;
+	}
+
+	void updateTrainingSamples()
+	{
+		trainingSamples = getMNISTImageVector(false);
+	}
+
+	void updateTestingSamples()
+	{
+		testingSamples = getMNISTImageVector(true);
+	}
+
+	void updateTrainingLabels()
+	{
+		trainingLabels = getMNISTLabelVector(false);
+	}
+
+	void updateTestingLabels()
+	{
+		testingLabels = getMNISTLabelVector(true);
 	}
 
 	//gives the partial derivative value of the cost function in respect to an output activation
@@ -1158,15 +1274,28 @@ MenuStates manageSelection()
 	}
 }
 
-MenuStates datasetSelection()
+MenuStates datasetSelection(NeuralNetwork* network)
 {
-	int selection;
+	std::string trainingImageFilePath, trainingLabelFilePath, testingImageFilePath, testingLabelFilePath;
+
+	//updateTestingSamples
 
 	std::cout << std::endl;
 	std::cout << "Dataset:" << std::endl;
-	std::cout << "Dataset functionalities not written, dead end on menu" << std::endl;
-	std::cout << "Type any integer to exit: ";
-	std::cin >> selection;
+	std::cout << "Training set image file path: ";
+	std::cin >> trainingImageFilePath;
+	std::cout << std::endl << "Training set label file path: ";
+	std::cin >> trainingLabelFilePath;
+	std::cout << std::endl << "Testing set image file path: ";
+	std::cin >> testingImageFilePath;
+	std::cout << std::endl << "Testing set label file path: ";
+	std::cin >> testingLabelFilePath;
+
+	network->updateTrainingSamples();
+	network->updateTrainingLabels();
+	network->updateTestingSamples();
+	network->updateTestingLabels();
+
 	return MenuStates::Manage;
 }
 
@@ -1298,7 +1427,7 @@ void manageNeuralNetwork()
 			break;
 
 		case MenuStates::Dataset:
-			menuFSMState = datasetSelection();
+			menuFSMState = datasetSelection(network);
 			break;
 
 		case MenuStates::Training:
@@ -1324,103 +1453,10 @@ void manageNeuralNetwork()
 	}
 }
 
-//flips byte ordering of input integer
-unsigned int flipIntegerByteOrdering(int original)
-{
-	char firstByte, secondByte, thirdByte, fourthByte;
-
-	firstByte = (0xFF000000 & original)>>24;
-	secondByte = (0x00FF0000 & original)>>16;
-	thirdByte = (0x0000FF00 & original)>>8;
-	fourthByte = 0x000000FF & original;
-
-	return ((int)fourthByte << 24) | ((int)thirdByte << 16) | ((int)secondByte << 8) | ((int)firstByte << 0);
-}
-
-std::vector<unsigned char> getMNISTLabelVector(bool testing)
-{
-	std::vector<unsigned char> labels;
-	int magicNumber, labelCount;
-	unsigned char currentLabel;
-
-	std::string fullPath = "train-labels.idx1-ubyte";
-	if (testing) fullPath = "t10k-labels.idx1-ubyte";
-
-	std::ifstream file(fullPath);
-	if (file.is_open())
-	{
-		file.read((char*)&magicNumber, sizeof(magicNumber));
-		file.read((char*)&labelCount, sizeof(labelCount));
-
-		magicNumber = flipIntegerByteOrdering(magicNumber);
-		labelCount = flipIntegerByteOrdering(labelCount);
-
-		for (auto i = 0; i < labelCount; i++)
-		{
-			file.read((char *)&currentLabel, sizeof(currentLabel));
-			labels.push_back(currentLabel);
-			std::cout << (int)currentLabel << std::endl;
-		}
-	}
-
-	return labels;
-}
-
-std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool testing)
-{
-	std::vector<std::vector<std::vector<unsigned char>>> images;
-	std::vector<std::vector<unsigned char>> columnsOfAnImage;
-	std::vector<unsigned char> pixelsOfAColumn;
-
-	std::string fullPath = "train-images.idx3-ubyte";
-	if (testing) fullPath = "t10k-images.idx3-ubyte";
-
-	int magicNumber, numberOfImages, rowsPerImage, columnsPerImage;
-	unsigned char currentPixel;
-
-	std::ifstream file(fullPath);
-
-	if (file.is_open())
-	{
-		file.read((char*)&magicNumber, sizeof(magicNumber));
-		file.read((char*)&numberOfImages, sizeof(numberOfImages));
-		file.read((char*)&rowsPerImage, sizeof(rowsPerImage));
-		file.read((char*)&columnsPerImage, sizeof(columnsPerImage));
-
-		magicNumber = flipIntegerByteOrdering(magicNumber);
-		numberOfImages = flipIntegerByteOrdering(numberOfImages);
-		rowsPerImage = flipIntegerByteOrdering(rowsPerImage);
-		columnsPerImage = flipIntegerByteOrdering(columnsPerImage);
-
-		for (auto i = 0; i < numberOfImages; i++)
-		{
-			for (auto j = 0; j < rowsPerImage; j++)
-			{
-				for (auto k = 0; k < columnsPerImage; k++)
-				{
-					file.read((char *)&currentPixel, sizeof(currentPixel));
-					pixelsOfAColumn.push_back(currentPixel);
-				}
-				
-				columnsOfAnImage.push_back(pixelsOfAColumn);
-				pixelsOfAColumn.clear();
-			}
-
-			images.push_back(columnsOfAnImage);
-			columnsOfAnImage.clear();
-		}
-	}
-
-	return images;
-}
 
 int main()
 {
-	//manageNeuralNetwork();
-
-	auto labelVector = getMNISTLabelVector(true);
-	 
-	auto imageVector = getMNISTImageVector(true);
+	manageNeuralNetwork();
 
 	return 0;
 }
