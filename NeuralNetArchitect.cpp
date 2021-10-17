@@ -1337,9 +1337,9 @@ unsigned int flipIntegerByteOrdering(int original)
 	return ((int)fourthByte << 24) | ((int)thirdByte << 16) | ((int)secondByte << 8) | ((int)firstByte << 0);
 }
 
-std::vector<char> getMNISTLabelVector()
-{
-	std::vector<char> labels;
+std::vector<int> getMNISTLabelVector()
+{//todo: make all vectors <char> to save memory, cast to int when inputting to network
+	std::vector<int> labels;
 	int magicNumber, labelCount;
 	char currentLabel;
 
@@ -1365,6 +1365,49 @@ std::vector<char> getMNISTLabelVector()
 std::vector<std::vector<std::vector<char>>> getMNISTImageVector()
 {
 	std::vector<std::vector<std::vector<char>>> images;
+	std::vector<std::vector<char>> columnsOfAnImage;
+	std::vector<char> pixelsOfAColumn;
+
+	int magicNumber, numberOfImages, rowsPerImage, columnsPerImage;
+	char currentPixel;
+
+	std::ifstream file("t10k-images.idx3-ubyte");
+	if (file.is_open())
+	{
+		file.read((char*)&magicNumber, sizeof(magicNumber));
+		file.read((char*)&numberOfImages, sizeof(numberOfImages));
+		file.read((char*)&rowsPerImage, sizeof(rowsPerImage));
+		file.read((char*)&columnsPerImage, sizeof(columnsPerImage));
+
+		magicNumber = flipIntegerByteOrdering(magicNumber);
+		numberOfImages = flipIntegerByteOrdering(numberOfImages);
+		rowsPerImage = flipIntegerByteOrdering(rowsPerImage);
+		columnsPerImage = flipIntegerByteOrdering(columnsPerImage);
+
+		std::cout << magicNumber << std::endl;
+		std::cout << numberOfImages << std::endl;
+		std::cout << rowsPerImage << std::endl;
+		std::cout << columnsPerImage << std::endl;
+
+		for (auto i = 0; i < numberOfImages; i++)
+		{
+			for (auto j = 0; j < rowsPerImage; j++)
+			{
+				for (auto k = 0; k < columnsPerImage; k++)
+				{
+					file.read(&currentPixel, sizeof(currentPixel));
+					pixelsOfAColumn.push_back(currentPixel);
+					if(i==0)std::cout << (int)currentPixel << std::endl;
+				}
+				
+				columnsOfAnImage.push_back(pixelsOfAColumn);
+				pixelsOfAColumn.clear();
+			}
+
+			images.push_back(columnsOfAnImage);
+			columnsOfAnImage.clear();
+		}
+	}
 
 	return images;
 }
@@ -1373,9 +1416,9 @@ int main()
 {
 	//manageNeuralNetwork();
 	 
-	auto labelVector = getMNISTLabelVector();
+	auto imageVector = getMNISTImageVector();
 
-	std::cout << labelVector[1] << std::endl;
+	std::cout << imageVector[14][14][14] << std::endl;
 
 	return 0;
 }
