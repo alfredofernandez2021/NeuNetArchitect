@@ -1118,6 +1118,36 @@ int getIndexOfMaxEntry(std::vector<double> Vector)
 	return maxIndex;
 }
 
+int getValueOfMaxEntry(std::vector<double> Vector)
+{
+	int maxValue = INT32_MIN, maxIndex = -1;
+
+	for (auto i = 0; i < Vector.size(); i++)
+	{
+		if (Vector[i] > maxValue)
+		{
+			maxValue = Vector[i];
+		}
+	}
+
+	return maxValue;
+}
+
+int getValueOfMinEntry(std::vector<double> Vector)
+{
+	int minValue = INT32_MAX, minIndex = -1;
+
+	for (auto i = 0; i < Vector.size(); i++)
+	{
+		if (Vector[i] < minValue)
+		{
+			minValue = Vector[i];
+		}
+	}
+
+	return minValue;
+}
+
 enum class MenuStates : unsigned int
 {
 	Exit = 0,
@@ -1351,6 +1381,14 @@ MenuStates datasetSelection(NeuralNetwork* network)
 MenuStates trainingSelection(NeuralNetwork* network)
 {
 	int batchSize, learningRate;
+	int minOutputValue, maxOutputValue;
+	int selection, answer, correctDeterminations = 0;
+	double* inputGrid = nullptr;
+	double* errorVector = nullptr;
+	bool errorEncountered = false;
+
+	std::vector<std::vector<std::vector<unsigned char>>> trainingSamples = network->getTrainingSamples();
+	std::vector<unsigned char> trainingLabels = network->getTrainingLabels();
 
 	std::cout << std::endl;
 	std::cout << "Training:" << std::endl;
@@ -1359,10 +1397,122 @@ MenuStates trainingSelection(NeuralNetwork* network)
 	std::cout << "Learning rate: ";
 	std::cin >> learningRate;
 
+	if (!network->isReadyForTraining())
+	{
+		std::cout << "Testing data not yet loaded" << std::endl;
+		errorEncountered = true;
+	}
 
+	if (network->getInputCount() != trainingSamples[0].size() * trainingSamples[0][0].size())
+	{
+		std::cout << "Mismatch between dataset input samples and network input count" << std::endl;
+		errorEncountered = true;
+	}
+
+	if (network->getOutputCount() != 10)
+	{
+		std::cout << "Mismatch between dataset label type count and network output count" << std::endl;
+		errorEncountered = true;
+	}
+
+	if (!errorEncountered)
+	{
+		inputGrid = new double[network->getInputCount()];
+		errorVector = new double[network->getOutputCount()];
+
+		//for each image in the set
+		for (auto i = 0; i < trainingSamples.size(); i++)
+		{	//for each column in an image
+			for (auto j = 0; j < trainingSamples[0].size(); j++)
+			{	//for each pixel in a column
+				for (auto k = 0; k < trainingSamples[0][0].size(); k++)
+				{
+					//load a pixel
+					inputGrid[j * trainingSamples[0].size() + k] = trainingSamples[i][j][k];
+				}
+			}
+
+			//propagate network forwards to calculate outputs from inputs
+			network->propagateForwards(inputGrid);
+
+			//get index of entry that scored the highest, from 0 to 9
+			answer = getIndexOfMaxEntry(network->getOutputs());
+
+			if (answer == (int)trainingLabels[i])
+			{
+				correctDeterminations++;
+			}
+
+			if (i % 100 == 0 && i > 0)
+			{
+				std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
+			}
+
+			minOutputValue = getValueOfMinEntry(network->getOutputs());
+			maxOutputValue = getValueOfMaxEntry(network->getOutputs());
+
+			//calculate error vector
+			for (auto i = 0; i < network->getOutputCount(); i++)
+			{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
+				if(i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(maxOutputValue, i);
+				else errorVector[i] = network->getOutputRespectiveCost(minOutputValue, i);
+			}
+
+			//network->propagateBackwards(errorVector);
+		}
+
+		std::cout << "Final score: " << (double)correctDeterminations / (double)trainingLabels.size() << std::endl;
+	}
+
+	std::cout << "Type 0 to exit:" << std::endl;
+	std::cin >> selection;
 
 	return MenuStates::Manage;
 }
+
+/*std::cout << std::endl;
+std::cout << "Testing:" << std::endl;
+std::cout << "Testing functionalities not written, dead end on menu" << std::endl;
+std::cout << "Type 0 to exit:" << std::endl;
+std::cin >> selection;
+
+//load inputs with dummy data
+double* inputGrid = new double[network->getInputCount()];
+for (auto i = 0; i < network->getInputCount(); i++)
+{
+	inputGrid[i] = 15;
+}
+
+//propagate forwards
+network->propagateForwards(inputGrid);
+
+//get outputs
+auto outputVector = network->getOutputs();
+for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
+{
+	std::cout << (*it) << " ";
+}
+
+//calculate error vector
+double* errorVector = new double[network->getOutputCount()];
+for (auto i = 0; i < network->getOutputCount(); i++)
+{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
+	errorVector[i] = network->getOutputRespectiveCost(20, i);
+}
+
+network->propagateBackwards(errorVector);
+
+//propagate forwards
+network->propagateForwards(inputGrid);
+
+//get outputs
+outputVector = network->getOutputs();
+for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
+{
+	std::cout << (*it) << " ";
+}
+
+std::cout << std::endl;*/
 
 MenuStates testingSelection(NeuralNetwork* network)
 {
@@ -1424,8 +1574,6 @@ MenuStates testingSelection(NeuralNetwork* network)
 			if (i % 100 == 0 && i > 0)
 			{
 				std::cout << "Current score: " << (double)correctDeterminations / (double)i<< std::endl;
-				std::cout << "Network answer: " << answer << std::endl;
-				std::cout << "correct answer: " << (int)testingLabels[i] << std::endl;
 			}
 				
 
@@ -1436,50 +1584,6 @@ MenuStates testingSelection(NeuralNetwork* network)
 
 	std::cout << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;
-
-	/*std::cout << std::endl;
-	std::cout << "Testing:" << std::endl;
-	std::cout << "Testing functionalities not written, dead end on menu" << std::endl;
-	std::cout << "Type 0 to exit:" << std::endl;
-	std::cin >> selection;
-
-	//load inputs with dummy data
-	double* inputGrid = new double[network->getInputCount()];
-	for (auto i = 0; i < network->getInputCount(); i++)
-	{
-		inputGrid[i] = 15;
-	}
-
-	//propagate forwards
-	network->propagateForwards(inputGrid);
-
-	//get outputs
-	auto outputVector = network->getOutputs();
-	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
-	{
-		std::cout << (*it) << " ";
-	}
-
-	//calculate error vector
-	double* errorVector = new double[network->getOutputCount()];
-	for (auto i = 0; i < network->getOutputCount(); i++)
-	{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-		errorVector[i] = network->getOutputRespectiveCost(20, i);
-	}
-
-	network->propagateBackwards(errorVector);
-
-	//propagate forwards
-	network->propagateForwards(inputGrid);
-
-	//get outputs
-	outputVector = network->getOutputs();
-	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
-	{
-		std::cout << (*it) << " ";
-	}
-
-	std::cout << std::endl;*/
 
 	return MenuStates::Manage;
 }
