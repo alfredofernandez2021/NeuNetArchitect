@@ -849,6 +849,40 @@ public:
 	{
 		testingLabels = getMNISTLabelVector(true);
 	}
+	
+	bool isReadyForTraining()
+	{
+		if (trainingSamples.size() * trainingLabels.size() == 0)
+			return false;
+		return true;
+	}
+
+	bool isReadyForTesting()
+	{
+		if (testingSamples.size() * testingLabels.size() == 0)
+			return false;
+		return true;
+	}
+
+	std::vector<std::vector<std::vector<unsigned char>>> getTrainingSamples()
+	{
+		return trainingSamples;
+	}
+
+	std::vector<unsigned char> getTrainingLabels()
+	{
+		return trainingLabels;
+	}
+
+	std::vector<std::vector<std::vector<unsigned char>>> getTestingSamples()
+	{
+		return testingSamples;
+	}
+
+	std::vector<unsigned char> getTestingLabels()
+	{
+		return testingLabels;
+	}
 
 	//gives the partial derivative value of the cost function in respect to an output activation
 	double getOutputRespectiveCost(double targetValue, int outputIndex)
@@ -1066,6 +1100,22 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 
 	//returns fully-defined neural network... todo: might need to overload = operator for NeuralNetwork
 	return new NeuralNetwork(networkDepth, inputLength, 1, outputLength, 0.0001, 1, errorFunction, layerStates);
+}
+
+int getIndexOfMaxEntry(std::vector<double> Vector)
+{
+	int maxValue = INT32_MIN, maxIndex = -1;
+
+	for (auto i = 0; i < Vector.size(); i++)
+	{
+		if (Vector[i] > maxValue)
+		{
+			maxIndex = i;
+			maxValue = Vector[i];
+		}
+	}
+
+	return maxIndex;
 }
 
 enum class MenuStates : unsigned int
@@ -1300,25 +1350,98 @@ MenuStates datasetSelection(NeuralNetwork* network)
 
 MenuStates trainingSelection(NeuralNetwork* network)
 {
-	int selection;
+	int batchSize, learningRate;
 
 	std::cout << std::endl;
 	std::cout << "Training:" << std::endl;
-	std::cout << "Training functionalities not written, dead end on menu" << std::endl;
-	std::cout << "Type any integer to exit: ";
-	std::cin >> selection;
+	std::cout << "Batch size: ";
+	std::cin >> batchSize;
+	std::cout << "Learning rate: ";
+	std::cin >> learningRate;
+
+
+
 	return MenuStates::Manage;
 }
 
 MenuStates testingSelection(NeuralNetwork* network)
 {
-	int selection;
+	int selection, answer, correctDeterminations = 0;
+	double* inputGrid = nullptr;
+	bool errorEncountered = false;
+
+	std::vector<std::vector<std::vector<unsigned char>>> testingSamples = network->getTestingSamples();
+	std::vector<unsigned char> testingLabels = network->getTestingLabels();
+
+	std::cout << std::endl;
+	std::cout << "Testing:" << std::endl;
+
+	if (!network->isReadyForTesting())
+	{
+		std::cout << "Testing data not yet loaded" << std::endl;
+		errorEncountered = true;
+	}
+
+	if (network->getInputCount() != testingSamples[0].size() * testingSamples[0][0].size())
+	{
+		std::cout << "Mismatch between dataset input samples and network input count" << std::endl;
+		errorEncountered = true;
+	}
+
+	if (network->getOutputCount() != 10)
+	{
+		std::cout << "Mismatch between dataset label type count and network output count" << std::endl;
+		errorEncountered = true;
+	}
+
+	if (!errorEncountered)
+	{
+		inputGrid = new double[network->getInputCount()];
+
+		//for each image in the set
+		for (auto i = 0; i < testingSamples.size(); i++)
+		{	//for each column in an image
+			for (auto j = 0; j < testingSamples[0].size(); j++)
+			{	//for each pixel in a column
+				for (auto k = 0; k < testingSamples[0][0].size(); k++)
+				{
+					//load a pixel
+					inputGrid[j * testingSamples[0].size() + k] = testingSamples[i][j][k];
+				}
+			}
+
+			//propagate network forwards to calculate outputs from inputs
+			network->propagateForwards(inputGrid);
+
+			//get index of entry that scored the highest, from 0 to 9
+			answer = getIndexOfMaxEntry(network->getOutputs());
+
+			if (answer == (int)testingLabels[i])
+			{
+				correctDeterminations++;
+			}
+
+			if (i % 100 == 0 && i > 0)
+			{
+				std::cout << "Current score: " << (double)correctDeterminations / (double)i<< std::endl;
+				std::cout << "Network answer: " << answer << std::endl;
+				std::cout << "correct answer: " << (int)testingLabels[i] << std::endl;
+			}
+				
+
+		}
+
+		std::cout << "Final score: " << (double)correctDeterminations / (double)testingLabels.size() << std::endl;
+	}
+
+	std::cout << "Type 0 to exit:" << std::endl;
+	std::cin >> selection;
 
 	/*std::cout << std::endl;
 	std::cout << "Testing:" << std::endl;
 	std::cout << "Testing functionalities not written, dead end on menu" << std::endl;
 	std::cout << "Type 0 to exit:" << std::endl;
-	std::cin >> selection;*/
+	std::cin >> selection;
 
 	//load inputs with dummy data
 	double* inputGrid = new double[network->getInputCount()];
@@ -1356,7 +1479,7 @@ MenuStates testingSelection(NeuralNetwork* network)
 		std::cout << (*it) << " ";
 	}
 
-	std::cout << std::endl;
+	std::cout << std::endl;*/
 
 	return MenuStates::Manage;
 }
@@ -1459,7 +1582,8 @@ int main()
 
 	return 0;
 }
-// 2 1 4 1 1 0 1 2 0 1 0 
-// 2 2 4 1 1 0 1 2 0 1 0 the usual
-// 1 1 2 1 0 single non-input neuron
-// 1 1 3 1 1 0 1 0 series
+// 2 1 4 1 1 0 1 2 0 1 0	the first
+// 2 2 4 1 1 0 1 2 0 1 0	the usual
+// 1 1 2 1 0				single non-input neuron
+// 1 1 3 1 1 0 1 0			series
+// 784 10 2 0 0				MNIST linear network
