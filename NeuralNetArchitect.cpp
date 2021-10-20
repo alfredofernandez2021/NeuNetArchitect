@@ -1443,7 +1443,7 @@ MenuStates trainingSelection(NeuralNetwork* network)
 				correctDeterminations++;
 			}
 
-			if (i % 400 == 0 && i > 0)
+			if (i % 100 == 0 && i > 0)
 			{
 				std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
 				std::cout << "answer: " << answer << "\t" << "correct: " << (int)trainingLabels[i] << std::endl;
@@ -1456,8 +1456,8 @@ MenuStates trainingSelection(NeuralNetwork* network)
 			//calculate error vector
 			for (auto i = 0; i < network->getOutputCount(); i++)
 			{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-				if(i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(0, i);
-				else errorVector[i] = network->getOutputRespectiveCost(0, i);
+				if(i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(maxOutputValue, i)/4000;
+				else errorVector[i] = network->getOutputRespectiveCost(minOutputValue, i)/4000;
 			}
 
 			network->propagateBackwards(errorVector);
