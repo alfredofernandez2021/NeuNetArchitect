@@ -477,7 +477,7 @@ public:
 	{
 		setError(costArray);
 
-		injectErrorBackwards();
+		injectErrorBackwards(); //todo: skip for 2nd layer?
 
 		updateParameters(batchSize, learningRate);
 	}
@@ -558,7 +558,7 @@ public:
 //the derivation of the mean-squared-error function in respect to the activation of an output neuron
 double derivedMSECost(double targetValue, double estimatedValue, int outputCount)
 {
-	return (-2 / outputCount) * (targetValue - estimatedValue);
+	return (-2.0 / (double)outputCount) * (targetValue - estimatedValue);
 }
 
 struct layerCreationInfo
@@ -1443,9 +1443,11 @@ MenuStates trainingSelection(NeuralNetwork* network)
 				correctDeterminations++;
 			}
 
-			if (i % 100 == 0 && i > 0)
+			if (i % 400 == 0 && i > 0)
 			{
 				std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
+				std::cout << "answer: " << answer << "\t" << "correct: " << (int)trainingLabels[i] << std::endl;
+				std::cout << std::endl;
 			}
 
 			minOutputValue = getValueOfMinEntry(network->getOutputs());
@@ -1454,11 +1456,11 @@ MenuStates trainingSelection(NeuralNetwork* network)
 			//calculate error vector
 			for (auto i = 0; i < network->getOutputCount(); i++)
 			{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-				if(i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(maxOutputValue, i);
-				else errorVector[i] = network->getOutputRespectiveCost(minOutputValue, i);
+				if(i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(0, i);
+				else errorVector[i] = network->getOutputRespectiveCost(0, i);
 			}
 
-			//network->propagateBackwards(errorVector);
+			network->propagateBackwards(errorVector);
 		}
 
 		std::cout << "Final score: " << (double)correctDeterminations / (double)trainingLabels.size() << std::endl;
