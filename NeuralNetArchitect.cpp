@@ -697,19 +697,7 @@ private:
 
 
 public:
-	//default constructor for NeuralNetworks with invalid values
-	NeuralNetwork()
-	{
-		this->layerCount = -1;
-		this->inputLength = -1;
-		this->inputWidth = -1;
-		this->outputCount = -1;
-		this->neuralLayers = nullptr;
-		this->learningRate = -1;
-		this->batchSize = -1;
-		this->derivedCostFunction = nullptr;
-		this->layerStates = nullptr;
-	}
+
 	//constructor for creating NeuralNetworks
 	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerCreationInfo* layerDetails)
 	{
@@ -750,7 +738,6 @@ public:
 		layerStates = new layerLoadingInfo[layerCount];
 	}
 
-	//todo: create load constructor
 	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerLoadingInfo* layerDetails)
 	{
 		this->layerCount = layerCount;
@@ -1456,8 +1443,8 @@ MenuStates trainingSelection(NeuralNetwork* network)
 			//calculate error vector
 			for (auto i = 0; i < network->getOutputCount(); i++)
 			{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-				if(i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(maxOutputValue, i)/4000;
-				else errorVector[i] = network->getOutputRespectiveCost(minOutputValue, i)/4000;
+				if(i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(maxOutputValue, i)/5000;
+				else errorVector[i] = network->getOutputRespectiveCost(minOutputValue, i)/5000;
 			}
 
 			network->propagateBackwards(errorVector);
@@ -1471,50 +1458,6 @@ MenuStates trainingSelection(NeuralNetwork* network)
 
 	return MenuStates::Manage;
 }
-
-/*std::cout << std::endl;
-std::cout << "Testing:" << std::endl;
-std::cout << "Testing functionalities not written, dead end on menu" << std::endl;
-std::cout << "Type 0 to exit:" << std::endl;
-std::cin >> selection;
-
-//load inputs with dummy data
-double* inputGrid = new double[network->getInputCount()];
-for (auto i = 0; i < network->getInputCount(); i++)
-{
-	inputGrid[i] = 15;
-}
-
-//propagate forwards
-network->propagateForwards(inputGrid);
-
-//get outputs
-auto outputVector = network->getOutputs();
-for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
-{
-	std::cout << (*it) << " ";
-}
-
-//calculate error vector
-double* errorVector = new double[network->getOutputCount()];
-for (auto i = 0; i < network->getOutputCount(); i++)
-{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-	errorVector[i] = network->getOutputRespectiveCost(20, i);
-}
-
-network->propagateBackwards(errorVector);
-
-//propagate forwards
-network->propagateForwards(inputGrid);
-
-//get outputs
-outputVector = network->getOutputs();
-for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
-{
-	std::cout << (*it) << " ";
-}
-
-std::cout << std::endl;*/
 
 MenuStates testingSelection(NeuralNetwork* network)
 {
@@ -1681,15 +1624,45 @@ void manageNeuralNetwork()
 	}
 }
 
-
 int main()
 {
 	manageNeuralNetwork();
 
 	return 0;
 }
-// 2 1 4 1 1 0 1 2 0 1 0	the first
-// 2 2 4 1 1 0 1 2 0 1 0	the usual
-// 1 1 2 1 0				single non-input neuron
-// 1 1 3 1 1 0 1 0			series
-// 784 10 2 0 0				MNIST linear network
+// 2 1 4 1 1 0 1 2 0 1 0	the first network		(propagation checking)
+// 2 2 4 1 1 0 1 2 0 1 0	the usual network		(loading + learning correctness)
+// 784 10 2 0 0				MNIST linear network	(dataset confirmation)
+
+/* Cleanup todo:
+* Move to .hpp and .cpp file setup
+* Make all hyperparameters (learning rate, batch size, momentum...) be stored only in NeuralNetwork
+* Create Destructor methods and write calls for memory management
+* Write 'how' comment above each definition, 'what' comment on declarations, comments summarizing blocks of code
+* Decide and enforce consistent formatting of all code
+* Enable all commented out, red-lined, or hard-coded features
+* Expand menu functions to acknowledge newly-enabled features
+* Accomodate for invalid input handling
+* Find sections where exception detection handling should be carried out
+* Identify potential space and time complexity reductions
+* Delete unused functions
+* Ensure ease of use between Visual Studio project and Github repo
+* Update project description on Github
+* Change names of confusing functions after looking up 'sweet spot' of description depth
+*/
+
+/* Expansion todo:
+* Sigmoid neuron/layer
+* ReLU neuron/layer
+* ...
+* Softplus neuron/layer
+* Step neuron/layer
+* Recurrent neuron/layer
+* Convolutional neuron/layer
+* Softmax neuron/layer
+* Input processing ...
+* Output processing ...
+* Dropout learning feature
+* Early-stopping learning feature
+* Edge-case detection learning feature
+*/
