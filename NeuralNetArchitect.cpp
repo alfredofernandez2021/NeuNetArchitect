@@ -477,7 +477,7 @@ public:
 	{
 		setError(costArray);
 
-		injectErrorBackwards();
+		injectErrorBackwards(); //todo: skip for 2nd layer?
 
 		updateParameters(batchSize, learningRate);
 	}
@@ -558,7 +558,7 @@ public:
 //the derivation of the mean-squared-error function in respect to the activation of an output neuron
 double derivedMSECost(double targetValue, double estimatedValue, int outputCount)
 {
-	return (-2 / outputCount) * (targetValue - estimatedValue);
+	return (-2.0 / (double)outputCount) * (targetValue - estimatedValue);
 }
 
 struct layerCreationInfo
@@ -576,6 +576,96 @@ struct layerLoadingInfo
 	std::vector<std::vector<double>> weightsOfNeurons;
 	std::vector<double> biasOfNeurons;
 };
+
+//flips byte ordering of input integer
+unsigned int flipIntegerByteOrdering(int original)
+{
+	unsigned char firstByte, secondByte, thirdByte, fourthByte;
+
+	firstByte = (0xFF000000 & original) >> 24;
+	secondByte = (0x00FF0000 & original) >> 16;
+	thirdByte = (0x0000FF00 & original) >> 8;
+	fourthByte = 0x000000FF & original;
+
+	return ((unsigned int)fourthByte << 24) | ((unsigned int)thirdByte << 16) | ((unsigned int)secondByte << 8) | ((unsigned int)firstByte << 0);
+}
+
+std::vector<unsigned char> getMNISTLabelVector(bool testing)
+{
+	std::vector<unsigned char> labels;
+	unsigned int magicNumber, labelCount;
+	unsigned char currentLabel;
+
+	std::string fullPath = "train-labels.idx1-ubyte";
+	if (testing) fullPath = "t10k-labels.idx1-ubyte";
+
+	std::ifstream file(fullPath);
+	if (file.is_open())
+	{
+		file.read((char*)&magicNumber, sizeof(magicNumber));
+		file.read((char*)&labelCount, sizeof(labelCount));
+
+		magicNumber = flipIntegerByteOrdering(magicNumber);
+		labelCount = flipIntegerByteOrdering(labelCount);
+
+		for (auto i = 0; i < labelCount; i++)
+		{
+			file.read((char*)&currentLabel, sizeof(currentLabel));
+			labels.push_back(currentLabel);
+		}
+	}
+
+	return labels;
+}
+
+std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool testing)
+{
+	std::vector<std::vector<std::vector<unsigned char>>> images;
+	std::vector<std::vector<unsigned char>> columnsOfAnImage;
+	std::vector<unsigned char> pixelsOfAColumn;
+
+	std::string fullPath = "train-images.idx3-ubyte";
+	if (testing) fullPath = "t10k-images.idx3-ubyte";
+
+	unsigned int magicNumber, numberOfImages, rowsPerImage, columnsPerImage;
+	unsigned char currentPixel;
+
+	std::ifstream file(fullPath);
+
+	if (file.is_open())
+	{
+		file.read((char*)&magicNumber, sizeof(magicNumber));
+		file.read((char*)&numberOfImages, sizeof(numberOfImages));
+		file.read((char*)&rowsPerImage, sizeof(rowsPerImage));
+		file.read((char*)&columnsPerImage, sizeof(columnsPerImage));
+
+		magicNumber = flipIntegerByteOrdering(magicNumber);
+		numberOfImages = flipIntegerByteOrdering(numberOfImages);
+		rowsPerImage = flipIntegerByteOrdering(rowsPerImage);
+		columnsPerImage = flipIntegerByteOrdering(columnsPerImage);
+
+		for (auto i = 0; i < numberOfImages; i++)
+		{
+			for (auto j = 0; j < rowsPerImage; j++)
+			{
+				for (auto k = 0; k < columnsPerImage; k++)
+				{
+					file.read((char*)&currentPixel, sizeof(currentPixel));
+					pixelsOfAColumn.push_back(currentPixel);
+				}
+
+				columnsOfAnImage.push_back(pixelsOfAColumn);
+				pixelsOfAColumn.clear();
+			}
+
+			images.push_back(columnsOfAnImage);
+			columnsOfAnImage.clear();
+		}
+	}
+
+	return images;
+}
+
 
 /**********************************************************************************************************************************************
  NeuralNetworks's activation is a function of all weights and bias parameters held within the neurons of each layer
@@ -600,21 +690,14 @@ private:
 	int batchSize;
 	double (*derivedCostFunction)(double, double, int);
 	layerLoadingInfo* layerStates;
+	std::vector<std::vector<std::vector<unsigned char>>> trainingSamples;
+	std::vector<unsigned char> trainingLabels;
+	std::vector<std::vector<std::vector<unsigned char>>> testingSamples;
+	std::vector<unsigned char> testingLabels;
+
 
 public:
-	//default constructor for NeuralNetworks with invalid values
-	NeuralNetwork()
-	{
-		this->layerCount = -1;
-		this->inputLength = -1;
-		this->inputWidth = -1;
-		this->outputCount = -1;
-		this->neuralLayers = nullptr;
-		this->learningRate = -1;
-		this->batchSize = -1;
-		this->derivedCostFunction = nullptr;
-		this->layerStates = nullptr;
-	}
+
 	//constructor for creating NeuralNetworks
 	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerCreationInfo* layerDetails)
 	{
@@ -655,7 +738,6 @@ public:
 		layerStates = new layerLoadingInfo[layerCount];
 	}
 
-	//todo: create load constructor
 	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerLoadingInfo* layerDetails)
 	{
 		this->layerCount = layerCount;
@@ -733,6 +815,60 @@ public:
 	void updateLearningRate(int newLearningRate)
 	{
 		learningRate = newLearningRate;
+	}
+
+	void updateTrainingSamples()
+	{
+		trainingSamples = getMNISTImageVector(false);
+	}
+
+	void updateTrainingLabels()
+	{
+		trainingLabels = getMNISTLabelVector(false);
+	}
+
+	void updateTestingSamples()
+	{
+		testingSamples = getMNISTImageVector(true);
+	}
+
+	void updateTestingLabels()
+	{
+		testingLabels = getMNISTLabelVector(true);
+	}
+	
+	bool isReadyForTraining()
+	{
+		if (trainingSamples.size() * trainingLabels.size() == 0)
+			return false;
+		return true;
+	}
+
+	bool isReadyForTesting()
+	{
+		if (testingSamples.size() * testingLabels.size() == 0)
+			return false;
+		return true;
+	}
+
+	std::vector<std::vector<std::vector<unsigned char>>> getTrainingSamples()
+	{
+		return trainingSamples;
+	}
+
+	std::vector<unsigned char> getTrainingLabels()
+	{
+		return trainingLabels;
+	}
+
+	std::vector<std::vector<std::vector<unsigned char>>> getTestingSamples()
+	{
+		return testingSamples;
+	}
+
+	std::vector<unsigned char> getTestingLabels()
+	{
+		return testingLabels;
 	}
 
 	//gives the partial derivative value of the cost function in respect to an output activation
@@ -953,6 +1089,52 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 	return new NeuralNetwork(networkDepth, inputLength, 1, outputLength, 0.0001, 1, errorFunction, layerStates);
 }
 
+int getIndexOfMaxEntry(std::vector<double> Vector)
+{
+	int maxValue = INT32_MIN, maxIndex = -1;
+
+	for (auto i = 0; i < Vector.size(); i++)
+	{
+		if (Vector[i] > maxValue)
+		{
+			maxIndex = i;
+			maxValue = Vector[i];
+		}
+	}
+
+	return maxIndex;
+}
+
+int getValueOfMaxEntry(std::vector<double> Vector)
+{
+	int maxValue = INT32_MIN, maxIndex = -1;
+
+	for (auto i = 0; i < Vector.size(); i++)
+	{
+		if (Vector[i] > maxValue)
+		{
+			maxValue = Vector[i];
+		}
+	}
+
+	return maxValue;
+}
+
+int getValueOfMinEntry(std::vector<double> Vector)
+{
+	int minValue = INT32_MAX, minIndex = -1;
+
+	for (auto i = 0; i < Vector.size(); i++)
+	{
+		if (Vector[i] < minValue)
+		{
+			minValue = Vector[i];
+		}
+	}
+
+	return minValue;
+}
+
 enum class MenuStates : unsigned int
 {
 	Exit = 0,
@@ -1158,77 +1340,195 @@ MenuStates manageSelection()
 	}
 }
 
-MenuStates datasetSelection()
+MenuStates datasetSelection(NeuralNetwork* network)
 {
-	int selection;
+	std::string trainingImageFilePath, trainingLabelFilePath, testingImageFilePath, testingLabelFilePath;
+
+	//updateTestingSamples
 
 	std::cout << std::endl;
 	std::cout << "Dataset:" << std::endl;
-	std::cout << "Dataset functionalities not written, dead end on menu" << std::endl;
-	std::cout << "Type any integer to exit: ";
-	std::cin >> selection;
+	std::cout << "Training set image file path: ";
+	std::cin >> trainingImageFilePath;
+	std::cout << "Training set label file path: ";
+	std::cin >> trainingLabelFilePath;
+	std::cout << "Testing set image file path: ";
+	std::cin >> testingImageFilePath;
+	std::cout << "Testing set label file path: ";
+	std::cin >> testingLabelFilePath;
+
+	network->updateTrainingSamples();
+	network->updateTrainingLabels();
+	network->updateTestingSamples();
+	network->updateTestingLabels();
+
 	return MenuStates::Manage;
 }
 
 MenuStates trainingSelection(NeuralNetwork* network)
 {
-	int selection;
+	int batchSize, learningRate;
+	int minOutputValue, maxOutputValue;
+	int selection, answer, correctDeterminations = 0;
+	double* inputGrid = nullptr;
+	double* errorVector = nullptr;
+	bool errorEncountered = false;
+
+	std::vector<std::vector<std::vector<unsigned char>>> trainingSamples = network->getTrainingSamples();
+	std::vector<unsigned char> trainingLabels = network->getTrainingLabels();
 
 	std::cout << std::endl;
 	std::cout << "Training:" << std::endl;
-	std::cout << "Training functionalities not written, dead end on menu" << std::endl;
-	std::cout << "Type any integer to exit: ";
+	std::cout << "Batch size: ";
+	std::cin >> batchSize;
+	std::cout << "Learning rate: ";
+	std::cin >> learningRate;
+
+	if (!network->isReadyForTraining())
+	{
+		std::cout << "Testing data not yet loaded" << std::endl;
+		errorEncountered = true;
+	}
+
+	if (network->getInputCount() != trainingSamples[0].size() * trainingSamples[0][0].size())
+	{
+		std::cout << "Mismatch between dataset input samples and network input count" << std::endl;
+		errorEncountered = true;
+	}
+
+	if (network->getOutputCount() != 10)
+	{
+		std::cout << "Mismatch between dataset label type count and network output count" << std::endl;
+		errorEncountered = true;
+	}
+
+	if (!errorEncountered)
+	{
+		inputGrid = new double[network->getInputCount()];
+		errorVector = new double[network->getOutputCount()];
+
+		//for each image in the set
+		for (auto i = 0; i < trainingSamples.size(); i++)
+		{	//for each column in an image
+			for (auto j = 0; j < trainingSamples[0].size(); j++)
+			{	//for each pixel in a column
+				for (auto k = 0; k < trainingSamples[0][0].size(); k++)
+				{
+					//load a pixel
+					inputGrid[j * trainingSamples[0].size() + k] = trainingSamples[i][j][k];
+				}
+			}
+
+			//propagate network forwards to calculate outputs from inputs
+			network->propagateForwards(inputGrid);
+
+			//get index of entry that scored the highest, from 0 to 9
+			answer = getIndexOfMaxEntry(network->getOutputs());
+
+			if (answer == (int)trainingLabels[i])
+			{
+				correctDeterminations++;
+			}
+
+			if (i % 100 == 0 && i > 0)
+			{
+				std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
+				std::cout << "answer: " << answer << "\t" << "correct: " << (int)trainingLabels[i] << std::endl;
+				std::cout << std::endl;
+			}
+
+			minOutputValue = getValueOfMinEntry(network->getOutputs());
+			maxOutputValue = getValueOfMaxEntry(network->getOutputs());
+
+			//calculate error vector
+			for (auto i = 0; i < network->getOutputCount(); i++)
+			{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
+				if(i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(maxOutputValue, i)/5000;
+				else errorVector[i] = network->getOutputRespectiveCost(minOutputValue, i)/5000;
+			}
+
+			network->propagateBackwards(errorVector);
+		}
+
+		std::cout << "Final score: " << (double)correctDeterminations / (double)trainingLabels.size() << std::endl;
+	}
+
+	std::cout << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;
+
 	return MenuStates::Manage;
 }
 
 MenuStates testingSelection(NeuralNetwork* network)
 {
-	int selection;
+	int selection, answer, correctDeterminations = 0;
+	double* inputGrid = nullptr;
+	bool errorEncountered = false;
 
-	/*std::cout << std::endl;
-	std::cout << "Testing:" << std::endl;
-	std::cout << "Testing functionalities not written, dead end on menu" << std::endl;
-	std::cout << "Type 0 to exit:" << std::endl;
-	std::cin >> selection;*/
-
-	//load inputs with dummy data
-	double* inputGrid = new double[network->getInputCount()];
-	for (auto i = 0; i < network->getInputCount(); i++)
-	{
-		inputGrid[i] = 15;
-	}
-
-	//propagate forwards
-	network->propagateForwards(inputGrid);
-
-	//get outputs
-	auto outputVector = network->getOutputs();
-	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
-	{
-		std::cout << (*it) << " ";
-	}
-
-	//calculate error vector
-	double* errorVector = new double[network->getOutputCount()];
-	for (auto i = 0; i < network->getOutputCount(); i++)
-	{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-		errorVector[i] = network->getOutputRespectiveCost(20, i);
-	}
-
-	network->propagateBackwards(errorVector);
-
-	//propagate forwards
-	network->propagateForwards(inputGrid);
-
-	//get outputs
-	outputVector = network->getOutputs();
-	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
-	{
-		std::cout << (*it) << " ";
-	}
+	std::vector<std::vector<std::vector<unsigned char>>> testingSamples = network->getTestingSamples();
+	std::vector<unsigned char> testingLabels = network->getTestingLabels();
 
 	std::cout << std::endl;
+	std::cout << "Testing:" << std::endl;
+
+	if (!network->isReadyForTesting())
+	{
+		std::cout << "Testing data not yet loaded" << std::endl;
+		errorEncountered = true;
+	}
+
+	if (network->getInputCount() != testingSamples[0].size() * testingSamples[0][0].size())
+	{
+		std::cout << "Mismatch between dataset input samples and network input count" << std::endl;
+		errorEncountered = true;
+	}
+
+	if (network->getOutputCount() != 10)
+	{
+		std::cout << "Mismatch between dataset label type count and network output count" << std::endl;
+		errorEncountered = true;
+	}
+
+	if (!errorEncountered)
+	{
+		inputGrid = new double[network->getInputCount()];
+
+		//for each image in the set
+		for (auto i = 0; i < testingSamples.size(); i++)
+		{	//for each column in an image
+			for (auto j = 0; j < testingSamples[0].size(); j++)
+			{	//for each pixel in a column
+				for (auto k = 0; k < testingSamples[0][0].size(); k++)
+				{
+					//load a pixel
+					inputGrid[j * testingSamples[0].size() + k] = testingSamples[i][j][k];
+				}
+			}
+
+			//propagate network forwards to calculate outputs from inputs
+			network->propagateForwards(inputGrid);
+
+			//get index of entry that scored the highest, from 0 to 9
+			answer = getIndexOfMaxEntry(network->getOutputs());
+
+			if (answer == (int)testingLabels[i])
+			{
+				correctDeterminations++;
+			}
+
+			if (i % 100 == 0 && i > 0)
+			{
+				std::cout << "Current score: " << (double)correctDeterminations / (double)i<< std::endl;
+			}
+				
+
+		}
+
+		std::cout << "Final score: " << (double)correctDeterminations / (double)testingLabels.size() << std::endl;
+	}
+
+	std::cout << "Type 0 to exit:" << std::endl;
+	std::cin >> selection;
 
 	return MenuStates::Manage;
 }
@@ -1298,7 +1598,7 @@ void manageNeuralNetwork()
 			break;
 
 		case MenuStates::Dataset:
-			menuFSMState = datasetSelection();
+			menuFSMState = datasetSelection(network);
 			break;
 
 		case MenuStates::Training:
@@ -1326,116 +1626,43 @@ void manageNeuralNetwork()
 
 int main()
 {
-/*
-	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
-
-	std::cout << "What is the length of inputs that this neural network will accept? ";
-	std::cin >> inputLength;
-	std::cout << std::endl;
-
-	//std::cout << "What is the width of inputs that this neural network will accept? ";
-	//std::cin >> inputWidth;
-	inputWidth = 1;
-	//std::cout << std::endl;
-
-	std::cout << "What is the number of outputs that this neural network will produce? ";
-	std::cin >> outputCount;
-	std::cout << std::endl;
-
-	std::cout << "How many layers will this neural network contain? ";
-	std::cin >> numberOfLayers;
-	layerCreationInfo* layerDetails = new layerCreationInfo[numberOfLayers];
-	std::cout << std::endl;
-
-	//std::cout << "What is the current batch size that this network will train on? ";
-	//std::cin >> batchSize;
-	batchSize = 1;
-	//std::cout << std::endl;
-
-	//std::cout << "Which cost function should be used to calculate error? ;
-	//std::cin >> costSelection;
-	costSelection = 1;
-	//std::cout << std::endl;
-
-	layerDetails[0].type = 1;
-	layerDetails[0].neuronCount = inputLength * inputWidth;
-	layerDetails[0].momentumRetention = 0;
-
-	for (int i = 1; i < numberOfLayers; i++)
-	{
-		std::cout << std::endl << "Define neural layer " << i + 1 << ":\n";
-
-		std::cout << "\tActivation type: ";
-		std::cin >> layerDetails[i].type;
-		std::cout << std::endl;
-
-		if (i + 1 < numberOfLayers)
-		{
-			std::cout << "\tNeuron count: ";
-			std::cin >> layerDetails[i].neuronCount;
-			std::cout << std::endl;
-		}
-		else
-		{
-			layerDetails[i].neuronCount = outputCount;
-		}
-
-		std::cout << "\tMomentum retention: ";
-		std::cin >> layerDetails[i].momentumRetention;
-		layerDetails[i].momentumRetention = 0;
-		std::cout << std::endl;
-	}
-
-	//create network
-	//NeuralNetwork network = NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
-	std::string xmlName = "test1.xml";
-	NeuralNetwork network = loadNetwork(xmlName);
-	//todo: learning rate heuristics?
-
-	//load inputs with dummy data
-	double* inputGrid = new double[inputLength * inputWidth];
-	for (auto i = 0; i < inputLength * inputWidth; i++)
-	{
-		inputGrid[i] = 15;
-	}
-
-	//propagate forwards
-	network.propagateForwards(inputGrid);
-
-	//get outputs
-	auto outputVector = network.getOutputs();
-	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
-	{
-		std::cout << (*it) << " ";
-	}
-
-	//calculate error vector
-	double* errorVector = new double[outputCount];
-	for (auto i = 0; i < outputCount; i++)
-	{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-		errorVector[i] = network.getOutputRespectiveCost(20, i);
-	}
-
-	network.propagateBackwards(errorVector);
-
-	//propagate forwards
-	network.propagateForwards(inputGrid);
-
-	//get outputs
-	outputVector = network.getOutputs();
-	for (std::vector<double>::iterator it = outputVector.begin(); it < outputVector.end(); it++)
-	{
-		std::cout << (*it) << " ";
-	}
-
-	xmlName = "test1.xml";
-	storeNetwork(network,xmlName);*/
-
 	manageNeuralNetwork();
 
 	return 0;
 }
-// 2 1 4 1 1 0 1 2 0 1 0
-// 2 2 4 1 1 0 1 2 0 1 0 the usual
-// 1 1 2 1 0 single non-input neuron
-// 1 1 3 1 1 0 1 0 series
+// 2 1 4 1 1 0 1 2 0 1 0	the first network		(propagation checking)
+// 2 2 4 1 1 0 1 2 0 1 0	the usual network		(loading + learning correctness)
+// 784 10 2 0 0				MNIST linear network	(dataset confirmation)
+
+/* Cleanup todo:
+* Move to .hpp and .cpp file setup
+* Make all hyperparameters (learning rate, batch size, momentum...) be stored only in NeuralNetwork
+* Create Destructor methods and write calls for memory management
+* Write 'how' comment above each definition, 'what' comment on declarations, comments summarizing blocks of code
+* Decide and enforce consistent formatting of all code
+* Enable all commented out, red-lined, or hard-coded features
+* Expand menu functions to acknowledge newly-enabled features
+* Accomodate for invalid input handling
+* Find sections where exception detection handling should be carried out
+* Identify potential space and time complexity reductions
+* Delete unused functions
+* Ensure ease of use between Visual Studio project and Github repo
+* Update project description on Github
+* Change names of confusing functions after looking up 'sweet spot' of description depth
+*/
+
+/* Expansion todo:
+* Sigmoid neuron/layer
+* ReLU neuron/layer
+* ...
+* Softplus neuron/layer
+* Step neuron/layer
+* Recurrent neuron/layer
+* Convolutional neuron/layer
+* Softmax neuron/layer
+* Input processing ...
+* Output processing ...
+* Dropout learning feature
+* Early-stopping learning feature
+* Edge-case detection learning feature
+*/
