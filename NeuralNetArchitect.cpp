@@ -744,6 +744,7 @@ public:
 		layerStates = new layerLoadingInfo[layerCount];
 	}
 
+	//constructor for loading NeuralNetworks
 	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerLoadingInfo* layerDetails)
 	{
 		this->layerCount = layerCount;
@@ -823,26 +824,31 @@ public:
 		learningRate = newLearningRate;
 	}
 
+	//loads training samples from dataset
 	void updateTrainingSamples()
 	{
 		trainingSamples = getMNISTImageVector(false);
 	}
 
+	//loads training labels from dataset
 	void updateTrainingLabels()
 	{
 		trainingLabels = getMNISTLabelVector(false);
 	}
 
+	//loads testing samples from dataset
 	void updateTestingSamples()
 	{
 		testingSamples = getMNISTImageVector(true);
 	}
 
+	//loads testing labels from dataset
 	void updateTestingLabels()
 	{
 		testingLabels = getMNISTLabelVector(true);
 	}
 	
+	//indicates if dataset training samples and labels have been loaded
 	bool isReadyForTraining()
 	{
 		if (trainingSamples.size() * trainingLabels.size() == 0)
@@ -850,6 +856,7 @@ public:
 		return true;
 	}
 
+	//indicates if dataset testing samples and labels have been loaded
 	bool isReadyForTesting()
 	{
 		if (testingSamples.size() * testingLabels.size() == 0)
@@ -857,21 +864,25 @@ public:
 		return true;
 	}
 
+	//returns dataset training samples to use during network training
 	std::vector<std::vector<std::vector<unsigned char>>> getTrainingSamples()
 	{
 		return trainingSamples;
 	}
 
+	//returns dataset training labels to use during network training
 	std::vector<unsigned char> getTrainingLabels()
 	{
 		return trainingLabels;
 	}
 
+	//returns dataset testing samples to use during network testing
 	std::vector<std::vector<std::vector<unsigned char>>> getTestingSamples()
 	{
 		return testingSamples;
 	}
 
+	//returns dataset testing labels to use during network testing
 	std::vector<unsigned char> getTestingLabels()
 	{
 		return testingLabels;
