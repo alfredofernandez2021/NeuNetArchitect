@@ -561,6 +561,7 @@ double derivedMSECost(double targetValue, double estimatedValue, int outputCount
 	return (-2.0 / (double)outputCount) * (targetValue - estimatedValue);
 }
 
+//structure used for passing layer details during network creation
 struct layerCreationInfo
 {
 	int type;
@@ -568,6 +569,7 @@ struct layerCreationInfo
 	double momentumRetention;
 };
 
+//structure used for passing layer details during network loading
 struct layerLoadingInfo
 {
 	int type;
@@ -590,6 +592,8 @@ unsigned int flipIntegerByteOrdering(int original)
 	return ((unsigned int)fourthByte << 24) | ((unsigned int)thirdByte << 16) | ((unsigned int)secondByte << 8) | ((unsigned int)firstByte << 0);
 }
 
+//todo: pass in a path string instead of a bool
+//returns vector of all available testing or training labels in the dataset
 std::vector<unsigned char> getMNISTLabelVector(bool testing)
 {
 	std::vector<unsigned char> labels;
@@ -618,6 +622,8 @@ std::vector<unsigned char> getMNISTLabelVector(bool testing)
 	return labels;
 }
 
+//todo: pass in a path string instead of a bool
+//returns vector of all available testing or training samples in the dataset
 std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool testing)
 {
 	std::vector<std::vector<std::vector<unsigned char>>> images;
@@ -1089,6 +1095,7 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 	return new NeuralNetwork(networkDepth, inputLength, 1, outputLength, 0.0001, 1, errorFunction, layerStates);
 }
 
+//returns the index of the most positive vector element
 int getIndexOfMaxEntry(std::vector<double> Vector)
 {
 	int maxValue = INT32_MIN, maxIndex = -1;
@@ -1105,6 +1112,7 @@ int getIndexOfMaxEntry(std::vector<double> Vector)
 	return maxIndex;
 }
 
+//returns the value of the most positive vector element
 int getValueOfMaxEntry(std::vector<double> Vector)
 {
 	int maxValue = INT32_MIN, maxIndex = -1;
@@ -1120,6 +1128,7 @@ int getValueOfMaxEntry(std::vector<double> Vector)
 	return maxValue;
 }
 
+//returns the value of the most negative vector element
 int getValueOfMinEntry(std::vector<double> Vector)
 {
 	int minValue = INT32_MAX, minIndex = -1;
@@ -1135,6 +1144,7 @@ int getValueOfMinEntry(std::vector<double> Vector)
 	return minValue;
 }
 
+//enumeration to number-code the names of the menu states
 enum class MenuStates : unsigned int
 {
 	Exit = 0,
@@ -1150,12 +1160,14 @@ enum class MenuStates : unsigned int
 	Help = 10,
 };
 
+//Final print before leaving menus
 void exitSelection()
 {
 	std::cout << std::endl;
 	std::cout << "Exiting manager..." << std::endl;
 }
 
+//lists main menu options and prompts user to select one
 MenuStates mainSelection()
 {
 	int selection;
@@ -1188,6 +1200,8 @@ MenuStates mainSelection()
 	}
 }
 
+//todo: improve this
+//prints description of project and provides a high-level guide
 MenuStates introSelection()
 {
 	int selection;
@@ -1206,6 +1220,7 @@ MenuStates introSelection()
 	return MenuStates::Main;
 }
 
+//prompts user through creation of a neural network
 MenuStates createSelection( NeuralNetwork** network)
 {
 	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
@@ -1285,6 +1300,7 @@ MenuStates createSelection( NeuralNetwork** network)
 	return MenuStates::Manage;
 }
 
+//asks user for path of file to load fully-defined neural network from
 MenuStates loadSelection(NeuralNetwork** network)
 {
 	std::string xmlName;
@@ -1302,6 +1318,7 @@ MenuStates loadSelection(NeuralNetwork** network)
 	return MenuStates::Manage;
 }
 
+//lists manager options and prompts user to select one
 MenuStates manageSelection()
 {
 	int selection;
@@ -1340,6 +1357,7 @@ MenuStates manageSelection()
 	}
 }
 
+//asks user for datatset label and sample files and loads them into vectors
 MenuStates datasetSelection(NeuralNetwork* network)
 {
 	std::string trainingImageFilePath, trainingLabelFilePath, testingImageFilePath, testingLabelFilePath;
@@ -1365,6 +1383,7 @@ MenuStates datasetSelection(NeuralNetwork* network)
 	return MenuStates::Manage;
 }
 
+//asks user to define higher-level hyperparameters and commences training
 MenuStates trainingSelection(NeuralNetwork* network)
 {
 	int batchSize, learningRate;
@@ -1459,6 +1478,7 @@ MenuStates trainingSelection(NeuralNetwork* network)
 	return MenuStates::Manage;
 }
 
+//completes testing of neural network with current learned-parameter values
 MenuStates testingSelection(NeuralNetwork* network)
 {
 	int selection, answer, correctDeterminations = 0;
@@ -1533,6 +1553,7 @@ MenuStates testingSelection(NeuralNetwork* network)
 	return MenuStates::Manage;
 }
 
+//asks user for path of file to store fully-defined neural network in
 MenuStates saveSelection(NeuralNetwork* network)
 {
 	std::string xmlFileName;
@@ -1545,6 +1566,7 @@ MenuStates saveSelection(NeuralNetwork* network)
 	return MenuStates::Manage;
 }
 
+//prints detailed instructions and explanation on the customization options
 MenuStates helpSelection()
 {
 	int selection;
@@ -1557,6 +1579,7 @@ MenuStates helpSelection()
 	return MenuStates::Manage;
 }
 
+//indicates error if an invalid menu state is somehow reached
 MenuStates defaultSelection()
 {
 	std::cout << std::endl;
@@ -1564,6 +1587,7 @@ MenuStates defaultSelection()
 	return MenuStates::Main;
 }
 
+//contains full fuctionality of neural network manager Finite State Menu
 void manageNeuralNetwork()
 {
 	NeuralNetwork* network = nullptr;
@@ -1624,6 +1648,7 @@ void manageNeuralNetwork()
 	}
 }
 
+//main execution of program
 int main()
 {
 	manageNeuralNetwork();
