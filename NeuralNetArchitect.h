@@ -1,3 +1,5 @@
+#ifndef NEURALNETARCHITECT_H
+#define NEURALNETARCHITECT_H
 
 /**********************************************************************************************************************************************
  Neuron's activation is the sumOfproducts(weights, inputActivations) + bias, or the given input if it is in the input layer
@@ -385,3 +387,5 @@ MenuStates defaultSelection();
 
 //contains full fuctionality of neural network manager Finite State Menu
 void manageNeuralNetwork();
+
+#endif
