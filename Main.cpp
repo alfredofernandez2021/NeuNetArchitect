@@ -22,10 +22,10 @@ int main()
 // 784 10 2 0 0				MNIST linear network	(dataset confirmation)
 
 /* Cleanup todo:
-* Move to .hpp and .cpp file setup
+* Move to .hpp and .cpp file setup																			--DONE
 * Make all hyperparameters (learning rate, batch size, momentum...) be stored only in NeuralNetwork
 * Create Destructor methods and write calls for memory management
-* Write 'how' comment above each definition, 'what' comment on declarations, comments summarizing blocks of code
+* Write 'how' comment above each definition, 'what' comment on declarations, comments summarizing blocks	
 * Decide and enforce consistent formatting of all code
 * Enable all commented out, red-lined, or hard-coded features
 * Expand menu functions to acknowledge newly-enabled features

@@ -951,13 +951,13 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 	}
 
 	//returns fully-defined neural network... todo: might need to overload = operator for NeuralNetwork
-	return new NeuralNetwork(networkDepth, inputLength, 1, outputLength, 0.0001, 1, errorFunction, layerStates);
+	return new NeuralNetwork(networkDepth, inputLength, 1, outputLength, 0.0000001, 1, errorFunction, layerStates);
 }
 
 //returns the index of the most positive vector element
 int getIndexOfMaxEntry(std::vector<double> Vector)
 {
-	int maxValue = INT32_MIN, maxIndex = -1;
+	double maxValue = -DBL_MAX, maxIndex = -1;
 
 	for (auto i = 0; i < Vector.size(); i++)
 	{
@@ -974,7 +974,7 @@ int getIndexOfMaxEntry(std::vector<double> Vector)
 //returns the value of the most positive vector element
 int getValueOfMaxEntry(std::vector<double> Vector)
 {
-	int maxValue = INT32_MIN, maxIndex = -1;
+	int maxValue = -DBL_MAX, maxIndex = -1;
 
 	for (auto i = 0; i < Vector.size(); i++)
 	{
@@ -990,7 +990,7 @@ int getValueOfMaxEntry(std::vector<double> Vector)
 //returns the value of the most negative vector element
 int getValueOfMinEntry(std::vector<double> Vector)
 {
-	int minValue = INT32_MAX, minIndex = -1;
+	int minValue = DBL_MAX, minIndex = -1;
 
 	for (auto i = 0; i < Vector.size(); i++)
 	{
@@ -1137,7 +1137,7 @@ MenuStates createSelection(NeuralNetwork** network)
 	}
 
 	//create network and point to intialized NeuralNetwork
-	*network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0001, batchSize, costSelection, layerDetails);
+	*network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0000001, batchSize, costSelection, layerDetails);
 
 	//return next menu state
 	return MenuStates::Manage;
@@ -1305,8 +1305,8 @@ MenuStates trainingSelection(NeuralNetwork* network)
 			//calculate error vector
 			for (auto i = 0; i < network->getOutputCount(); i++)
 			{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-				if (i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(maxOutputValue, i) / 5000;
-				else errorVector[i] = network->getOutputRespectiveCost(minOutputValue, i) / 5000;
+				if (i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(maxOutputValue, i);
+				else errorVector[i] = network->getOutputRespectiveCost(minOutputValue, i);
 			}
 
 			network->propagateBackwards(errorVector);
