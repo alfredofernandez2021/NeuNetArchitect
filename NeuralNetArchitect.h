@@ -12,7 +12,6 @@
   weightsMomentum; The momentum of weights being updated by the previous nudge, which will have an effect on subsequent nudges
   bias; the learned negative of the activation threshold that the sumOfProducts needs to surpass to have a positive activation
   biasMomentum; The momentum of the bias being updated by the previous nudge, which will have an effect on subsequent nudges
-  momentumRetention; The inverse rate of decay of a parameter's momentum having an effect in next nudge. if 0, no impact.
  **********************************************************************************************************************************************/
 class Neuron
 {
@@ -23,7 +22,6 @@ private:
 	double activation, activationNudgeSum;
 	double* weights, * weightsMomentum;
 	double bias, biasMomentum;
-	double momentumRetention;
 
 protected:
 	//Computes neuron's internal sumproduct, weights*input activations and bias
@@ -49,10 +47,10 @@ public:
 	Neuron();
 
 	//constructor called for hidden neurons during network creation, with optional learning momentum parameter
-	Neuron(int neuronInputListCount, Neuron* inputNeurons, double momentumRetention = 0.0);
+	Neuron(int neuronInputListCount, Neuron* inputNeurons);
 
 	//constructor called for hidden neurons during network loading, with stored weights and bias values passed in
-	Neuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue, double momentumRetention = 0.0);
+	Neuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue);
 
 	//copy constructor for neurons
 	Neuron(const Neuron& original);
@@ -73,10 +71,10 @@ public:
 	void injectInputRespectiveCostDerivation() const;
 
 	//Applies change to weights that would reduce cost for past batch - uses reserved activationNudges to scale change proportionally
-	void updateWeights(int batchSize, double learningRate);
+	void updateWeights(int batchSize, double learningRate, double momentumRetention);
 
 	//Applies change to bias that would reduce cost function for past batch - uses reserved activationNudges to scale change proportionally
-	void updateBias(int batchSize, double learningRate);
+	void updateBias(int batchSize, double learningRate, double momentumRetention);
 
 	//Resets partial derivative of cost in respect to this neuron's activation from past batch
 	void resetNudges();
@@ -123,7 +121,7 @@ protected:
 	void injectErrorBackwards();
 
 	//apply learned weights and bias updates
-	void updateParameters(int batchSize, double learningRate);
+	void updateParameters(int batchSize, double learningRate, double momentumRetention);
 
 	//clears all stored nudges to neuron parameters
 	void clearNudges();
@@ -136,10 +134,10 @@ public:
 	NeuralLayer(int inputLength, int inputWidth);
 
 	//constructor called for hidden layers during network creation, with optional momentum parameter
-	NeuralLayer(int neuronCount, NeuralLayer* inputLayer, double momentumRetention = 0.0);
+	NeuralLayer(int neuronCount, NeuralLayer* inputLayer);
 
 	//constructor called for hidden layers during network loading, with stored weights and bias values passed in
-	NeuralLayer(int neuronCount, NeuralLayer* inputLayer, double momentumRetention, std::vector<std::vector<double>> weightValues, std::vector<double> biasValues);
+	NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<std::vector<double>> weightValues, std::vector<double> biasValues);
 
 	//copy constructor for layers
 	NeuralLayer(const NeuralLayer& original);
@@ -154,7 +152,7 @@ public:
 	void propagateForward(double inputValues[] = nullptr);
 
 	//transmit error to input neurons and apply learned parameter updates
-	void propagateBackward(int batchSize, double learningRate, double* costArray = nullptr);
+	void propagateBackward(int batchSize, double learningRate, double momentumRetention, double* costArray = nullptr);
 
 	//returns number of neurons contained within a column of the layer
 	int getNeuronArrayLength() const;

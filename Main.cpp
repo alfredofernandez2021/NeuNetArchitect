@@ -17,13 +17,15 @@ int main()
 
 	return 0;
 }
-// 2 1 4 1 1 0 1 2 0 1 0	the first network		(propagation checking)
-// 2 2 4 1 1 0 1 2 0 1 0	the usual network		(loading + learning correctness)
-// 784 10 2 0 0				MNIST linear network	(dataset confirmation)
+// 2 1 4 1 1 0 1 2 0 1 0				the first network		(propagation checking)
+// 2 2 4 1 1 0 1 2 0 1 0				the usual network		(loading + learning correctness)
+// 784 10 2 0 0							MNIST linear network	(dataset confirmation)
+// 784 10 2 1 0.0001 0 1 1 0 0 1 0 1	MNIST linear network	(hyperparameters prompted)
 
 /* Cleanup todo:
 * Move to .hpp and .cpp file setup																			--DONE
-* Make all hyperparameters (learning rate, batch size, momentum...) be stored only in NeuralNetwork
+* Make all hyperparameters (learning rate, batch size, momentum...) be stored in NeuralNetwork				--DONE
+* Remove all hyperparameters from sub-network classes, pass in hyperparameters from network by arguments
 * Create Destructor methods and write calls for memory management
 * Write 'how' comment above each definition, 'what' comment on declarations, comments summarizing blocks	
 * Decide and enforce consistent formatting of all code

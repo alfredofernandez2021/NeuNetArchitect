@@ -62,7 +62,6 @@ void Neuron::nudgeActivation(double nudge)
 Neuron::Neuron() : weights(nullptr), weightsMomentum(nullptr), inputNeurons(nullptr)
 {
 	this->neuronInputListCount = 0;
-	this->momentumRetention = 0;
 
 	bias = biasMomentum = 0.0;
 
@@ -70,11 +69,10 @@ Neuron::Neuron() : weights(nullptr), weightsMomentum(nullptr), inputNeurons(null
 }
 
 //constructor called for hidden neurons during network creation, with optional learning momentum parameter
-Neuron::Neuron(int neuronInputListCount, Neuron* inputNeurons, double momentumRetention)
+Neuron::Neuron(int neuronInputListCount, Neuron* inputNeurons)
 {
 	this->neuronInputListCount = neuronInputListCount;
 	this->inputNeurons = inputNeurons;
-	this->momentumRetention = momentumRetention;
 
 	//Initialize tools for randomly generating numbers that follow a gaussian distribution
 	std::random_device randomDevice{};
@@ -98,11 +96,10 @@ Neuron::Neuron(int neuronInputListCount, Neuron* inputNeurons, double momentumRe
 }
 
 //constructor called for hidden neurons during network loading, with stored weights and bias values passed in
-Neuron::Neuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue, double momentumRetention)
+Neuron::Neuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue)
 {
 	this->neuronInputListCount = neuronInputListCount;
 	this->inputNeurons = inputNeurons;
-	this->momentumRetention = momentumRetention;
 
 	//Initializes weights using He-et-al method
 	weights = new double[neuronInputListCount];
@@ -128,7 +125,6 @@ Neuron::Neuron(const Neuron& original)
 	activationNudgeSum = original.activationNudgeSum;
 	bias = original.bias;
 	biasMomentum = original.biasMomentum;
-	momentumRetention = original.momentumRetention;
 
 	weights = new double[neuronInputListCount];
 	if (weights == nullptr) throw std::bad_alloc();
@@ -150,7 +146,6 @@ Neuron& Neuron::operator=(const Neuron& original)
 	activationNudgeSum = original.activationNudgeSum;
 	bias = original.bias;
 	biasMomentum = original.biasMomentum;
-	momentumRetention = original.momentumRetention;
 
 	weights = new double[neuronInputListCount];
 	if (weights == nullptr) throw std::bad_alloc();
@@ -204,7 +199,7 @@ void Neuron::injectInputRespectiveCostDerivation() const
 }
 
 //Applies change to weights that would reduce cost for past batch - uses reserved activationNudges to scale change proportionally
-void Neuron::updateWeights(int batchSize, double learningRate)
+void Neuron::updateWeights(int batchSize, double learningRate, double momentumRetention)
 {
 	for (auto i = 0; i < neuronInputListCount; i++)
 	{
@@ -214,7 +209,7 @@ void Neuron::updateWeights(int batchSize, double learningRate)
 }
 
 //Applies change to bias that would reduce cost function for past batch - uses reserved activationNudges to scale change proportionally
-void Neuron::updateBias(int batchSize, double learningRate)
+void Neuron::updateBias(int batchSize, double learningRate, double momentumRetention)
 {
 	biasMomentum = momentumRetention * biasMomentum - (getBiasRespectiveDerivation() / batchSize) * learningRate;
 	bias += biasMomentum;
@@ -289,13 +284,13 @@ void NeuralLayer::injectErrorBackwards()
 }
 
 //apply learned weights and bias updates
-void NeuralLayer::updateParameters(int batchSize, double learningRate)
+void NeuralLayer::updateParameters(int batchSize, double learningRate, double momentumRetention)
 {
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 	{
-		neurons[i].updateWeights(batchSize, learningRate);
+		neurons[i].updateWeights(batchSize, learningRate, momentumRetention);
 
-		neurons[i].updateBias(batchSize, learningRate);
+		neurons[i].updateBias(batchSize, learningRate, momentumRetention);
 	}
 }
 
@@ -328,7 +323,7 @@ NeuralLayer::NeuralLayer(int inputLength, int inputWidth) : neuronArrayLength(in
 }
 
 //constructor called for hidden layers during network creation, with optional momentum parameter
-NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, double momentumRetention)
+NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer)
 {
 	neuronArrayLength = neuronCount;
 	neuronArrayWidth = 1;
@@ -341,13 +336,13 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, double moment
 
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 	{
-		neurons[i] = Neuron(inputNeuronCount, inputNeurons, momentumRetention);
+		neurons[i] = Neuron(inputNeuronCount, inputNeurons);
 	}
 
 }
 
 //constructor called for hidden layers during network loading, with stored weights and bias values passed in
-NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, double momentumRetention, std::vector<std::vector<double>> weightValues, std::vector<double> biasValues)
+NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<std::vector<double>> weightValues, std::vector<double> biasValues)
 {
 	neuronArrayLength = neuronCount;
 	neuronArrayWidth = 1;
@@ -360,7 +355,7 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, double moment
 
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 	{
-		neurons[i] = Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i], momentumRetention);
+		neurons[i] = Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]);
 	}
 }
 
@@ -429,13 +424,13 @@ void NeuralLayer::propagateForward(double inputValues[])
 }
 
 //transmit error to input neurons and apply learned parameter updates
-void NeuralLayer::propagateBackward(int batchSize, double learningRate, double* costArray)
+void NeuralLayer::propagateBackward(int batchSize, double learningRate, double momentumRetention, double* costArray)
 {
 	setError(costArray);
 
 	injectErrorBackwards(); //todo: skip for 2nd layer?
 
-	updateParameters(batchSize, learningRate);
+	updateParameters(batchSize, learningRate, momentumRetention);
 }
 
 //returns number of neurons contained within a column of the layer
@@ -638,10 +633,10 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 		switch (layerDetails[i].type)
 		{
 		case 1:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], learningParameters.momentumRetention);
+			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1]);
 			break;
 		default:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], learningParameters.momentumRetention);
+			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1]);
 			break;
 		}
 	}
@@ -677,10 +672,10 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 		switch (layerDetails[i].type)
 		{
 		case 1:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], learningParameters.momentumRetention, layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
+			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
 			break;
 		default:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], learningParameters.momentumRetention, layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
+			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
 			break;
 		}
 	}
@@ -708,11 +703,11 @@ void NeuralNetwork::propagateForwards(double* inputMatrix)
 //updates parameters in all layers in order from output to input layers
 void NeuralNetwork::propagateBackwards(double* costArray)
 {
-	neuralLayers[layerCount - 1].propagateBackward(learningParameters.batchSize, learningParameters.learningRate, costArray);
+	neuralLayers[layerCount - 1].propagateBackward(learningParameters.batchSize, learningParameters.learningRate, learningParameters.momentumRetention, costArray);
 
 	for (auto i = layerCount - 2; i > 0; i--)
 	{
-		neuralLayers[i].propagateBackward(learningParameters.batchSize, learningParameters.learningRate);
+		neuralLayers[i].propagateBackward(learningParameters.batchSize, learningParameters.learningRate, learningParameters.momentumRetention);
 	}
 }
 
@@ -867,6 +862,7 @@ void storeNetwork(NeuralNetwork* network, std::string& fileName)
 	networkPropertyTree.put("network.optimizationAlgorithm", optimizationAlgorithm);
 	networkPropertyTree.put("network.errorFunction", errorFunction);
 
+	//stores learning hyperparameters
 	networkPropertyTree.put("network.learningRate", learningParameters.learningRate);
 	networkPropertyTree.put("network.learningDecay", learningParameters.learningDecay);
 	networkPropertyTree.put("network.batchSize", learningParameters.batchSize);
@@ -924,6 +920,7 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 	optimizationAlgorithm = networkPropertyTree.get<int>("network.optimizationAlgorithm");
 	errorFunction = networkPropertyTree.get<int>("network.errorFunction");
 
+	//loads learning hyperparameters
 	learningParameters.learningRate = networkPropertyTree.get<double>("network.learningRate");
 	learningParameters.learningDecay = networkPropertyTree.get<double>("network.learningDecay");
 	learningParameters.batchSize = networkPropertyTree.get<double>("network.batchSize");
@@ -1295,13 +1292,6 @@ MenuStates trainingSelection(NeuralNetwork* network)
 
 	std::vector<std::vector<std::vector<unsigned char>>> trainingSamples = network->getTrainingSamples();
 	std::vector<unsigned char> trainingLabels = network->getTrainingLabels();
-
-	std::cout << std::endl;
-	std::cout << "Training:" << std::endl;
-	std::cout << "Batch size: ";
-	std::cin >> batchSize;
-	std::cout << "Learning rate: ";
-	std::cin >> learningRate;
 
 	if (!network->isReadyForTraining())
 	{
