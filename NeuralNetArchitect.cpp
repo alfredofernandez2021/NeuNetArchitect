@@ -611,14 +611,13 @@ std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool te
 
 
 //constructor for creating NeuralNetworks
-NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerCreationInfo* layerDetails)
+NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, int costSelection, layerCreationInfo* layerDetails, hyperParameters learningParameters)
 {
 	this->layerCount = layerCount;
 	this->inputLength = inputLength;
 	this->inputWidth = inputWidth;
 	this->outputCount = outputCount;
-	this->learningRate = learningRate;
-	this->batchSize = batchSize;
+	this->learningParameters = learningParameters;
 
 	switch (costSelection)
 	{
@@ -639,10 +638,10 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 		switch (layerDetails[i].type)
 		{
 		case 1:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].momentumRetention);
+			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], learningParameters.momentumRetention);
 			break;
 		default:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].momentumRetention);
+			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], learningParameters.momentumRetention);
 			break;
 		}
 	}
@@ -651,14 +650,13 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 }
 
 //constructor for loading NeuralNetworks
-NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerLoadingInfo* layerDetails)
+NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, int costSelection, layerLoadingInfo* layerDetails, hyperParameters learningParameters)
 {
 	this->layerCount = layerCount;
 	this->inputLength = inputLength;
 	this->inputWidth = inputWidth;
 	this->outputCount = outputCount;
-	this->learningRate = learningRate;
-	this->batchSize = batchSize;
+	this->learningParameters = learningParameters;
 
 	switch (costSelection)
 	{
@@ -679,10 +677,10 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 		switch (layerDetails[i].type)
 		{
 		case 1:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].momentumRetention, layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
+			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], learningParameters.momentumRetention, layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
 			break;
 		default:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].momentumRetention, layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
+			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], learningParameters.momentumRetention, layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
 			break;
 		}
 	}
@@ -710,16 +708,16 @@ void NeuralNetwork::propagateForwards(double* inputMatrix)
 //updates parameters in all layers in order from output to input layers
 void NeuralNetwork::propagateBackwards(double* costArray)
 {
-	neuralLayers[layerCount - 1].propagateBackward(batchSize, learningRate, costArray);
+	neuralLayers[layerCount - 1].propagateBackward(learningParameters.batchSize, learningParameters.learningRate, costArray);
 
 	for (auto i = layerCount - 2; i > 0; i--)
 	{
-		neuralLayers[i].propagateBackward(batchSize, learningRate);
+		neuralLayers[i].propagateBackward(learningParameters.batchSize, learningParameters.learningRate);
 	}
 }
 
 //changes number of samples network expects to process before being told to learn
-void NeuralNetwork::updateBatchSize(int newBatchSize)
+/*void NeuralNetwork::updateBatchSize(int newBatchSize)
 {
 	batchSize = newBatchSize;
 }
@@ -728,7 +726,7 @@ void NeuralNetwork::updateBatchSize(int newBatchSize)
 void NeuralNetwork::updateLearningRate(int newLearningRate)
 {
 	learningRate = newLearningRate;
-}
+}*/
 
 //loads training samples from dataset
 void NeuralNetwork::updateTrainingSamples()
@@ -825,7 +823,6 @@ void NeuralNetwork::saveLayerStates()
 	{
 		layerStates[i].type = neuralLayers[i].getNeuralLayerType();
 		layerStates[i].neuronCount = neuralLayers[i].getNeuronArrayCount();
-		layerStates[i].momentumRetention = 0;
 		layerStates[i].weightsOfNeurons = neuralLayers[i].getNeuronWeights();
 		layerStates[i].biasOfNeurons = neuralLayers[i].getNeuronBiases();
 	}
@@ -837,10 +834,16 @@ layerLoadingInfo* NeuralNetwork::getLayerStates()
 	return layerStates;
 }
 
+hyperParameters NeuralNetwork::getLearningParameters()
+{
+	return learningParameters;
+}
+
 //saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
 void storeNetwork(NeuralNetwork* network, std::string& fileName)
 {
 	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
+	hyperParameters learningParameters;
 
 	//saves network details that are not specific to the layers
 	inputLength = network->getInputCount();
@@ -848,6 +851,7 @@ void storeNetwork(NeuralNetwork* network, std::string& fileName)
 	networkDepth = network->getLayerCount();
 	optimizationAlgorithm = 0;
 	errorFunction = 0;
+	learningParameters = network->getLearningParameters();
 
 	//initializes array of fully defined layer states
 	network->saveLayerStates();
@@ -863,13 +867,21 @@ void storeNetwork(NeuralNetwork* network, std::string& fileName)
 	networkPropertyTree.put("network.optimizationAlgorithm", optimizationAlgorithm);
 	networkPropertyTree.put("network.errorFunction", errorFunction);
 
+	networkPropertyTree.put("network.learningRate", learningParameters.learningRate);
+	networkPropertyTree.put("network.learningDecay", learningParameters.learningDecay);
+	networkPropertyTree.put("network.batchSize", learningParameters.batchSize);
+	networkPropertyTree.put("network.epochCount", learningParameters.epochCount);
+	networkPropertyTree.put("network.momentumRetention", learningParameters.momentumRetention);
+	networkPropertyTree.put("network.dropoutPercent", learningParameters.dropoutPercent);
+	networkPropertyTree.put("network.outlierMinError", learningParameters.outlierMinError);
+	networkPropertyTree.put("network.earlyStoppingMaxError", learningParameters.earlyStoppingMaxError);
+
 	//defines and inserts layer detail subtrees as children to network ptree's 'layers' member
 	for (auto i = 0; i < networkDepth; i++)
 	{
 		//adds non-neuron layer details as chidlren to property subtree root
 		layerPropertySubTree.put("activationType", layerStates[i].type);
 		layerPropertySubTree.put("neuronCount", layerStates[i].neuronCount);
-		layerPropertySubTree.put("momentumRetention", layerStates[i].momentumRetention);
 
 		//defines and inserts neuron detail subtrees as children to layer ptree's 'neurons' member
 		for (auto j = 0; j < layerStates[i].neuronCount; j++)
@@ -901,6 +913,7 @@ void storeNetwork(NeuralNetwork* network, std::string& fileName)
 NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 {
 	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
+	hyperParameters learningParameters;
 	boost::property_tree::ptree networkPropertyTree;
 	boost::property_tree::read_xml(fileName, networkPropertyTree);
 
@@ -911,7 +924,14 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 	optimizationAlgorithm = networkPropertyTree.get<int>("network.optimizationAlgorithm");
 	errorFunction = networkPropertyTree.get<int>("network.errorFunction");
 
-	//double test = networkPropertyTree.get<double>("network.layers.layer.activationType");
+	learningParameters.learningRate = networkPropertyTree.get<double>("network.learningRate");
+	learningParameters.learningDecay = networkPropertyTree.get<double>("network.learningDecay");
+	learningParameters.batchSize = networkPropertyTree.get<double>("network.batchSize");
+	learningParameters.epochCount = networkPropertyTree.get<double>("network.epochCount");
+	learningParameters.momentumRetention = networkPropertyTree.get<double>("network.momentumRetention");
+	learningParameters.dropoutPercent = networkPropertyTree.get<double>("network.dropoutPercent");
+	learningParameters.outlierMinError = networkPropertyTree.get<double>("network.outlierMinError");
+	learningParameters.earlyStoppingMaxError = networkPropertyTree.get<double>("network.earlyStoppingMaxError");
 
 	layerLoadingInfo* layerStates = new layerLoadingInfo[networkDepth];
 
@@ -925,7 +945,6 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 		//defines non-neuron layer state details
 		layerStates[i].type = layer.second.get<int>("activationType");
 		layerStates[i].neuronCount = layer.second.get<int>("neuronCount");
-		layerStates[i].momentumRetention = layer.second.get<int>("momentumRetention");
 
 		//defines neuron state details
 		//BOOST_FOREACH(const boost::property_tree::ptree::value_type &neuron, layer.second.get_child("layer.neurons"))
@@ -951,7 +970,7 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 	}
 
 	//returns fully-defined neural network... todo: might need to overload = operator for NeuralNetwork
-	return new NeuralNetwork(networkDepth, inputLength, 1, outputLength, 0.0000001, 1, errorFunction, layerStates);
+	return new NeuralNetwork(networkDepth, inputLength, 1, outputLength, errorFunction, layerStates, learningParameters);
 }
 
 //returns the index of the most positive vector element
@@ -1066,7 +1085,8 @@ MenuStates introSelection()
 //prompts user through creation of a neural network
 MenuStates createSelection(NeuralNetwork** network)
 {
-	int numberOfLayers, inputLength, inputWidth, outputCount, batchSize, costSelection;
+	int numberOfLayers, inputLength, inputWidth, outputCount, costSelection;
+	hyperParameters learningParameters;
 
 	//define input length
 	std::cout << std::endl;
@@ -1092,22 +1112,64 @@ MenuStates createSelection(NeuralNetwork** network)
 	layerCreationInfo* layerDetails = new layerCreationInfo[numberOfLayers];
 	std::cout << std::endl;
 
-	//define batch size hyperparameter, the number of samples that will be processed before learning takes place
-	//std::cout << "What is the current batch size that this network will train on? ";
-	//std::cin >> batchSize;
-	batchSize = 1;
-	//std::cout << std::endl;
-
 	//define cost function that will calculate network's error upon calculating an output
-	//std::cout << "Which cost function should be used to calculate error? ;
-	//std::cin >> costSelection;
+	std::cout << "Which cost function should be used to calculate error? ";
+	std::cin >> costSelection;
 	costSelection = 1;
-	//std::cout << std::endl;
+	std::cout << std::endl;
+
+	//begin defining hyperparameters
+	//define learning rate hyperparameter, the percent of the current learning step error gradient that will update learned parameters
+	std::cout << "What is the learning rate of this network? ";
+	std::cin >> learningParameters.learningRate;
+	learningParameters.learningRate = 0.0000001;
+	std::cout << std::endl;
+
+	//define learning decay, the gradual decrease in learning rate of the network after each batch
+	std::cout << "What is the learning decay of this network? ";
+	std::cin >> learningParameters.learningDecay;
+	learningParameters.learningDecay = 0.0;
+	std::cout << std::endl;
+
+	//define batch size hyperparameter, the number of samples that will be processed before learning takes place
+	std::cout << "What is the batch size that this network will train on? ";
+	std::cin >> learningParameters.batchSize;
+	learningParameters.batchSize = 1;
+	std::cout << std::endl;
+
+	//define epoch count hyperparameter, the number of times the network will train on the data set
+	std::cout << "What are the total epochs that this network will train on? ";
+	std::cin >> learningParameters.epochCount;
+	learningParameters.epochCount = 1;
+	std::cout << std::endl;
+
+	//define momentum retention, how much the direction of learning from last batch will influence the learning of this batch
+	std::cout << "What is the momentum retention of each training batch? ";
+	std::cin >> learningParameters.momentumRetention;
+	learningParameters.momentumRetention = 0.0;
+	std::cout << std::endl;
+
+	//define percent dropout hyperparameter, the percent of neurons that will be forced inactive to improve generalization
+	std::cout << "What is the percent neuron dropout of the network in each batch/epoch? ";
+	std::cin >> learningParameters.dropoutPercent;
+	learningParameters.dropoutPercent = 0.0;
+	std::cout << std::endl;
+
+	//define minimum network error needed to exclude a training image from being learned on
+	std::cout << "What is the minimun network error needed to prevent learning on a sample? ";
+	std::cin >> learningParameters.outlierMinError;
+	learningParameters.outlierMinError = 1.0;
+	std::cout << std::endl;
+
+	//define early stopping criteria, maximum percent error that a neural network must achieve on a 'streak' to conclude training
+	std::cout << "What is the average maximum percent error that will conclude training? ";
+	std::cin >> learningParameters.earlyStoppingMaxError;
+	learningParameters.earlyStoppingMaxError = 0.0;
+	std::cout << std::endl;
 
 	//initialize first (input) layer
 	layerDetails[0].type = 1;
 	layerDetails[0].neuronCount = inputLength * inputWidth;
-	layerDetails[0].momentumRetention = 0;
 
 	//define each layer
 	for (int i = 1; i < numberOfLayers; i++)
@@ -1129,15 +1191,10 @@ MenuStates createSelection(NeuralNetwork** network)
 			layerDetails[i].neuronCount = outputCount;
 		}
 
-		//define optimization algorithm
-		std::cout << "\tMomentum retention: ";
-		std::cin >> layerDetails[i].momentumRetention;
-		layerDetails[i].momentumRetention = 0;
-		std::cout << std::endl;
 	}
 
 	//create network and point to intialized NeuralNetwork
-	*network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, 0.0000001, batchSize, costSelection, layerDetails);
+	*network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, costSelection, layerDetails, learningParameters);
 
 	//return next menu state
 	return MenuStates::Manage;

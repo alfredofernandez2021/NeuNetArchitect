@@ -30,6 +30,7 @@ int main()
 * Enable all commented out, red-lined, or hard-coded features
 * Expand menu functions to acknowledge newly-enabled features
 * Accomodate for invalid input handling
+* Polish user input prompts and comments
 * Find sections where exception detection handling should be carried out
 * Identify potential space and time complexity reductions
 * Delete unused functions

@@ -190,7 +190,6 @@ struct layerCreationInfo
 {
 	int type;
 	int neuronCount;
-	double momentumRetention;
 };
 
 //structure used for passing layer details during network loading
@@ -198,9 +197,20 @@ struct layerLoadingInfo
 {
 	int type;
 	int neuronCount;
-	double momentumRetention;
 	std::vector<std::vector<double>> weightsOfNeurons;
 	std::vector<double> biasOfNeurons;
+};
+
+struct hyperParameters
+{
+	double learningRate;
+	double learningDecay;
+	double batchSize;
+	double epochCount;
+	double momentumRetention;
+	double dropoutPercent;
+	double outlierMinError;
+	double earlyStoppingMaxError;
 };
 
 //flips byte ordering of input integer
@@ -234,10 +244,9 @@ private:
 	int inputLength, inputWidth;
 	int outputCount;
 	NeuralLayer* neuralLayers;
-	double learningRate;
-	int batchSize;
 	double (*derivedCostFunction)(double, double, int);
 	layerLoadingInfo* layerStates;
+	hyperParameters learningParameters;
 	std::vector<std::vector<std::vector<unsigned char>>> trainingSamples;
 	std::vector<unsigned char> trainingLabels;
 	std::vector<std::vector<std::vector<unsigned char>>> testingSamples;
@@ -247,10 +256,10 @@ private:
 public:
 
 	//constructor for creating NeuralNetworks
-	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerCreationInfo* layerDetails);
+	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, int costSelection, layerCreationInfo* layerDetails, hyperParameters learningParameters);
 
 	//constructor for loading NeuralNetworks
-	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, double learningRate, int batchSize, int costSelection, layerLoadingInfo* layerDetails);
+	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, int costSelection, layerLoadingInfo* layerDetails, hyperParameters learningParameters);
 
 	//returns a vector of the activation values of the final layer of the network
 	std::vector<double> getOutputs();
@@ -314,6 +323,8 @@ public:
 
 	//gives array of layer state details that may be used to recreate layers
 	layerLoadingInfo* getLayerStates();
+
+	hyperParameters getLearningParameters();
 
 };
 
