@@ -27,19 +27,23 @@ int main()
 * Make all hyperparameters (learning rate, batch size, momentum...) be stored in NeuralNetwork				--DONE
 * Remove all hyperparameters from sub-network classes, pass in hyperparameters from network by arguments	--DONE
 * Create NeuralNetwork Destructor methods and write calls for memory management								--DONE
+* ----------------------------------------------------------------------------------------------------------
 * Write 'how' comment above each definition, 'what' comment on declarations, comments summarizing blocks	
-* Decide and enforce consistent formatting of all code
-* Enable all commented out, red-lined, or hard-coded features
-* Expand menu functions to acknowledge newly-enabled features
-* Accomodate for invalid input handling
-* Polish user input prompts and comments
-* Find sections where exception detection handling should be carried out
 * Identify potential space and time complexity reductions
 * Delete unused functions
 * Scan for memory leaks
+* Change names of confusing functions after looking up 'sweet spot' of description depth
+* ----------------------------------------------------------------------------------------------------------
+* Accomodate for invalid input handling
+* Polish user input prompts and comments
+* Find sections where exception detection handling should be carried out
+* Finish Help and Introduction prompts
+* ----------------------------------------------------------------------------------------------------------
 * Ensure ease of use between Visual Studio project and Github repo
 * Update project description on Github
-* Change names of confusing functions after looking up 'sweet spot' of description depth
+* Decide and enforce consistent formatting of all code
+* Enable all commented out, red-lined, or hard-coded features
+* Expand menu functions to acknowledge newly-enabled features
 */
 
 /* Expansion todo:
@@ -51,8 +55,8 @@ int main()
 * Recurrent neuron/layer
 * Convolutional neuron/layer
 * Softmax neuron/layer
-* Input processing ...
-* Output processing ...
+* Input (pre) processing ...
+* Output (post) processing ...
 * Dropout learning feature
 * Early-stopping learning feature
 * All hyperparameter effects
