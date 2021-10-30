@@ -51,5 +51,6 @@ int main()
 * Output processing ...
 * Dropout learning feature
 * Early-stopping learning feature
+* All hyperparameter effects
 * Edge-case detection learning feature
 */
