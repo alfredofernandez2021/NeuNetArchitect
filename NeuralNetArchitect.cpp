@@ -834,6 +834,17 @@ hyperParameters NeuralNetwork::getLearningParameters()
 	return learningParameters;
 }
 
+NeuralNetwork::~NeuralNetwork()
+{
+	delete[] neuralLayers;
+	delete[] layerStates;
+
+	trainingSamples.clear();
+	trainingLabels.clear();
+	testingSamples.clear();
+	testingLabels.clear();
+}
+
 //saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
 void storeNetwork(NeuralNetwork* network, std::string& fileName)
 {
@@ -1027,9 +1038,11 @@ void exitSelection()
 }
 
 //lists main menu options and prompts user to select one
-MenuStates mainSelection()
+MenuStates mainSelection(NeuralNetwork* network)
 {
 	int selection;
+
+	delete network;
 
 	//initial menu state prompt to user
 	std::cout << std::endl;
@@ -1492,7 +1505,7 @@ void manageNeuralNetwork()
 			return;
 
 		case MenuStates::Main:
-			menuFSMState = mainSelection();
+			menuFSMState = mainSelection(network);
 			break;
 
 		case MenuStates::Intro:

@@ -324,6 +324,8 @@ public:
 
 	hyperParameters getLearningParameters();
 
+	~NeuralNetwork();
+
 };
 
 //saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
@@ -361,7 +363,7 @@ enum class MenuStates : unsigned int
 void exitSelection();
 
 //lists main menu options and prompts user to select one
-MenuStates mainSelection();
+MenuStates mainSelection(NeuralNetwork* network);
 
 //todo: improve this
 //prints description of project and provides a high-level guide

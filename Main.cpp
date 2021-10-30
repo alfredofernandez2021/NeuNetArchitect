@@ -25,8 +25,8 @@ int main()
 /* Cleanup todo:
 * Move to .hpp and .cpp file setup																			--DONE
 * Make all hyperparameters (learning rate, batch size, momentum...) be stored in NeuralNetwork				--DONE
-* Remove all hyperparameters from sub-network classes, pass in hyperparameters from network by arguments
-* Create Destructor methods and write calls for memory management
+* Remove all hyperparameters from sub-network classes, pass in hyperparameters from network by arguments	--DONE
+* Create NeuralNetwork Destructor methods and write calls for memory management								--DONE
 * Write 'how' comment above each definition, 'what' comment on declarations, comments summarizing blocks	
 * Decide and enforce consistent formatting of all code
 * Enable all commented out, red-lined, or hard-coded features
@@ -36,6 +36,7 @@ int main()
 * Find sections where exception detection handling should be carried out
 * Identify potential space and time complexity reductions
 * Delete unused functions
+* Scan for memory leaks
 * Ensure ease of use between Visual Studio project and Github repo
 * Update project description on Github
 * Change names of confusing functions after looking up 'sweet spot' of description depth
