@@ -2,16 +2,14 @@
 #define NEURALNETARCHITECT_H
 
 /**********************************************************************************************************************************************
- Neuron's activation is the sumOfproducts(weights, inputActivations) + bias, or the given input if it is in the input layer
+ Linear neuron's activation is the sumOfproducts(weights, inputActivations) + bias, or the given input if it is in the input layer
 
   neuronInputListCount; number of neurons with activation that feeds into this neuron's activation function
   inputNeurons; array of addresses of input neurons with an activation that forms part of this neuron's activation
-  activation; the evaluation of this neuron's activation function: sumOfproducts(weights, inputActivations) + bias
+  activation; the evaluation of this neuron's activation function = sumOfproducts(weights, inputActivations) + bias, or the input value
   activationNudgeSum; measurement of how this activation affects cost function, found by sum (dC/da)*(da/da_this) from proceeding neurons
   weights; array of learned weights that are used to modify impact of input neuron activations on this neuron's activation
-  weightsMomentum; The momentum of weights being updated by the previous nudge, which will have an effect on subsequent nudges
   bias; the learned negative of the activation threshold that the sumOfProducts needs to surpass to have a positive activation
-  biasMomentum; The momentum of the bias being updated by the previous nudge, which will have an effect on subsequent nudges
  **********************************************************************************************************************************************/
 class Neuron
 {
@@ -24,82 +22,82 @@ private:
 	double bias, biasMomentum;
 
 protected:
-	//Computes neuron's internal sumproduct, weights*input activations and bias
+	//gives neuron's internal sumproduct
 	double getActivationFunctionInput() const;
 
-	//returns the current calculation for derivative of cost function in respect to this neuron's activation
+	//gives how much this neuron's activation affects the evaluation of the network's cost function
 	double getActivationNudgeSum() const;
 
-	//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
+	//gives how much a particular input affects the evaluation of the network's cost function
 	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const;
 
-	//Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
+	//gives how much a particular weight affects the evaluation of the network's cost function
 	virtual double getWeightRespectiveDerivation(const int inputNeuronIndex) const;
 
-	//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
+	//gives how much the neuron's bias affects the evaluation of the network's cost function
 	virtual double getBiasRespectiveDerivation() const;
 
-	//Adds desired change in activation value that would've reduced minibatch training error, dC/da = completeSum(dC/do * do/da)
+	//Considers desired change to activation that would minimize network's cost or error
 	void nudgeActivation(double nudge);
 
 public:
-	//constructor called for input neurons of activation determined by input
+	//constructor called for input neurons of activations determined only by direct input
 	Neuron();
 
-	//constructor called for hidden neurons during network creation, with optional learning momentum parameter
+	//constructor called for hidden neurons during network creation
 	Neuron(int neuronInputListCount, Neuron* inputNeurons);
 
-	//constructor called for hidden neurons during network loading, with stored weights and bias values passed in
+	//constructor called for hidden neurons during network loading, with previously-stored parameter values passed in
 	Neuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue);
 
-	//copy constructor for neurons
+	//copy constructor for neurons for copying an existing neuron's state
 	Neuron(const Neuron& original);
 
-	//operator = overloading for readable assignments resulting in deep copies
+	//operator = overloading for copying an existing neuron's state
 	Neuron& operator=(const Neuron& original);
 
-	//custom destructor for neurons
+	//custom destructor for neurons to delete neuron
 	~Neuron();
 
-	//Defines empty exterior activation function of neuron, a linear sumOfProducts(weights,inputActivations) + bias
+	//Defines (lack of) exterior activation function of linear neuron
 	virtual void activate(const double input = 0.0);
 
-	//Injects error dC/da into neuron
+	//Injects error indicating how much the network's cost function changes according to this neuron's activation
 	void setError(double cost);
 
-	//Injects corresponding error into input neurons due to activation, dC/di = sum(all(dC/dh * dh/di)) 
+	//Injects corresponding error into input neurons depending on how their activation affects this neuron's activation
 	void injectInputRespectiveCostDerivation() const;
 
-	//Applies change to weights that would reduce cost for past batch - uses reserved activationNudges to scale change proportionally
+	//Applies change to weights
 	void updateWeights(int batchSize, double learningRate, double momentumRetention);
 
-	//Applies change to bias that would reduce cost function for past batch - uses reserved activationNudges to scale change proportionally
+	//Applies change to bias
 	void updateBias(int batchSize, double learningRate, double momentumRetention);
 
-	//Resets partial derivative of cost in respect to this neuron's activation from past batch
+	//Resets indication of how this neuron's activation affects the network's cost function evaluation
 	void resetNudges();
 
-	//returns number of input neurons
+	//gives number of input neurons
 	int getInputCount() const;
 
-	//returns activation value of neuron
+	//gives activation value of neuron
 	double getActivation() const;
 
-	//returns weight from this neuron towards a specified input neuron
+	//gives value of specified weight parameter belonging to this neuron
 	double getWeight(int inputNeuronIndex) const;
 
 	std::vector<double> getWeights() const;
 
-	//returns bias of this neuron
+	//gives value of this neuron's bias parameter
 	double getBias() const;
 
-	//returns the activation type of the neuron
+	//gives the activation type of the neuron
 	virtual std::string getNeuronType();
 
 };
 
 /**********************************************************************************************************************************************
- NeuralLayer's activation is strictly function(sumOfproducts(weights, inputActivations) + biases) or input array, with no additional variables
+ NeuralLayer's activation is either the vector of the outputs of its neurons, or the input values that were directly passed in
 
   neuronArrayLength; number of neurons contained within each column of a layer
   neuronArrayWidth; number of neurons contained within each row of a layer

@@ -39,11 +39,15 @@ int main()
 * Find sections where exception detection handling should be carried out
 * Finish Help and Introduction prompts
 * ----------------------------------------------------------------------------------------------------------
-* Ensure ease of use between Visual Studio project and Github repo
-* Update project description on Github
+* Update project description on Github and repo permissions
 * Decide and enforce consistent formatting of all code
 * Enable all commented out, red-lined, or hard-coded features
 * Expand menu functions to acknowledge newly-enabled features
+* ----------------------------------------------------------------------------------------------------------
+* Require check status before being able to merge to Github repo
+* Use submodule of all 3rd party libraries
+* Ensure ease of use between Visual Studio project and Github repo
+* Test that entire project can be identically used on another system
 */
 
 /* Expansion todo:
