@@ -56,7 +56,7 @@ public:
 	//operator = overloading for copying an existing neuron's state
 	Neuron& operator=(const Neuron& original);
 
-	//custom destructor for neurons to delete neuron
+	//custom destructor for deleting Neuron objects
 	~Neuron();
 
 	//Defines (lack of) exterior activation function of linear neuron
@@ -112,83 +112,98 @@ protected:
 	Neuron* neurons;
 	NeuralLayer* previousLayer;
 
-	//Set error of neurons with activations directly used to calculate cost dC/da
+	//Set error of neurons with activations directly used to calculate cost
 	void setError(double costArray[]);
 
-	//nudge input layer activations with appropriate derivatives of cost function dC/da * da/di
+	//nudge preceeding layer activation depending on how much they affect the network's cost function evaluation
 	void injectErrorBackwards();
 
 	//apply learned weights and bias updates
 	void updateParameters(int batchSize, double learningRate, double momentumRetention);
 
-	//clears all stored nudges to neuron parameters
+	//clears all stored nudges to layer's activation
 	void clearNudges();
 
 public:
-	//default constructor for layer class
+	//default constructor for layer class, todo: get rid of this?
 	NeuralLayer();
 
-	//constructor called for input layers
+	//constructor called for creating input layers
 	NeuralLayer(int inputLength, int inputWidth);
 
-	//constructor called for hidden layers during network creation, with optional momentum parameter
+	//constructor called for hidden layers during network creation
 	NeuralLayer(int neuronCount, NeuralLayer* inputLayer);
 
-	//constructor called for hidden layers during network loading, with stored weights and bias values passed in
+	//constructor called for hidden layers during network loading, with stored neuron parameter values passed in
 	NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<std::vector<double>> weightValues, std::vector<double> biasValues);
 
-	//copy constructor for layers
+	//copy constructor for creating layers of the same state as the one passed in
 	NeuralLayer(const NeuralLayer& original);
 
-	//operator = overloading for readable assignments resulting in deep copies
+	//operator = overloading for creating layers of the same state as the one passed in
 	NeuralLayer& operator=(const NeuralLayer& original);
 
-	//custom destructor for NeuralLayer objects
+	//custom destructor for deleting NeuralLayer objects
 	~NeuralLayer();
 
-	//activate all neurons in layer and resets nudges from past learning iteration
+	//activate layer based on previous layer's activation
 	void propagateForward(double inputValues[] = nullptr);
 
-	//transmit error to input neurons and apply learned parameter updates
+	//inject error vector to previous layer depending on this layer's error vector
 	void propagateBackward(int batchSize, double learningRate, double momentumRetention, double* costArray = nullptr);
 
-	//returns number of neurons contained within a column of the layer
+	//gives number of neurons contained within a column of this layer
 	int getNeuronArrayLength() const;
 
-	//returns number of neurons contained within a row of the layer
+	//gives number of neurons contained within a row of this layer
 	int getNeuronArrayWidth() const;
 
-	//returns number of neurons contained within layer
+	//gives number of neurons contained within layer
 	int getNeuronArrayCount() const;
 
-	//returns array of pointers to neurons contained within layer
+	//gives array of addresses to neurons contained within layer
 	Neuron* getNeurons() const;
 
-	//returns pointer to layer that is feeding into this layer
+	//gives address of layer that is feeding into this layer
 	NeuralLayer* getPreviousLayer() const;
 
+	//get the activations of this layer's neurons
 	std::vector<double> getNeuronActivations() const;
 
+	//get the weight values stored in each neuron in this layer
 	std::vector<std::vector<double>> getNeuronWeights() const;
 
+	//get the bias value corresponding to each neuron in this layer
 	std::vector<double> getNeuronBiases() const;
 
-	//returns the activation type of the neurons contained within layer
+	//gives this layer's activation function
 	virtual int getNeuralLayerType() const;
 
 };
 
-//the derivation of the mean-squared-error function in respect to the activation of an output neuron
+//todo: change this to bool determining derived state
 double derivedMSECost(double targetValue, double estimatedValue, int outputCount);
 
-//structure used for passing layer details during network creation
+/**********************************************************************************************************************************************
+ layerCreationInfo is used for passing layer details for NeuralNetwork creation
+
+  type; activation type of layer, the activation function that determines each neuron's output
+  neuronCount; number of neurons stored in layer
+ **********************************************************************************************************************************************/
 struct layerCreationInfo
 {
 	int type;
 	int neuronCount;
 };
 
-//structure used for passing layer details during network loading
+/**********************************************************************************************************************************************
+ layerLoadingInfo is used for passing layer details for NeuralNetwork loading
+
+  type; activation type of layer, the activation function that determines each neuron's output
+  neuronCount; number of neurons stored in layer
+  weightsOfNeurons; loaded weight parameter values of neurons
+  biasOfNeurons; loaded bias parameter values of neurons
+ **********************************************************************************************************************************************/
 struct layerLoadingInfo
 {
 	int type;
@@ -197,6 +212,18 @@ struct layerLoadingInfo
 	std::vector<double> biasOfNeurons;
 };
 
+/**********************************************************************************************************************************************
+ hyperParameters is used for storing values of NeuralNetwork's learning hyperparameters
+
+  learningRate; the portion of a learning step that is taken when updating parameters during backpropagation
+  learningDecay; the rate at which learning step sizes cumulatively decrease after each batch is learned on
+  batchSize; the number of samples used to determine the magnitude and averaged direction of a learning step
+  epochCount; the number of times that the entire training dataset is used for learning
+  momentumRetention; the amount that a learning step influences the magnitude and direction of the next step
+  dropoutPercent; the rate of neurons in the network that will not be activated or trained during an epoch
+  outlierMinError; the criteria by which an example is deemed an outlier of the dataset and will not be trained on
+  earlyStoppingMaxError; the criteria used to determined whether a network has reached its learning goals after an epoch
+ **********************************************************************************************************************************************/
 struct hyperParameters
 {
 	double learningRate;
@@ -213,11 +240,11 @@ struct hyperParameters
 unsigned int flipIntegerByteOrdering(int original);
 
 //todo: pass in a path string instead of a bool
-//returns vector of all available testing or training labels in the dataset
+//gives all available testing or training labels in the dataset
 std::vector<unsigned char> getMNISTLabelVector(bool testing);
 
 //todo: pass in a path string instead of a bool
-//returns vector of all available testing or training samples in the dataset
+//gives all available testing or training samples in the dataset
 std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool testing);
 
 
@@ -229,8 +256,12 @@ std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool te
   inputWidth; the first dimension defining the size of the input array, currently assuming a 2D input grid
   outputCount; the number of outputs the neural network is expected to produce, currently assuming a vector output
   neuralLayers; an array containing all neural layers that make up the network
-  learningRate; coefficient describing the magnitude of the adjustments to weight and bias parameters following a training iteration
-  batchSize; number of training samples from a dataset that will be fed-forward through the network before learning takes place
+  derivedCostFunction; c
+  layerStates; n
+  trainingSamples; c
+  trainingLabels; n
+  testingSamples; c
+  testingLabels; n
  **********************************************************************************************************************************************/
 class NeuralNetwork
 {
