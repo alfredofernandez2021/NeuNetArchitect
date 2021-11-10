@@ -251,17 +251,18 @@ std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool te
 /**********************************************************************************************************************************************
  NeuralNetworks's activation is a function of all weights and bias parameters held within the neurons of each layer
 
-  layerCount; number of neural layers held within neural network (also defines the depth of the network)
+  layerCount; number of neural layers held within neural network, the depth of the network
   inputLength; the first dimension defining the size of the input array, currently assuming a 2D input grid
-  inputWidth; the first dimension defining the size of the input array, currently assuming a 2D input grid
+  inputWidth; the second dimension defining the size of the input array, currently assuming a 2D input grid
   outputCount; the number of outputs the neural network is expected to produce, currently assuming a vector output
   neuralLayers; an array containing all neural layers that make up the network
-  derivedCostFunction; c
-  layerStates; n
-  trainingSamples; c
-  trainingLabels; n
-  testingSamples; c
-  testingLabels; n
+  derivedCostFunction; address of function... todo: update this after fixing function with bool
+  layerStates; saved states of layers, containing everything that is needed to fully define and reconstruct the layers
+  learningParameters; learning hyperparameters that tweak how the network will carry out training
+  trainingSamples; vector of raw samples from the dataset that will be used to train the network
+  trainingLabels; vector of labels that correctly classify the training samples used to train the network
+  testingSamples; vector of raw samples from the dataset that will be used to test the network
+  testingLabels; vector of labels that correctly classify the training samples used to test the network
  **********************************************************************************************************************************************/
 class NeuralNetwork
 {
@@ -288,20 +289,14 @@ public:
 	//constructor for loading NeuralNetworks
 	NeuralNetwork(int layerCount, int inputLength, int inputWidth, int outputCount, int costSelection, layerLoadingInfo* layerDetails, hyperParameters learningParameters);
 
-	//returns a vector of the activation values of the final layer of the network
+	//gives a vector of the activation values of the network's final layer
 	std::vector<double> getOutputs();
 
 	//activates all layers in order from input to output layers
 	void propagateForwards(double* inputMatrix);
 
-	//updates parameters in all layers in order from output to input layers
+	//performs learning step in all layers in order from output to input layers
 	void propagateBackwards(double* costArray);
-
-	//changes number of samples network expects to process before being told to learn
-	void updateBatchSize(int newBatchSize);
-
-	//updates magnitude of parameter changes during learning
-	void updateLearningRate(int newLearningRate);
 
 	//loads training samples from dataset
 	void updateTrainingSamples();
@@ -321,22 +316,22 @@ public:
 	//indicates if dataset testing samples and labels have been loaded
 	bool isReadyForTesting();
 
-	//returns dataset training samples to use during network training
+	//gives dataset training samples to use during network training
 	std::vector<std::vector<std::vector<unsigned char>>> getTrainingSamples();
 
-	//returns dataset training labels to use during network training
+	//gives dataset training labels to use during network training
 	std::vector<unsigned char> getTrainingLabels();
 
-	//returns dataset testing samples to use during network testing
+	//gives dataset testing samples to use during network testing
 	std::vector<std::vector<std::vector<unsigned char>>> getTestingSamples();
 
-	//returns dataset testing labels to use during network testing
+	//gives dataset testing labels to use during network testing
 	std::vector<unsigned char> getTestingLabels();
 
 	//gives the partial derivative value of the cost function in respect to an output activation
 	double getOutputRespectiveCost(double targetValue, int outputIndex);
 
-	//gives the number of inputs that network accepts
+	//gives the number of inputs that the network accepts
 	int getInputCount();
 
 	//gives the number of outputs that the network produces
@@ -345,7 +340,7 @@ public:
 	//gives the depth of the network
 	int getLayerCount();
 
-	//saves all necessary layer data necessary to recreate the network layers exactly upon loading
+	//saves all necessary layer data necessary to accurately recreate the network layers upon loading
 	void saveLayerStates();
 
 	//gives array of layer state details that may be used to recreate layers
@@ -357,19 +352,19 @@ public:
 
 };
 
-//saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
+//saves the entire neural network, such that all data necessary to rebuild the exact network is stored
 void storeNetwork(NeuralNetwork* network, std::string& fileName);
 
-//saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
+//loads the entire neural network, such that all data necessary to rebuild the exact network is restored
 NeuralNetwork* loadNetworkPointer(const std::string& fileName);
 
-//returns the index of the most positive vector element
+//gives the index of the most positive vector element
 int getIndexOfMaxEntry(std::vector<double> Vector);
 
-//returns the value of the most positive vector element
+//gives the value of the most positive vector element
 int getValueOfMaxEntry(std::vector<double> Vector);
 
-//returns the value of the most negative vector element
+//gives the value of the most negative vector element
 int getValueOfMinEntry(std::vector<double> Vector);
 
 //enumeration to number-code the names of the menu states
@@ -388,7 +383,7 @@ enum class MenuStates : unsigned int
 	Help = 10,
 };
 
-//Final print before leaving menus
+//prints performed when leaving menus
 void exitSelection();
 
 //lists main menu options and prompts user to select one
@@ -401,16 +396,16 @@ MenuStates introSelection();
 //prompts user through creation of a neural network
 MenuStates createSelection(NeuralNetwork** network);
 
-//asks user for path of file to load fully-defined neural network from
+//asks user for path of file to load fully-defined neural network
 MenuStates loadSelection(NeuralNetwork** network);
 
 //lists manager options and prompts user to select one
 MenuStates manageSelection();
 
-//asks user for datatset label and sample files and loads them into vectors
+//asks user for datatset label and sample files and loads them
 MenuStates datasetSelection(NeuralNetwork* network);
 
-//asks user to define higher-level hyperparameters and commences training
+//commences training
 MenuStates trainingSelection(NeuralNetwork* network);
 
 //completes testing of neural network with current learned-parameter values
