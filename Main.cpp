@@ -29,10 +29,10 @@ int main()
 * Create NeuralNetwork Destructor methods and write calls for memory management								--DONE
 * ----------------------------------------------------------------------------------------------------------
 * Write 'how' comment above each definition, 'what' comment on declarations, comments summarizing blocks	
-* Identify potential space and time complexity reductions
 * Delete unused functions
+* Change names of confusing functions
 * Scan for memory leaks
-* Change names of confusing functions after looking up 'sweet spot' of description depth
+* Identify potential space and time complexity reductions
 * ----------------------------------------------------------------------------------------------------------
 * Accomodate for invalid input handling
 * Polish user input prompts and comments

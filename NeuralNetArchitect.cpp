@@ -10,19 +10,19 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include "NeuralNetArchitect.h"
 
-//Computes neuron's internal sumproduct, weights*input activations and bias
+//Computes neuron's internal sumproduct(weights, inputs) + bias
 double Neuron::getActivationFunctionInput() const
 {
-	double sumOfProduct = 0;
+	double sumOfProducts = 0;
 	for (auto i = 0; i < neuronInputListCount; i++)
 	{
-		sumOfProduct += weights[i] * inputNeurons[i].getActivation();
+		sumOfProducts += weights[i] * inputNeurons[i].getActivation();
 	}
 
-	return sumOfProduct + bias;
+	return sumOfProducts + bias;
 }
 
-//returns the current calculation for derivative of cost function in respect to this neuron's activation
+//returns the current value for derivative of cost function in respect to this neuron's activation
 double Neuron::getActivationNudgeSum() const
 {
 	return activationNudgeSum;
@@ -31,7 +31,7 @@ double Neuron::getActivationNudgeSum() const
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
 double Neuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
 {
-	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+	assert(inputNeuronIndex < neuronInputListCount && inputNeuronIndex >= 0);
 
 	return activationNudgeSum * weights[inputNeuronIndex];
 }
@@ -39,7 +39,7 @@ double Neuron::getActivationRespectiveDerivation(const int inputNeuronIndex) con
 //Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
 double Neuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
 {
-	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+	assert(inputNeuronIndex < neuronInputListCount && inputNeuronIndex >= 0);
 
 	return activationNudgeSum * inputNeurons[inputNeuronIndex].getActivation();
 }
@@ -52,13 +52,13 @@ double Neuron::getBiasRespectiveDerivation() const
 	return activationNudgeSum * 1.0;
 }
 
-//Adds desired change in activation value that would've reduced minibatch training error, dC/da = completeSum(dC/do * do/da)
+//Adds desired change in activation value that's projected to reduce batch training error, dC/da = completeSum(dC/do * do/da)
 void Neuron::nudgeActivation(double nudge)
 {
 	activationNudgeSum += nudge;
 }
 
-//constructor called for input neurons of activation determined by input
+//constructor called for input neurons of activation value directly determined by dataset samples
 Neuron::Neuron() : weights(nullptr), weightsMomentum(nullptr), inputNeurons(nullptr)
 {
 	this->neuronInputListCount = 0;
@@ -68,7 +68,7 @@ Neuron::Neuron() : weights(nullptr), weightsMomentum(nullptr), inputNeurons(null
 	activation = activationNudgeSum = 0.0;
 }
 
-//constructor called for hidden neurons during network creation, with optional learning momentum parameter
+//constructor called for hidden neurons during network creation
 Neuron::Neuron(int neuronInputListCount, Neuron* inputNeurons)
 {
 	this->neuronInputListCount = neuronInputListCount;
@@ -87,11 +87,14 @@ Neuron::Neuron(int neuronInputListCount, Neuron* inputNeurons)
 		weights[i] = randomGaussianDistributor(generator);
 	}
 
+	//Sets weight residual-momentum values to 0
 	weightsMomentum = new double[neuronInputListCount]();
 	if (weightsMomentum == nullptr) throw std::bad_alloc();
 
+	//Sets bias and bias residual-momentum to 0
 	bias = biasMomentum = 0.0;
 
+	//Sets activation and partial derivative dCost/dActivation to 0
 	activation = activationNudgeSum = 0.0;
 }
 
@@ -101,24 +104,28 @@ Neuron::Neuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<doubl
 	this->neuronInputListCount = neuronInputListCount;
 	this->inputNeurons = inputNeurons;
 
-	//Initializes weights using He-et-al method
+	//Initializes weights using loaded values
 	weights = new double[neuronInputListCount];
 	if (weights == nullptr) throw std::bad_alloc();
 	for (auto i = 0; i < neuronInputListCount; i++)
 		weights[i] = weightValues[i];
 
+	//Sets weight residual-momentum values to loaded values
 	weightsMomentum = new double[neuronInputListCount]();
 	if (weightsMomentum == nullptr) throw std::bad_alloc();
 
+	//Sets bias to loaded value and bias residual-momentum to 0
 	bias = biasValue;
 	biasMomentum = 0.0;
 
+	//Sets activation and partial derivative dCost/dActivation to 0
 	activation = activationNudgeSum = 0.0;
 }
 
-//copy constructor for neurons
+//copy constructor for neurons, resulting in identical deep copies - future use?
 Neuron::Neuron(const Neuron& original)
 {
+	//Copies non-array values
 	neuronInputListCount = original.neuronInputListCount;
 	inputNeurons = original.inputNeurons;
 	activation = original.activation;
@@ -126,20 +133,23 @@ Neuron::Neuron(const Neuron& original)
 	bias = original.bias;
 	biasMomentum = original.biasMomentum;
 
+	//Copies weight values from original neuron
 	weights = new double[neuronInputListCount];
 	if (weights == nullptr) throw std::bad_alloc();
 	for (auto i = 0; i < neuronInputListCount; i++)
 		weights[i] = original.weights[i];
 
+	//Copies weight residual-momentums from original neuron
 	weightsMomentum = new double[neuronInputListCount];
 	if (weightsMomentum == nullptr) throw std::bad_alloc();
 	for (auto i = 0; i < neuronInputListCount; i++)
 		weightsMomentum[i] = original.weightsMomentum[i];
 }
 
-//operator = overloading for readable assignments resulting in deep copies
+//operator = overloading for readable assignments, resulting in identical deep copies
 Neuron& Neuron::operator=(const Neuron& original)
 {
+	//Copies non-array values
 	neuronInputListCount = original.neuronInputListCount;
 	inputNeurons = original.inputNeurons;
 	activation = original.activation;
@@ -147,20 +157,23 @@ Neuron& Neuron::operator=(const Neuron& original)
 	bias = original.bias;
 	biasMomentum = original.biasMomentum;
 
+	//Copies weight values from original neuron
 	weights = new double[neuronInputListCount];
 	if (weights == nullptr) throw std::bad_alloc();
 	for (auto i = 0; i < neuronInputListCount; i++)
 		weights[i] = original.weights[i];
 
+	//Copies weight residual-momentums from original neuron
 	weightsMomentum = new double[neuronInputListCount];
 	if (weightsMomentum == nullptr) throw std::bad_alloc();
 	for (auto i = 0; i < neuronInputListCount; i++)
 		weightsMomentum[i] = original.weightsMomentum[i];
 
+	//returns address of newly-created neuron to allow chain assignments
 	return *this;
 }
 
-//custom destructor for neurons
+//custom destructor for neurons to free array memory and unlink from input neurons
 Neuron::~Neuron()
 {
 	inputNeurons = nullptr;
@@ -169,7 +182,7 @@ Neuron::~Neuron()
 	delete[] weightsMomentum;
 }
 
-//Defines empty exterior activation function of neuron, a linear sumOfProducts(weights,inputActivations) + bias
+//Defines empty exterior activation function of neuron, leaving only a linear sumOfProducts(weights,inputActivations) + bias
 void Neuron::activate(const double input)
 {
 	if (neuronInputListCount > 0)
@@ -183,13 +196,13 @@ void Neuron::activate(const double input)
 
 }
 
-//Injects error dC/da into neuron
+//Injects error dC/da into this neuron, called for output neurons that are directly used to calculate cost
 void Neuron::setError(double cost)
 {
 	activationNudgeSum = cost;
 }
 
-//Injects corresponding error into input neurons due to activation, dC/di = sum(all(dC/dh * dh/di)) 
+//Injects corresponding error into input neurons due to activation, dC/di = dC/dh * dh/di for each input activation i
 void Neuron::injectInputRespectiveCostDerivation() const
 {
 	for (auto i = 0; i < neuronInputListCount; i++)
@@ -198,19 +211,22 @@ void Neuron::injectInputRespectiveCostDerivation() const
 	}
 }
 
-//Applies change to weights that would reduce cost for past batch - uses reserved activationNudges to scale change proportionally
+//Applies change to weights that is projected to reduce cost for past batch, defines weight-update portion of a learning step
 void Neuron::updateWeights(int batchSize, double learningRate, double momentumRetention)
 {
+	//Calculates weight residual-momentums for next learning step based on hyperparameter
 	for (auto i = 0; i < neuronInputListCount; i++)
 	{
+		//Uses reserved activationNudges to scale change proportionally to a neuron's effect on network error
 		weightsMomentum[i] = momentumRetention * weightsMomentum[i] - (getWeightRespectiveDerivation(i) / batchSize) * learningRate;
 		weights[i] += weightsMomentum[i];
 	}
 }
 
-//Applies change to bias that would reduce cost function for past batch - uses reserved activationNudges to scale change proportionally
+//Applies change to bias that is projected to reduce cost for past batch, defines bias-update portion of a learning step
 void Neuron::updateBias(int batchSize, double learningRate, double momentumRetention)
 {
+	//Calculates weight residual-momentums for next learning step based on hyperparameter, scales to activationNudgeSum
 	biasMomentum = momentumRetention * biasMomentum - (getBiasRespectiveDerivation() / batchSize) * learningRate;
 	bias += biasMomentum;
 }
@@ -227,13 +243,13 @@ int Neuron::getInputCount() const
 	return neuronInputListCount;
 }
 
-//returns activation value of neuron
+//returns current activation value of neuron
 double Neuron::getActivation() const
 {
 	return activation;
 }
 
-//returns weight from this neuron towards a specified input neuron
+//returns weight from this neuron that scales a specified input neuron's activation
 double Neuron::getWeight(int inputNeuronIndex) const
 {
 	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
@@ -241,6 +257,7 @@ double Neuron::getWeight(int inputNeuronIndex) const
 	return weights[inputNeuronIndex];
 }
 
+//returns current learned weight values
 std::vector<double> Neuron::getWeights() const
 {
 	std::vector<double> weights;
@@ -259,12 +276,11 @@ double Neuron::getBias() const
 	return bias;
 }
 
-//returns the activation type of the neuron
+//returns the activation type of the neuron -unused?
 std::string Neuron::getNeuronType()
 {
 	return getInputCount() == 0 ? "Input" : "Linear";
 }
-
 
 //Set error of neurons with activations directly used to calculate cost dC/da
 void NeuralLayer::setError(double costArray[])
@@ -276,7 +292,8 @@ void NeuralLayer::setError(double costArray[])
 	}
 }
 
-//nudge input layer activations with appropriate derivatives of cost function dC/da * da/di
+
+//nudge input layer activations with derivatives of cost function dC/da * da/di
 void NeuralLayer::injectErrorBackwards()
 {
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
@@ -988,20 +1005,22 @@ int getIndexOfMaxEntry(std::vector<double> Vector)
 
 	for (auto i = 0; i < Vector.size(); i++)
 	{
+
 		if (Vector[i] > maxValue)
 		{
 			maxIndex = i;
 			maxValue = Vector[i];
 		}
+
 	}
 
 	return maxIndex;
 }
 
-//returns the value of the most positive vector element
+//returns the value of the most positive vector element, todo: temp function
 int getValueOfMaxEntry(std::vector<double> Vector)
 {
-	int maxValue = -DBL_MAX, maxIndex = -1;
+	double maxValue = -DBL_MAX, maxIndex = -1;
 
 	for (auto i = 0; i < Vector.size(); i++)
 	{
@@ -1014,10 +1033,10 @@ int getValueOfMaxEntry(std::vector<double> Vector)
 	return maxValue;
 }
 
-//returns the value of the most negative vector element
+//returns the value of the most negative vector element, todo: temp function
 int getValueOfMinEntry(std::vector<double> Vector)
 {
-	int minValue = DBL_MAX, minIndex = -1;
+	double minValue = DBL_MAX, minIndex = -1;
 
 	for (auto i = 0; i < Vector.size(); i++)
 	{
@@ -1365,8 +1384,8 @@ MenuStates trainingSelection(NeuralNetwork* network)
 			//calculate error vector
 			for (auto i = 0; i < network->getOutputCount(); i++)
 			{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-				if (i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(maxOutputValue, i);
-				else errorVector[i] = network->getOutputRespectiveCost(minOutputValue, i);
+				if (i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(100, i);
+				else errorVector[i] = network->getOutputRespectiveCost(0, i);
 			}
 
 			network->propagateBackwards(errorVector);
