@@ -1350,7 +1350,8 @@ MenuStates trainingSelection(NeuralNetwork* network)
 
 		//for each image in the set
 		for (auto i = 0; i < trainingSamples.size(); i++)
-		{	//for each column in an image
+		{	
+			//for each column in an image
 			for (auto j = 0; j < trainingSamples[0].size(); j++)
 			{	//for each pixel in a column
 				for (auto k = 0; k < trainingSamples[0][0].size(); k++)
@@ -1382,10 +1383,16 @@ MenuStates trainingSelection(NeuralNetwork* network)
 			maxOutputValue = getValueOfMaxEntry(network->getOutputs());
 
 			//calculate error vector
-			for (auto i = 0; i < network->getOutputCount(); i++)
+			for (auto l = 0; l < network->getOutputCount(); l++)
 			{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-				if (i == (int)trainingLabels[i]) errorVector[i] = network->getOutputRespectiveCost(100, i);
-				else errorVector[i] = network->getOutputRespectiveCost(0, i);
+				if (l == (int)trainingLabels[i])
+				{
+					errorVector[l] = network->getOutputRespectiveCost(1000, l);
+				}
+				else
+				{
+					errorVector[l] = network->getOutputRespectiveCost(-100, l);
+				}
 			}
 
 			network->propagateBackwards(errorVector);
