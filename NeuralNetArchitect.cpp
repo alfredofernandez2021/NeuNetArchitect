@@ -318,7 +318,7 @@ void NeuralLayer::clearNudges()
 		neurons[i].resetNudges();
 }
 
-//default constructor for layer class
+//default constructor - todo: remove?
 NeuralLayer::NeuralLayer()
 {
 	neurons = nullptr;
@@ -327,7 +327,7 @@ NeuralLayer::NeuralLayer()
 	previousLayer = nullptr;
 }
 
-//constructor called for input layers
+//constructor for initializing input layers
 NeuralLayer::NeuralLayer(int inputLength, int inputWidth) : neuronArrayLength(inputLength), neuronArrayWidth(inputWidth), previousLayer(nullptr)
 {
 	neurons = new Neuron[inputLength * inputWidth];
@@ -339,7 +339,7 @@ NeuralLayer::NeuralLayer(int inputLength, int inputWidth) : neuronArrayLength(in
 	}
 }
 
-//constructor called for hidden layers during network creation, with optional momentum parameter
+//constructor for initializing hidden layers during network creation
 NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer)
 {
 	neuronArrayLength = neuronCount;
@@ -358,7 +358,7 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer)
 
 }
 
-//constructor called for hidden layers during network loading, with stored weights and bias values passed in
+//constructor for hidden layers during network loading
 NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<std::vector<double>> weightValues, std::vector<double> biasValues)
 {
 	neuronArrayLength = neuronCount;
@@ -376,7 +376,7 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 	}
 }
 
-//copy constructor for layers
+//copy constructor for layer deep copies - todo: accomodate for several Neuron types?
 NeuralLayer::NeuralLayer(const NeuralLayer& original)
 {
 	neuronArrayLength = original.neuronArrayLength;
@@ -392,7 +392,7 @@ NeuralLayer::NeuralLayer(const NeuralLayer& original)
 	}
 }
 
-//operator = overloading for readable assignments resulting in deep copies
+//operator = overloading for initializing and returning of object deep copy - todo: accomodate for several Neuron types?
 NeuralLayer& NeuralLayer::operator=(const NeuralLayer& original)
 {
 	neuronArrayLength = original.neuronArrayLength;
@@ -410,7 +410,7 @@ NeuralLayer& NeuralLayer::operator=(const NeuralLayer& original)
 	return (*this);
 }
 
-//custom destructor for NeuralLayer objects
+//custom destructor for NeuralLayer objects for complete memory deallocation
 NeuralLayer::~NeuralLayer()
 {
 	delete[] neurons;
@@ -418,7 +418,7 @@ NeuralLayer::~NeuralLayer()
 	previousLayer = nullptr;
 }
 
-//activate all neurons in layer and resets nudges from past learning iteration
+//activate all neurons in layer and resets activation nudges from previous learning step
 void NeuralLayer::propagateForward(double inputValues[])
 {
 	if (previousLayer == nullptr)
@@ -440,7 +440,7 @@ void NeuralLayer::propagateForward(double inputValues[])
 	clearNudges();
 }
 
-//transmit error to input neurons and apply learned parameter updates
+//inject error to previous layer and apply learned parameter updates to this layer
 void NeuralLayer::propagateBackward(int batchSize, double learningRate, double momentumRetention, double* costArray)
 {
 	setError(costArray);
@@ -462,13 +462,13 @@ int NeuralLayer::getNeuronArrayWidth() const
 	return neuronArrayWidth;
 }
 
-//returns number of neurons contained within layer
+//returns total number of neurons contained within this layer
 int NeuralLayer::getNeuronArrayCount() const
 {
 	return getNeuronArrayLength() * getNeuronArrayWidth();
 }
 
-//returns array of pointers to neurons contained within layer
+//returns array of pointers to neurons contained within this layer
 Neuron* NeuralLayer::getNeurons() const
 {
 	return neurons;
@@ -480,6 +480,7 @@ NeuralLayer* NeuralLayer::getPreviousLayer() const
 	return previousLayer;
 }
 
+//returns vector of this layer's neuron activations
 std::vector<double> NeuralLayer::getNeuronActivations() const
 {
 	std::vector<double> neuronActivations;
@@ -492,6 +493,7 @@ std::vector<double> NeuralLayer::getNeuronActivations() const
 	return neuronActivations;
 }
 
+//returns 2D vector of weight parameter values belonging to neurons of this layer
 std::vector<std::vector<double>> NeuralLayer::getNeuronWeights() const
 {
 	std::vector<std::vector<double>> neuronWeights;
@@ -504,6 +506,7 @@ std::vector<std::vector<double>> NeuralLayer::getNeuronWeights() const
 	return neuronWeights;
 }
 
+//returns vector of bias parameter values belonging to neurons of this layer
 std::vector<double> NeuralLayer::getNeuronBiases() const
 {
 	std::vector<double> neuronBiases;
@@ -516,13 +519,13 @@ std::vector<double> NeuralLayer::getNeuronBiases() const
 	return neuronBiases;
 }
 
-//returns the activation type of the neurons contained within layer
+//returns the activation type of the neurons contained within this layer
 int NeuralLayer::getNeuralLayerType() const
 {
 	return 1;
 }
 
-//the derivation of the mean-squared-error function in respect to the activation of an output neuron
+//the derivation of the mean-squared-error function in respect to the activation of an output neuron - todo: rework this for derivations?
 double derivedMSECost(double targetValue, double estimatedValue, int outputCount)
 {
 	return (-2.0 / (double)outputCount) * (targetValue - estimatedValue);
