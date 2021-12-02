@@ -531,16 +531,18 @@ double derivedMSECost(double targetValue, double estimatedValue, int outputCount
 	return (-2.0 / (double)outputCount) * (targetValue - estimatedValue);
 }
 
-//flips byte ordering of input integer
+//flips byte ordering integer to convert between high and low endian formats
 unsigned int flipIntegerByteOrdering(int original)
 {
 	unsigned char firstByte, secondByte, thirdByte, fourthByte;
 
+	//isolate each of the 4 bytes that make up the integer
 	firstByte = (0xFF000000 & original) >> 24;
 	secondByte = (0x00FF0000 & original) >> 16;
 	thirdByte = (0x0000FF00 & original) >> 8;
 	fourthByte = 0x000000FF & original;
 
+	//flip the ordering of the bytes that make up the integer
 	return ((unsigned int)fourthByte << 24) | ((unsigned int)thirdByte << 16) | ((unsigned int)secondByte << 8) | ((unsigned int)firstByte << 0);
 }
 
@@ -558,12 +560,15 @@ std::vector<unsigned char> getMNISTLabelVector(bool testing)
 	std::ifstream file(fullPath);
 	if (file.is_open())
 	{
+		//read two high-endian integers of the file
 		file.read((char*)&magicNumber, sizeof(magicNumber));
 		file.read((char*)&labelCount, sizeof(labelCount));
 
+		//flip byte ordering of integers to obtain intended values in low-endian architectures
 		magicNumber = flipIntegerByteOrdering(magicNumber);
 		labelCount = flipIntegerByteOrdering(labelCount);
 
+		//read and store each label
 		for (auto i = 0; i < labelCount; i++)
 		{
 			file.read((char*)&currentLabel, sizeof(currentLabel));
@@ -592,16 +597,19 @@ std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool te
 
 	if (file.is_open())
 	{
+		//read four high-endian integers of the file
 		file.read((char*)&magicNumber, sizeof(magicNumber));
 		file.read((char*)&numberOfImages, sizeof(numberOfImages));
 		file.read((char*)&rowsPerImage, sizeof(rowsPerImage));
 		file.read((char*)&columnsPerImage, sizeof(columnsPerImage));
 
+		//flip byte ordering of integers to obtain intended values in low-endian architectures
 		magicNumber = flipIntegerByteOrdering(magicNumber);
 		numberOfImages = flipIntegerByteOrdering(numberOfImages);
 		rowsPerImage = flipIntegerByteOrdering(rowsPerImage);
 		columnsPerImage = flipIntegerByteOrdering(columnsPerImage);
 
+		//read and store each pixel of the sample
 		for (auto i = 0; i < numberOfImages; i++)
 		{
 			for (auto j = 0; j < rowsPerImage; j++)
