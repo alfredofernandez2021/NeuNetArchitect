@@ -887,7 +887,7 @@ NeuralNetwork::~NeuralNetwork()
 	testingLabels.clear();
 }
 
-//saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
+//saves the neural network's state to an xml
 void storeNetwork(NeuralNetwork* network, std::string& fileName)
 {
 	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
@@ -958,7 +958,7 @@ void storeNetwork(NeuralNetwork* network, std::string& fileName)
 	boost::property_tree::write_xml(fileName, networkPropertyTree);
 }
 
-//saves the entire neural network to an xml, such that all data necessary to rebuild the exact network is stored
+//loads a entire neural network's state from an xml
 NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 {
 	int inputLength, outputLength, networkDepth, optimizationAlgorithm, errorFunction;
@@ -989,7 +989,6 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 	std::vector<double> neuronWeights;
 
 	//defines array of layer details by extracting values from the network property tree
-	//BOOST_FOREACH(const boost::property_tree::ptree::value_type &layer, networkPropertyTree.get_child("network.layers"))
 	for (const boost::property_tree::ptree::value_type& layer : networkPropertyTree.get_child("network.layers"))
 	{
 		//defines non-neuron layer state details
@@ -997,14 +996,12 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 		layerStates[i].neuronCount = layer.second.get<int>("neuronCount");
 
 		//defines neuron state details
-		//BOOST_FOREACH(const boost::property_tree::ptree::value_type &neuron, layer.second.get_child("layer.neurons"))
 		for (const boost::property_tree::ptree::value_type& neuron : layer.second.get_child("neurons"))
 		{
 			//define neuron's saved bias parameter
 			layerStates[i].biasOfNeurons.push_back(neuron.second.get<double>("bias"));
 
 			//define neuron's saved weight parameters, skipping the first layer's weights to avoid get_child exception
-			//BOOST_FOREACH(const boost::property_tree::ptree::value_type & weight, neuron.second.get_child("weights"))
 			if (i > 0) for (const boost::property_tree::ptree::value_type& weight : neuron.second.get_child("weights"))
 			{
 				neuronWeights.push_back(weight.second.get_value<double>());
@@ -1030,14 +1027,15 @@ int getIndexOfMaxEntry(std::vector<double> Vector)
 
 	for (auto i = 0; i < Vector.size(); i++)
 	{
-
 		if (Vector[i] > maxValue)
 		{
 			maxIndex = i;
 			maxValue = Vector[i];
 		}
-
 	}
+
+	if (maxIndex < 0)
+		throw std::out_of_range("All activations resulted in overflow/underflow");
 
 	return maxIndex;
 }
@@ -1051,9 +1049,13 @@ int getValueOfMaxEntry(std::vector<double> Vector)
 	{
 		if (Vector[i] > maxValue)
 		{
+			maxIndex = i;
 			maxValue = Vector[i];
 		}
 	}
+
+	if (maxIndex < 0)
+		throw std::out_of_range("All activations resulted in overflow/underflow");
 
 	return maxValue;
 }
@@ -1067,9 +1069,13 @@ int getValueOfMinEntry(std::vector<double> Vector)
 	{
 		if (Vector[i] < minValue)
 		{
+			minIndex = i;
 			minValue = Vector[i];
 		}
 	}
+
+	if (minIndex < 0)
+		throw std::out_of_range("All activations resulted in overflow/underflow");
 
 	return minValue;
 }
@@ -1086,6 +1092,7 @@ MenuStates mainSelection(NeuralNetwork* network)
 {
 	int selection;
 
+	//ensures old networks being pointed to from previous management menu are deallocated
 	delete network;
 
 	//initial menu state prompt to user

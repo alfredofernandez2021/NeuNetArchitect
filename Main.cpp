@@ -48,6 +48,8 @@ int main()
 * Use submodule of all 3rd party libraries
 * Ensure ease of use between Visual Studio project and Github repo
 * Test that entire project can be identically used on another system
+* ----------------------------------------------------------------------------------------------------------
+* Fix randomization of learned parameters during network creation... training results are always the same, even in repetition
 */
 
 /* Expansion todo:
