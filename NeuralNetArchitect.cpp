@@ -728,8 +728,10 @@ std::vector<double> NeuralNetwork::getOutputs()
 //activates all layers in order from input to output layers
 void NeuralNetwork::propagateForwards(double* inputMatrix)
 {
+	//activates input layer to input values
 	neuralLayers[0].propagateForward(inputMatrix);
 
+	//activates remaining layers to their activation function
 	for (auto i = 1; i < layerCount; i++)
 	{
 		neuralLayers[i].propagateForward();
@@ -739,8 +741,10 @@ void NeuralNetwork::propagateForwards(double* inputMatrix)
 //updates parameters in all layers in order from output to input layers
 void NeuralNetwork::propagateBackwards(double* costArray)
 {
+	//informs output layer of the initial error array in first backpropagation call
 	neuralLayers[layerCount - 1].propagateBackward(learningParameters.batchSize, learningParameters.learningRate, learningParameters.momentumRetention, costArray);
 
+	//performs backpropagation for all preceeding layers
 	for (auto i = layerCount - 2; i > 0; i--)
 	{
 		neuralLayers[i].propagateBackward(learningParameters.batchSize, learningParameters.learningRate, learningParameters.momentumRetention);
@@ -865,11 +869,13 @@ layerLoadingInfo* NeuralNetwork::getLayerStates()
 	return layerStates;
 }
 
+//gives structure containing learning hyperparameter values
 hyperParameters NeuralNetwork::getLearningParameters()
 {
 	return learningParameters;
 }
 
+//destructor for NeuralNetworks to ensure complete memory deallocation
 NeuralNetwork::~NeuralNetwork()
 {
 	delete[] neuralLayers;
