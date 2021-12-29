@@ -642,6 +642,7 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 	this->outputCount = outputCount;
 	this->learningParameters = learningParameters;
 
+	//select which error function the NeuralNetwork will try to minimize
 	switch (costSelection)
 	{
 	case 1:
@@ -652,10 +653,12 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 		break;
 	}
 
+	//declare array of NeuralLayer pointers
 	neuralLayers = new NeuralLayer[layerCount];
 	if (neuralLayers == nullptr) throw std::bad_alloc();
 	neuralLayers[0] = NeuralLayer(inputLength, inputWidth);
 
+	//initialize NeuralLayers and have array elements point to them
 	for (auto i = 1; i < layerCount; i++)
 	{
 		switch (layerDetails[i].type)
@@ -669,6 +672,7 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 		}
 	}
 
+	//save layer states
 	layerStates = new layerLoadingInfo[layerCount];
 }
 
@@ -681,6 +685,7 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 	this->outputCount = outputCount;
 	this->learningParameters = learningParameters;
 
+	//select which error function the NeuralNetwork will try to minimize
 	switch (costSelection)
 	{
 	case 1:
@@ -691,10 +696,12 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 		break;
 	}
 
+	//declare array of NeuralLayer pointers
 	neuralLayers = new NeuralLayer[layerCount];
 	if (neuralLayers == nullptr) throw std::bad_alloc();
 	neuralLayers[0] = NeuralLayer(inputLength, inputWidth);
 
+	//initialize NeuralLayers and have array elements point to them
 	for (auto i = 1; i < layerCount; i++)
 	{
 		switch (layerDetails[i].type)
@@ -708,6 +715,7 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 		}
 	}
 
+	//save layer states
 	layerStates = new layerLoadingInfo[layerCount];
 }
 
