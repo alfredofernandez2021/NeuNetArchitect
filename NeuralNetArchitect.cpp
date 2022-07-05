@@ -1095,7 +1095,7 @@ MenuStates mainSelection(NeuralNetwork* network)
 	//ensures old networks being pointed to from previous management menu are deallocated
 	delete network;
 
-	//initial menu state prompt to user
+	//print main menu, first state of finite-state machine
 	std::cout << std::endl;
 	std::cout << "Welcome to the Main Menu!" << std::endl;
 	std::cout << "1) Create Neural Network" << std::endl;
