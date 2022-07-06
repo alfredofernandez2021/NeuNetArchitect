@@ -1095,7 +1095,7 @@ MenuStates mainSelection(NeuralNetwork* network)
 	//ensures old networks being pointed to from previous management menu are deallocated
 	delete network;
 
-	//print main menu, first state of finite-state machine
+	//print main menu
 	std::cout << std::endl;
 	std::cout << "Welcome to the Main Menu!" << std::endl;
 	std::cout << "1) Create Neural Network" << std::endl;
@@ -1123,19 +1123,26 @@ MenuStates mainSelection(NeuralNetwork* network)
 	}
 }
 
-//todo: improve this
-//prints description of project and provides a high-level guide
+//prints description of project and provides a high-level user guide regarding main menu options
 MenuStates introSelection()
 {
 	int selection;
 
+	//prints project introduction
 	std::cout << std::endl;
 	std::cout << "Introduction:" << std::endl;
-	std::cout << "Welcome to NeuralNetArchitect! In this pre-alpha console application you can create your own linear ";
-	std::cout << "neural network with full model structure and optimization algorithm customizability. Currently, only the ";
+	std::cout << "Welcome to NeuralNetArchitect! In this console application you can create your own linear neural";
+	std::cout << "network with full model structure and optimization algorithm customizability. Currently, only the ";
 	std::cout << "MSE cost function and linear neuron activation functions are available. Datasets can manually input into ";
-	std::cout << "the network and learning can only be achieved through the editing of the main method. The menu is a ";
+	std::cout << "the network and learning can only be achieved through the editing of the main method. This menu is a ";
 	std::cout << "work in progress:)" << std::endl;
+
+	//prints description of main menu options
+	std::cout << std::endl;
+	std::cout << "Create Neural Network: Create new neural network from scratch" << std::endl;
+	std::cout << "Load Neural Network: Load previously saved neural network from project directory" << std::endl;
+	std::cout << "Introduction and Info: Where we are at now, introduction and option descriptions" << std::endl;
+	std::cout << "Exit Network Manager: Terminate program execution cleanly" << std::endl;
 
 	std::cout << "Type any integer to exit: ";
 	std::cin >> selection;
@@ -1228,7 +1235,7 @@ MenuStates createSelection(NeuralNetwork** network)
 	learningParameters.earlyStoppingMaxError = 0.0;
 	std::cout << std::endl;
 
-	//initialize first (input) layer
+	//initialize input layer
 	layerDetails[0].type = 1;
 	layerDetails[0].neuronCount = inputLength * inputWidth;
 
@@ -1237,16 +1244,19 @@ MenuStates createSelection(NeuralNetwork** network)
 	{
 		std::cout << std::endl << "Define neural layer " << i + 1 << ":\n";
 
+		//define activation type
 		std::cout << "\tActivation type: ";
 		std::cin >> layerDetails[i].type;
 		std::cout << std::endl;
 
+		//defines hidden layers
 		if (i + 1 < numberOfLayers)
 		{
 			std::cout << "\tNeuron count: ";
 			std::cin >> layerDetails[i].neuronCount;
 			std::cout << std::endl;
 		}
+		//defines output layer
 		else
 		{
 			layerDetails[i].neuronCount = outputCount;
@@ -1284,7 +1294,7 @@ MenuStates manageSelection()
 {
 	int selection;
 
-	//initial menu state prompt to user
+	//display the manageSelection options
 	std::cout << std::endl;
 	std::cout << "Manage:" << std::endl;
 	std::cout << "1) Select DataSets" << std::endl;
