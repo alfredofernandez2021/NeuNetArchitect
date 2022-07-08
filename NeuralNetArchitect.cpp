@@ -1465,7 +1465,7 @@ MenuStates trainingSelection(NeuralNetwork* network)
 	return MenuStates::Manage;
 }
 
-//completes testing of neural network with current learned-parameter values
+//completes testing of neural network with latest learned-parameter values
 MenuStates testingSelection(NeuralNetwork* network)
 {
 	int selection, answer, correctDeterminations = 0;
@@ -1478,24 +1478,29 @@ MenuStates testingSelection(NeuralNetwork* network)
 	std::cout << std::endl;
 	std::cout << "Testing:" << std::endl;
 
+	//checks if testing data has previously been loaded
 	if (!network->isReadyForTesting())
 	{
 		std::cout << "Testing data not yet loaded" << std::endl;
 		errorEncountered = true;
 	}
 
+	//checks if network input dimensions matches dataset sample dimensions
 	if (network->getInputCount() != testingSamples[0].size() * testingSamples[0][0].size())
 	{
 		std::cout << "Mismatch between dataset input samples and network input count" << std::endl;
 		errorEncountered = true;
 	}
 
+	//checks if network output length matches cardinality of dataset labels
+    //todo: update hard-coded number
 	if (network->getOutputCount() != 10)
 	{
 		std::cout << "Mismatch between dataset label type count and network output count" << std::endl;
 		errorEncountered = true;
 	}
 
+	//if all of the network and dataset compatibility checks passed, perform training om all training samples
 	if (!errorEncountered)
 	{
 		inputGrid = new double[network->getInputCount()];
@@ -1518,11 +1523,14 @@ MenuStates testingSelection(NeuralNetwork* network)
 			//get index of entry that scored the highest, from 0 to 9
 			answer = getIndexOfMaxEntry(network->getOutputs());
 
+			//if network guessed the correct answer, count successful attempt
 			if (answer == (int)testingLabels[i])
 			{
 				correctDeterminations++;
 			}
 
+			//periodically displays current network performance
+			//todo: possibly make this not hard-coded?
 			if (i % 100 == 0 && i > 0)
 			{
 				std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
@@ -1531,6 +1539,7 @@ MenuStates testingSelection(NeuralNetwork* network)
 
 		}
 
+		//display final network training score
 		std::cout << "Final score: " << (double)correctDeterminations / (double)testingLabels.size() << std::endl;
 	}
 
@@ -1540,7 +1549,7 @@ MenuStates testingSelection(NeuralNetwork* network)
 	return MenuStates::Manage;
 }
 
-//asks user for path of file to store fully-defined neural network in
+//asks user for path of file to store fully-defined neural network in its current state
 MenuStates saveSelection(NeuralNetwork* network)
 {
 	std::string xmlFileName;
