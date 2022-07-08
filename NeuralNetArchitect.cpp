@@ -1289,7 +1289,7 @@ MenuStates loadSelection(NeuralNetwork** network)
 	return MenuStates::Manage;
 }
 
-//lists manager options and prompts user to select one
+//lists manager menu options and prompts user to select one
 MenuStates manageSelection()
 {
 	int selection;
@@ -1328,13 +1328,12 @@ MenuStates manageSelection()
 	}
 }
 
-//asks user for datatset label and sample files and loads them into vectors
+//asks user for dataset label and sample files and loads them into vectors
 MenuStates datasetSelection(NeuralNetwork* network)
 {
 	std::string trainingImageFilePath, trainingLabelFilePath, testingImageFilePath, testingLabelFilePath;
 
-	//updateTestingSamples
-
+	//prompts user for dataset directories
 	std::cout << std::endl;
 	std::cout << "Dataset:" << std::endl;
 	std::cout << "Training set image file path: ";
@@ -1351,6 +1350,7 @@ MenuStates datasetSelection(NeuralNetwork* network)
 	network->updateTestingSamples();
 	network->updateTestingLabels();
 
+	//returns to manage menu
 	return MenuStates::Manage;
 }
 
@@ -1367,24 +1367,29 @@ MenuStates trainingSelection(NeuralNetwork* network)
 	std::vector<std::vector<std::vector<unsigned char>>> trainingSamples = network->getTrainingSamples();
 	std::vector<unsigned char> trainingLabels = network->getTrainingLabels();
 
+	//checks if training dataset has previously been loaded
 	if (!network->isReadyForTraining())
 	{
-		std::cout << "Testing data not yet loaded" << std::endl;
+		std::cout << "Training data not yet loaded" << std::endl;
 		errorEncountered = true;
 	}
 
+	//checks if network input dimensions matches dataset sample dimensions
 	if (network->getInputCount() != trainingSamples[0].size() * trainingSamples[0][0].size())
 	{
 		std::cout << "Mismatch between dataset input samples and network input count" << std::endl;
 		errorEncountered = true;
 	}
 
+	//checks if network output length matches cardinality of dataset labels
+	//todo: update hard-coded number
 	if (network->getOutputCount() != 10)
 	{
 		std::cout << "Mismatch between dataset label type count and network output count" << std::endl;
 		errorEncountered = true;
 	}
 
+	//if all of the network and dataset compatibility checks passed, perform training om all training samples
 	if (!errorEncountered)
 	{
 		inputGrid = new double[network->getInputCount()];
@@ -1395,7 +1400,8 @@ MenuStates trainingSelection(NeuralNetwork* network)
 		{	
 			//for each column in an image
 			for (auto j = 0; j < trainingSamples[0].size(); j++)
-			{	//for each pixel in a column
+			{	
+				//for each pixel in a column
 				for (auto k = 0; k < trainingSamples[0][0].size(); k++)
 				{
 					//load a pixel
@@ -1407,20 +1413,26 @@ MenuStates trainingSelection(NeuralNetwork* network)
 			network->propagateForwards(inputGrid);
 
 			//get index of entry that scored the highest, from 0 to 9
+			//todo: sections assumes index number will always match the answer
 			answer = getIndexOfMaxEntry(network->getOutputs());
 
+			//if network guessed the correct answer, count successful attempt
 			if (answer == (int)trainingLabels[i])
 			{
 				correctDeterminations++;
 			}
 
-			if (i % 100 == 0 && i > 0)
+			//periodically displays current network performance
+			//todo: possibly make this not hard-coded?
+			if (i % 200 == 0 && i > 0)
 			{
 				std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
 				std::cout << "answer: " << answer << "\t" << "correct: " << (int)trainingLabels[i] << std::endl;
 				std::cout << std::endl;
 			}
 
+			//$$$work in progress section for training linear neural network
+			//todo: get linear training work more probablistically and abstract section for different neuron types
 			minOutputValue = getValueOfMinEntry(network->getOutputs());
 			maxOutputValue = getValueOfMaxEntry(network->getOutputs());
 
@@ -1435,11 +1447,15 @@ MenuStates trainingSelection(NeuralNetwork* network)
 				{
 					errorVector[l] = network->getOutputRespectiveCost(-100, l);
 				}
-			}
+			}//$$$end of work in progress section
 
+			//perform backpropagation given an error vector
+			//todo: make errorVector come from cost function
+			//todo: make more cost functions to accomodate step and linear neurons
 			network->propagateBackwards(errorVector);
 		}
 
+		//display final network training score
 		std::cout << "Final score: " << (double)correctDeterminations / (double)trainingLabels.size() << std::endl;
 	}
 
