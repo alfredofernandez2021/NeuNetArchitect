@@ -1088,12 +1088,13 @@ void exitSelection()
 }
 
 //lists main menu options and prompts user to select one
-MenuStates mainSelection(NeuralNetwork* network)
+MenuStates mainSelection(NeuralNetwork* &network)
 {
 	int selection;
 
 	//ensures old networks being pointed to from previous management menu are deallocated
-	delete network;//todo: fix post-unload and post-intro-exit crash
+	delete network;
+	network = nullptr;
 
 	//print main menu
 	std::cout << std::endl;
