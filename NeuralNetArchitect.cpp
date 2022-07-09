@@ -1569,7 +1569,16 @@ MenuStates helpSelection()
 
 	std::cout << std::endl;
 	std::cout << "Help:" << std::endl;
-	std::cout << "Help of 'manage' options not yet written, dead end on menu" << std::endl;
+
+	//prints description of manager menu options
+	std::cout << std::endl;
+	std::cout << "Select DataSets: Provide directory to load training and testing dataset files" << std::endl;
+	std::cout << "Run Training: Begin training the neural network on the training samples" << std::endl;
+	std::cout << "Run Testing: Begin testing the neural network on the training samples" << std::endl;
+	std::cout << "Save Solution: Save neural network with current parameters as an xml file" << std::endl;
+	std::cout << "Help: Where we are at now. Descriptions for the manager menu options" << std::endl;
+	std::cout << "Back: Unload neural network from memory and return to creation menu" << std::endl;
+
 	std::cout << "Type any integer to exit: ";
 	std::cin >> selection;
 	return MenuStates::Manage;
@@ -1579,7 +1588,7 @@ MenuStates helpSelection()
 MenuStates defaultSelection()
 {
 	std::cout << std::endl;
-	std::cout << "If you got here, it's a bug. Returning to Main Menu..." << std::endl;
+	std::cout << "If we got here, it's a bug... Returning to Main Menu." << std::endl;
 	return MenuStates::Main;
 }
 

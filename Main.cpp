@@ -68,3 +68,9 @@ int main()
 * All hyperparameter effects
 * Edge-case detection learning feature
 */
+
+/*NC notes : Fix deterministic coin - toss training for linear models
+* Test Full user-interface adequately (no random test vectors yet)
+* Provide debugging entry to neuralNetwork saving - activation value
+* Begin forensic saving at some point
+*/
