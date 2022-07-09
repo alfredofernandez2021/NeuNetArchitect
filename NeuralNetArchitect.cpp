@@ -878,7 +878,7 @@ hyperParameters NeuralNetwork::getLearningParameters()
 //destructor for NeuralNetworks to ensure complete memory deallocation
 NeuralNetwork::~NeuralNetwork()
 {
-	delete[] neuralLayers;
+	delete[] neuralLayers;//causes post-unload-post-intro-exit crash
 	delete[] layerStates;
 
 	trainingSamples.clear();
