@@ -73,4 +73,5 @@ int main()
 * Test Full user-interface adequately (no random test vectors yet)
 * Provide debugging entry to neuralNetwork saving - activation value
 * Begin forensic saving at some point
+* Entering and exiting Intro menu after loading and unloading network causes crash at 'delete network' on main menu
 */

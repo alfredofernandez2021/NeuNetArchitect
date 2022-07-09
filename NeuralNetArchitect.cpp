@@ -1093,7 +1093,7 @@ MenuStates mainSelection(NeuralNetwork* network)
 	int selection;
 
 	//ensures old networks being pointed to from previous management menu are deallocated
-	delete network;
+	delete network;//todo: fix post-unload and post-intro-exit crash
 
 	//print main menu
 	std::cout << std::endl;
