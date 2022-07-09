@@ -72,6 +72,7 @@ int main()
 /*NC notes : Fix deterministic coin - toss training for linear models
 * Test Full user-interface adequately (no random test vectors yet)
 * Provide debugging entry to neuralNetwork saving - activation value
+* Consider placing dataset menu between intro menu and manager menu to diminish common user mistake
 * Begin forensic saving at some point
 * Entering and exiting Intro menu after loading and unloading network causes crash at 'delete network' on main menu
 */
