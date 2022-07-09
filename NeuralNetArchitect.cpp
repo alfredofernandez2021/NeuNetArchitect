@@ -1592,7 +1592,7 @@ MenuStates defaultSelection()
 	return MenuStates::Main;
 }
 
-//contains full fuctionality of neural network manager Finite State Menu
+//contains full fuctionality of neural network manager finite state menu
 void manageNeuralNetwork()
 {
 	NeuralNetwork* network = nullptr;
@@ -1602,50 +1602,63 @@ void manageNeuralNetwork()
 	{
 		switch (menuFSMState)
 		{
+		
+		//Exits menu FSM
 		case MenuStates::Exit:
 			exitSelection();
 			return;
-
+		
+		//Enters main menu
 		case MenuStates::Main:
 			menuFSMState = mainSelection(network);
 			break;
 
+		//Enters introduction page
 		case MenuStates::Intro:
 			menuFSMState = introSelection();
 			break;
 
+		//Enters NeuralNetwork creation sequence
 		case MenuStates::Create:
 			menuFSMState = createSelection(&network);
 			break;
 
+		//Ask for file and load NeuralNetwork
 		case MenuStates::Load:
 			menuFSMState = loadSelection(&network);
 			break;
 
+		//Enters manage menu
 		case MenuStates::Manage:
 			menuFSMState = manageSelection();
 			break;
 
+		//Enters dataset selection
 		case MenuStates::Dataset:
 			menuFSMState = datasetSelection(network);
 			break;
 
+		//Begins training by using training dataset
 		case MenuStates::Training:
 			menuFSMState = trainingSelection(network);
 			break;
 
+		//Begins testing by using testing dataset
 		case MenuStates::Testing:
 			menuFSMState = testingSelection(network);
 			break;
 
+		//Saves NeuralNetwork to xml
 		case MenuStates::Save:
 			menuFSMState = saveSelection(network);
 			break;
 
+		//Enters help page
 		case MenuStates::Help:
 			menuFSMState = helpSelection();
 			break;
 
+		//Print an error if this state is reached
 		default:
 			menuFSMState = defaultSelection();
 			break;
