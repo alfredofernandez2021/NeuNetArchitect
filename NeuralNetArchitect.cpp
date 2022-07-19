@@ -1017,7 +1017,11 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 	}
 
 	//returns fully-defined neural network... todo: might need to overload = operator for NeuralNetwork
-	return new NeuralNetwork(networkDepth, inputLength, 1, outputLength, errorFunction, layerStates, learningParameters);
+	NeuralNetwork* loadedNetwork = new NeuralNetwork(networkDepth, inputLength, 1, outputLength, errorFunction, layerStates, learningParameters);
+
+	delete[] layerStates;
+
+	return loadedNetwork;
 }
 
 //returns the index of the most positive vector element
@@ -1365,33 +1369,31 @@ MenuStates trainingSelection(NeuralNetwork* network)
 	int selection, answer, correctDeterminations = 0;
 	double* inputGrid = nullptr;
 	double* errorVector = nullptr;
-	bool errorEncountered = false;
 
 	std::vector<std::vector<std::vector<unsigned char>>> trainingSamples = network->getTrainingSamples();
 	std::vector<unsigned char> trainingLabels = network->getTrainingLabels();
 
-	//checks if training dataset has previously been loaded
-	if (!network->isReadyForTraining())
-	{
-		throw DatasetNotLoadedException("Training dataset not yet loaded");
-	}
+	try {
+		//checks if training dataset has previously been loaded
+		if (!network->isReadyForTraining())
+		{
+			throw DatasetNotLoadedException("Training dataset not yet loaded");
+		}
 
-	//checks if network input dimensions matches dataset sample dimensions
-	if (network->getInputCount() != trainingSamples[0].size() * trainingSamples[0][0].size())
-	{
-		throw DatasetMismatchException("Mismatch between dataset input samples and network input count");
-	}
+		//checks if network input dimensions matches dataset sample dimensions
+		if (network->getInputCount() != trainingSamples[0].size() * trainingSamples[0][0].size())
+		{
+			throw DatasetMismatchException("Mismatch between dataset input samples and network input count");
+		}
 
-	//checks if network output length matches cardinality of dataset labels
-	//todo: update hard-coded number
-	if (network->getOutputCount() != 10)
-	{
-		throw DatasetMismatchException("Mismatch between dataset label type count and network output count");
-	}
+		//checks if network output length matches cardinality of dataset labels
+		//todo: update hard-coded number
+		if (network->getOutputCount() != 10)
+		{
+			throw DatasetMismatchException("Mismatch between dataset label type count and network output count");
+		}
 
-	//if all of the network and dataset compatibility checks passed, perform training om all training samples
-	if (!errorEncountered)
-	{
+	    //perform training om all training samples
 		inputGrid = new double[network->getInputCount()];
 		errorVector = new double[network->getOutputCount()];
 
@@ -1455,8 +1457,21 @@ MenuStates trainingSelection(NeuralNetwork* network)
 			network->propagateBackwards(errorVector);
 		}
 
+		delete[] inputGrid;
+		delete[] errorVector;
+
 		//display final network training score
 		std::cout << "Final score: " << (double)correctDeterminations / (double)trainingLabels.size() << std::endl;
+	}
+	catch (DatasetNotLoadedException exception)
+	{
+		std::cout << std::endl << "Caught DatasetNotLoadedException" << std::endl;
+		std::cout << exception.what();
+	}
+	catch (DatasetMismatchException exception)
+	{
+		std::cout << std::endl << "Caught DatasetMismatchException" << std::endl;
+		std::cout << exception.what();
 	}
 
 	std::cout << std::endl << "Type 0 to exit:" << std::endl;
@@ -1470,37 +1485,34 @@ MenuStates testingSelection(NeuralNetwork* network)
 {
 	int selection, answer, correctDeterminations = 0;
 	double* inputGrid = nullptr;
-	bool errorEncountered = false;
 
 	std::vector<std::vector<std::vector<unsigned char>>> testingSamples = network->getTestingSamples();
 	std::vector<unsigned char> testingLabels = network->getTestingLabels();
 
-	std::cout << std::endl;
-	std::cout << "Testing:" << std::endl;
+	try {
+		std::cout << std::endl;
+		std::cout << "Testing:" << std::endl;
 
-	//checks if testing data has previously been loaded
-	if (!network->isReadyForTesting())
-	{
-		throw DatasetNotLoadedException("Testing dataset not yet loaded");
-	}
+		//checks if testing data has previously been loaded
+		if (!network->isReadyForTesting())
+		{
+			throw DatasetNotLoadedException("Testing dataset not yet loaded");
+		}
 
-	//checks if network input dimensions matches dataset sample dimensions
-	if (network->getInputCount() != testingSamples[0].size() * testingSamples[0][0].size())
-	{
-		throw DatasetMismatchException("Mismatch between dataset input samples and network input count");
-	}
+		//checks if network input dimensions matches dataset sample dimensions
+		if (network->getInputCount() != testingSamples[0].size() * testingSamples[0][0].size())
+		{
+			throw DatasetMismatchException("Mismatch between dataset input samples and network input count");
+		}
 
-	//checks if network output length matches cardinality of dataset labels
-    //todo: update hard-coded number
-	if (network->getOutputCount() != 10)
-	{
-		throw DatasetMismatchException("Mismatch between dataset label type count and network output count");
-		errorEncountered = true;
-	}
+		//checks if network output length matches cardinality of dataset labels
+		//todo: update hard-coded number
+		if (network->getOutputCount() != 10)
+		{
+			throw DatasetMismatchException("Mismatch between dataset label type count and network output count");
+		}
 
-	//if all of the network and dataset compatibility checks passed, perform training om all training samples
-	if (!errorEncountered)
-	{
+	    //perform testing om all testing samples
 		inputGrid = new double[network->getInputCount()];
 
 		//for each image in the set
@@ -1533,12 +1545,22 @@ MenuStates testingSelection(NeuralNetwork* network)
 			{
 				std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
 			}
-
-
 		}
+
+		delete[] inputGrid;
 
 		//display final network training score
 		std::cout << "Final score: " << (double)correctDeterminations / (double)testingLabels.size() << std::endl;
+	}
+	catch (DatasetNotLoadedException exception)
+	{
+		std::cout << std::endl << "Caught DatasetNotLoadedException" << std::endl;
+		std::cout << exception.what();
+	}
+	catch (DatasetMismatchException exception)
+	{
+		std::cout << std::endl << "Caught DatasetMismatchException" << std::endl;
+		std::cout << exception.what();
 	}
 
 	std::cout << std::endl << "Type 0 to exit:" << std::endl;
