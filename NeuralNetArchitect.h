@@ -423,4 +423,48 @@ MenuStates defaultSelection();
 //contains full fuctionality of neural network manager Finite State Menu
 void manageNeuralNetwork();
 
+class InvalidInputException : public std::exception
+{
+private:
+	const char* message;
+
+public:
+	InvalidInputException(const char* message);
+
+	const char* what();
+};
+
+class InvalidSelectionException : public std::exception
+{
+private:
+	const char* message;
+
+public:
+	InvalidSelectionException(const char* message);
+
+	const char* what();
+};
+
+class DatasetNotLoadedException : public std::exception
+{
+private:
+	const char* message;
+
+public:
+	DatasetNotLoadedException(const char* message);
+
+	const char* what();
+};
+
+class DatasetMismatchException : public std::exception
+{
+private:
+	const char* message;
+
+public:
+	DatasetMismatchException(const char* message);
+
+	const char* what();
+};
+
 #endif
