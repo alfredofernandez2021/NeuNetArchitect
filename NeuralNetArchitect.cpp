@@ -1268,6 +1268,8 @@ MenuStates createSelection(NeuralNetwork** network)
 	//create network and point to intialized NeuralNetwork
 	*network = new NeuralNetwork(numberOfLayers, inputLength, inputWidth, outputCount, costSelection, layerDetails, learningParameters);
 
+	delete[] layerDetails;
+
 	//return next menu state
 	return MenuStates::Manage;
 }
