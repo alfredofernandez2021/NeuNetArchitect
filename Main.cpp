@@ -72,6 +72,5 @@ int main()
 /*NC notes : Fix deterministic coin - toss training for linear models
 * Provide debugging entry to neuralNetwork saving - activation value
 * Begin forensic saving at some point
-* Fix slight memory leak visible when alternating back and forth from loading and unloading NeuralNetwork through menu FSM
 * If user enters training or testing menu options before datasets, print out a message instead of crashing
 */

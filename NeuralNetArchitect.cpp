@@ -1376,17 +1376,15 @@ MenuStates trainingSelection(NeuralNetwork* network)
 		std::cout << "Training data not yet loaded" << std::endl;
 		errorEncountered = true;
 	}
-
 	//checks if network input dimensions matches dataset sample dimensions
-	if (network->getInputCount() != trainingSamples[0].size() * trainingSamples[0][0].size())
+	else if (network->getInputCount() != trainingSamples[0].size() * trainingSamples[0][0].size())
 	{
 		std::cout << "Mismatch between dataset input samples and network input count" << std::endl;
 		errorEncountered = true;
 	}
-
 	//checks if network output length matches cardinality of dataset labels
 	//todo: update hard-coded number
-	if (network->getOutputCount() != 10)
+	else if (network->getOutputCount() != 10)
 	{
 		std::cout << "Mismatch between dataset label type count and network output count" << std::endl;
 		errorEncountered = true;
@@ -1462,7 +1460,7 @@ MenuStates trainingSelection(NeuralNetwork* network)
 		std::cout << "Final score: " << (double)correctDeterminations / (double)trainingLabels.size() << std::endl;
 	}
 
-	std::cout << "Type 0 to exit:" << std::endl;
+	std::cout << std::endl << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;
 
 	return MenuStates::Manage;
@@ -1487,17 +1485,15 @@ MenuStates testingSelection(NeuralNetwork* network)
 		std::cout << "Testing data not yet loaded" << std::endl;
 		errorEncountered = true;
 	}
-
 	//checks if network input dimensions matches dataset sample dimensions
-	if (network->getInputCount() != testingSamples[0].size() * testingSamples[0][0].size())
+	else if (network->getInputCount() != testingSamples[0].size() * testingSamples[0][0].size())
 	{
 		std::cout << "Mismatch between dataset input samples and network input count" << std::endl;
 		errorEncountered = true;
 	}
-
 	//checks if network output length matches cardinality of dataset labels
     //todo: update hard-coded number
-	if (network->getOutputCount() != 10)
+	else if (network->getOutputCount() != 10)
 	{
 		std::cout << "Mismatch between dataset label type count and network output count" << std::endl;
 		errorEncountered = true;
@@ -1546,7 +1542,7 @@ MenuStates testingSelection(NeuralNetwork* network)
 		std::cout << "Final score: " << (double)correctDeterminations / (double)testingLabels.size() << std::endl;
 	}
 
-	std::cout << "Type 0 to exit:" << std::endl;
+	std::cout << std::endl << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;
 
 	return MenuStates::Manage;
