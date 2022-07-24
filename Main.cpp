@@ -49,7 +49,7 @@ int main()
 * Ensure ease of use between Visual Studio project and Github repo
 * Test that entire project can be identically used on another system
 * ----------------------------------------------------------------------------------------------------------
-* Fix randomization of learned parameters during network creation... training results are always the same, even in repetition
+* Fix randomization of learned parameters during network creation... training results are sometimes the same, even in repetition
 */
 
 /* Expansion todo:
@@ -67,10 +67,18 @@ int main()
 * Early-stopping learning feature
 * All hyperparameter effects
 * Edge-case detection learning feature
+* Parallel programming
+* Support Vector Machines
+* K Nearest Neighbors
+* Decision Stumps
+* Boosting (Ensembling)
 */
 
-/*NC notes : Fix deterministic coin - toss training for linear models
+/* NC notes: 
+* Fix deterministic training for linear models, improve accuracy of training
 * Provide debugging entry to neuralNetwork saving - activation value
 * Begin forensic saving at some point
-* If user enters training or testing menu options before datasets, print out a message instead of crashing
+* Neuron class inheritance for sigmoid and ReLU -- DONE
+* SigmoidNeuron and ReLUNeuron unit tests, layer test, network tests
+* Separate functions into multiple .h and .cpp files
 */

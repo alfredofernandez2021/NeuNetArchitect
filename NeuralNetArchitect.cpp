@@ -33,7 +33,7 @@ double Neuron::getActivationRespectiveDerivation(const int inputNeuronIndex) con
 {
 	assert(inputNeuronIndex < neuronInputListCount && inputNeuronIndex >= 0);
 
-	return activationNudgeSum * weights[inputNeuronIndex];
+	return getActivationNudgeSum() * weights[inputNeuronIndex];
 }
 
 //Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
@@ -41,7 +41,7 @@ double Neuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
 {
 	assert(inputNeuronIndex < neuronInputListCount && inputNeuronIndex >= 0);
 
-	return activationNudgeSum * inputNeurons[inputNeuronIndex].getActivation();
+	return getActivationNudgeSum() * inputNeurons[inputNeuronIndex].getActivation();
 }
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
@@ -49,7 +49,7 @@ double Neuron::getBiasRespectiveDerivation() const
 {
 	assert(neuronInputListCount >= 0);
 
-	return activationNudgeSum * 1.0;
+	return getActivationNudgeSum() * 1.0;
 }
 
 //Adds desired change in activation value that's projected to reduce batch training error, dC/da = completeSum(dC/do * do/da)
@@ -193,7 +193,6 @@ void Neuron::activate(const double input)
 	{
 		activation = input;
 	}
-
 }
 
 //Injects error dC/da into this neuron, called for output neurons that are directly used to calculate cost
@@ -281,6 +280,85 @@ std::string Neuron::getNeuronType()
 {
 	return getInputCount() == 0 ? "Input" : "Linear";
 }
+
+//ReLU start
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
+double ReLUNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return (getActivation() > 0) ? getActivationNudgeSum() * weights[inputNeuronIndex] : 0;
+}
+
+//Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
+double ReLUNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return (getActivation() > 0) ? getActivationNudgeSum() * inputNeurons[inputNeuronIndex].getActivation() : 0;
+}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
+double ReLUNeuron::getBiasRespectiveDerivation() const
+{
+	assert(neuronInputListCount >= 0);
+
+	return (getActivation() > 0) ? getActivationNudgeSum() * 1.0 : 0;
+}
+
+//Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
+void ReLUNeuron::activate(const double input)
+{
+	if (neuronInputListCount > 0)
+	{
+		activation = (getActivationFunctionInput() > 0) ? getActivationFunctionInput() : 0;
+	}
+	else
+	{
+		activation = input;
+	}
+}
+//ReLU end
+
+//sigmoid start
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
+double SigmoidNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * weights[inputNeuronIndex];
+}
+
+//Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
+double SigmoidNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * inputNeurons[inputNeuronIndex].getActivation();
+}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
+double SigmoidNeuron::getBiasRespectiveDerivation() const
+{
+
+	assert(neuronInputListCount >= 0);
+
+	return getActivationNudgeSum() * getActivation() * ( 1 - getActivation() ) * 1.0;
+}
+
+//Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
+void SigmoidNeuron::activate(const double input)
+{
+	if (neuronInputListCount > 0)
+	{
+		activation = 1 / ( 1 + exp( -1 * getActivationFunctionInput()));
+	}
+	else
+	{
+		activation = input;
+	}
+}
+//sigmoid end
 
 //Set error of neurons with activations directly used to calculate cost dC/da
 void NeuralLayer::setError(double costArray[])
@@ -1392,87 +1470,97 @@ MenuStates trainingSelection(NeuralNetwork* network)
 		{
 			throw DatasetMismatchException("Mismatch between dataset label type count and network output count");
 		}
-
-	    //perform training om all training samples
-		inputGrid = new double[network->getInputCount()];
-		errorVector = new double[network->getOutputCount()];
-
-		//for each image in the set
-		for (auto i = 0; i < trainingSamples.size(); i++)
-		{	
-			//for each column in an image
-			for (auto j = 0; j < trainingSamples[0].size(); j++)
-			{	
-				//for each pixel in a column
-				for (auto k = 0; k < trainingSamples[0][0].size(); k++)
-				{
-					//load a pixel
-					inputGrid[j * trainingSamples[0].size() + k] = trainingSamples[i][j][k];
-				}
-			}
-
-			//propagate network forwards to calculate outputs from inputs
-			network->propagateForwards(inputGrid);
-
-			//get index of entry that scored the highest, from 0 to 9
-			//todo: sections assumes index number will always match the answer
-			answer = getIndexOfMaxEntry(network->getOutputs());
-
-			//if network guessed the correct answer, count successful attempt
-			if (answer == (int)trainingLabels[i])
-			{
-				correctDeterminations++;
-			}
-
-			//periodically displays current network performance
-			//todo: possibly make this not hard-coded?
-			if (i % 200 == 0 && i > 0)
-			{
-				std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
-				std::cout << "answer: " << answer << "\t" << "correct: " << (int)trainingLabels[i] << std::endl;
-				std::cout << std::endl;
-			}
-
-			//$$$work in progress section for training linear neural network
-			//todo: get linear training work more probablistically and abstract section for different neuron types
-			minOutputValue = getValueOfMinEntry(network->getOutputs());
-			maxOutputValue = getValueOfMaxEntry(network->getOutputs());
-
-			//calculate error vector
-			for (auto l = 0; l < network->getOutputCount(); l++)
-			{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-				if (l == (int)trainingLabels[i])
-				{
-					errorVector[l] = network->getOutputRespectiveCost(1000, l);
-				}
-				else
-				{
-					errorVector[l] = network->getOutputRespectiveCost(-100, l);
-				}
-			}//$$$end of work in progress section
-
-			//perform backpropagation given an error vector
-			//todo: make errorVector come from cost function
-			//todo: make more cost functions to accomodate step and linear neurons
-			network->propagateBackwards(errorVector);
-		}
-
-		delete[] inputGrid;
-		delete[] errorVector;
-
-		//display final network training score
-		std::cout << "Final score: " << (double)correctDeterminations / (double)trainingLabels.size() << std::endl;
 	}
 	catch (DatasetNotLoadedException exception)
 	{
 		std::cout << std::endl << "Caught DatasetNotLoadedException" << std::endl;
 		std::cout << exception.what();
+
+		std::cout << std::endl << "Type 0 to exit:" << std::endl;
+		std::cin >> selection;
+
+		return MenuStates::Manage;
 	}
 	catch (DatasetMismatchException exception)
 	{
 		std::cout << std::endl << "Caught DatasetMismatchException" << std::endl;
 		std::cout << exception.what();
+
+		std::cout << std::endl << "Type 0 to exit:" << std::endl;
+		std::cin >> selection;
+
+		return MenuStates::Manage;
 	}
+
+    //perform training om all training samples
+	inputGrid = new double[network->getInputCount()];
+	errorVector = new double[network->getOutputCount()];
+
+	//for each image in the set
+	for (auto i = 0; i < trainingSamples.size(); i++)
+	{	
+		//for each column in an image
+		for (auto j = 0; j < trainingSamples[0].size(); j++)
+		{	
+			//for each pixel in a column
+			for (auto k = 0; k < trainingSamples[0][0].size(); k++)
+			{
+				//load a pixel
+				inputGrid[j * trainingSamples[0].size() + k] = trainingSamples[i][j][k];
+			}
+		}
+
+		//propagate network forwards to calculate outputs from inputs
+		network->propagateForwards(inputGrid);
+
+		//get index of entry that scored the highest, from 0 to 9
+		//todo: sections assumes index number will always match the answer
+		answer = getIndexOfMaxEntry(network->getOutputs());
+
+		//if network guessed the correct answer, count successful attempt
+		if (answer == (int)trainingLabels[i])
+		{
+			correctDeterminations++;
+		}
+
+		//periodically displays current network performance
+		//todo: possibly make this not hard-coded?
+		if (i % 200 == 0 && i > 0)
+		{
+			std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
+			std::cout << "answer: " << answer << "\t" << "correct: " << (int)trainingLabels[i] << std::endl;
+			std::cout << std::endl;
+		}
+
+		//$$$work in progress section for training linear neural network
+		//todo: get linear training work more probablistically and abstract section for different neuron types
+		minOutputValue = getValueOfMinEntry(network->getOutputs());
+		maxOutputValue = getValueOfMaxEntry(network->getOutputs());
+
+		//calculate error vector
+		for (auto l = 0; l < network->getOutputCount(); l++)
+		{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
+			if (l == (int)trainingLabels[i])
+			{
+				errorVector[l] = network->getOutputRespectiveCost(1000, l);
+			}
+			else
+			{
+				errorVector[l] = network->getOutputRespectiveCost(-100, l);
+			}
+		}//$$$end of work in progress section
+
+		//perform backpropagation given an error vector
+		//todo: make errorVector come from cost function
+		//todo: make more cost functions to accomodate step and linear neurons
+		network->propagateBackwards(errorVector);
+	}
+
+	delete[] inputGrid;
+	delete[] errorVector;
+
+	//display final network training score
+	std::cout << "Final score: " << (double)correctDeterminations / (double)trainingLabels.size() << std::endl;
 
 	std::cout << std::endl << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;
@@ -1511,57 +1599,68 @@ MenuStates testingSelection(NeuralNetwork* network)
 		{
 			throw DatasetMismatchException("Mismatch between dataset label type count and network output count");
 		}
-
-	    //perform testing om all testing samples
-		inputGrid = new double[network->getInputCount()];
-
-		//for each image in the set
-		for (auto i = 0; i < testingSamples.size(); i++)
-		{	//for each column in an image
-			for (auto j = 0; j < testingSamples[0].size(); j++)
-			{	//for each pixel in a column
-				for (auto k = 0; k < testingSamples[0][0].size(); k++)
-				{
-					//load a pixel
-					inputGrid[j * testingSamples[0].size() + k] = testingSamples[i][j][k];
-				}
-			}
-
-			//propagate network forwards to calculate outputs from inputs
-			network->propagateForwards(inputGrid);
-
-			//get index of entry that scored the highest, from 0 to 9
-			answer = getIndexOfMaxEntry(network->getOutputs());
-
-			//if network guessed the correct answer, count successful attempt
-			if (answer == (int)testingLabels[i])
-			{
-				correctDeterminations++;
-			}
-
-			//periodically displays current network performance
-			//todo: possibly make this not hard-coded?
-			if (i % 100 == 0 && i > 0)
-			{
-				std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
-			}
-		}
-
-		delete[] inputGrid;
-
-		//display final network training score
-		std::cout << "Final score: " << (double)correctDeterminations / (double)testingLabels.size() << std::endl;
 	}
 	catch (DatasetNotLoadedException exception)
 	{
 		std::cout << std::endl << "Caught DatasetNotLoadedException" << std::endl;
 		std::cout << exception.what();
+
+		std::cout << std::endl << "Type 0 to exit:" << std::endl;
+		std::cin >> selection;
+
+		return MenuStates::Manage;
 	}
 	catch (DatasetMismatchException exception)
 	{
 		std::cout << std::endl << "Caught DatasetMismatchException" << std::endl;
 		std::cout << exception.what();
+
+		std::cout << std::endl << "Type 0 to exit:" << std::endl;
+		std::cin >> selection;
+
+		return MenuStates::Manage;
 	}
+
+    //perform testing om all testing samples
+	inputGrid = new double[network->getInputCount()];
+
+	//for each image in the set
+	for (auto i = 0; i < testingSamples.size(); i++)
+	{	//for each column in an image
+		for (auto j = 0; j < testingSamples[0].size(); j++)
+		{	//for each pixel in a column
+			for (auto k = 0; k < testingSamples[0][0].size(); k++)
+			{
+				//load a pixel
+				inputGrid[j * testingSamples[0].size() + k] = testingSamples[i][j][k];
+			}
+		}
+
+		//propagate network forwards to calculate outputs from inputs
+		network->propagateForwards(inputGrid);
+
+		//get index of entry that scored the highest, from 0 to 9
+		answer = getIndexOfMaxEntry(network->getOutputs());
+
+		//if network guessed the correct answer, count successful attempt
+		if (answer == (int)testingLabels[i])
+		{
+			correctDeterminations++;
+		}
+
+		//periodically displays current network performance
+		//todo: possibly make this not hard-coded?
+		if (i % 100 == 0 && i > 0)
+		{
+			std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
+		}
+	}
+
+	delete[] inputGrid;
+
+	//display final network training score
+	std::cout << "Final score: " << (double)correctDeterminations / (double)testingLabels.size() << std::endl;
+
 
 	std::cout << std::endl << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;

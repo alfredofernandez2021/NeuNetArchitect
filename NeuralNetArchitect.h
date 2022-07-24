@@ -14,14 +14,13 @@
 class Neuron
 {
 
-private:
+protected:
 	int neuronInputListCount;
 	Neuron* inputNeurons;
 	double activation, activationNudgeSum;
 	double* weights, * weightsMomentum;
 	double bias, biasMomentum;
 
-protected:
 	//gives neuron's internal sumproduct
 	double getActivationFunctionInput() const;
 
@@ -94,6 +93,36 @@ public:
 	//gives the activation type of the neuron
 	virtual std::string getNeuronType();
 
+};
+
+class ReLUNeuron : public Neuron 
+{
+	//gives how much a particular input affects the evaluation of the network's cost function
+	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const;
+
+	//gives how much a particular weight affects the evaluation of the network's cost function
+	virtual double getWeightRespectiveDerivation(const int inputNeuronIndex) const;
+
+	//gives how much the neuron's bias affects the evaluation of the network's cost function
+	virtual double getBiasRespectiveDerivation() const;
+
+	//Defines exterior rectified linear activation function of ReLU neuron
+	virtual void activate(const double input = 0.0);
+};
+
+class SigmoidNeuron : public Neuron
+{
+	//gives how much a particular input affects the evaluation of the network's cost function
+	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const;
+
+	//gives how much a particular weight affects the evaluation of the network's cost function
+	virtual double getWeightRespectiveDerivation(const int inputNeuronIndex) const;
+
+	//gives how much the neuron's bias affects the evaluation of the network's cost function
+	virtual double getBiasRespectiveDerivation() const;
+
+	//Defines exterior rectified linear activation function of ReLU neuron
+	virtual void activate(const double input = 0.0);
 };
 
 /**********************************************************************************************************************************************
