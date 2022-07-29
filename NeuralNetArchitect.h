@@ -161,15 +161,19 @@ public:
 	NeuralLayer(int inputLength, int inputWidth);
 
 	//constructor called for hidden layers during network creation
+	//todo: add layer type parameter
 	NeuralLayer(int neuronCount, NeuralLayer* inputLayer);
 
 	//constructor called for hidden layers during network loading, with stored neuron parameter values passed in
+	//todo: add layer type parameter
 	NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<std::vector<double>> weightValues, std::vector<double> biasValues);
 
 	//copy constructor for creating layers of the same state as the one passed in
+	//todo: add layer type parameter
 	NeuralLayer(const NeuralLayer& original);
 
 	//operator = overloading for creating layers of the same state as the one passed in
+	//todo: add layer type parameter
 	NeuralLayer& operator=(const NeuralLayer& original);
 
 	//custom destructor for deleting NeuralLayer objects
@@ -344,6 +348,9 @@ public:
 
 	//indicates if dataset testing samples and labels have been loaded
 	bool isReadyForTesting();
+
+	//perform training on training dataset
+	void train();
 
 	//gives dataset training samples to use during network training
 	std::vector<std::vector<std::vector<unsigned char>>> getTrainingSamples();

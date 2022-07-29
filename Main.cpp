@@ -15,6 +15,9 @@ int main()
 {
 	manageNeuralNetwork();
 
+	//todo: Input Neuron to Sigmoid Neuron, and ReLU neuron unit tests
+	//Neuron neuron = SigmoidNeuron();
+
 	return 0;
 }
 // 2 1 4 1 1 0 1 2 0 1 0				the first network		(propagation checking)
@@ -81,4 +84,6 @@ int main()
 * Neuron class inheritance for sigmoid and ReLU -- DONE
 * SigmoidNeuron and ReLUNeuron unit tests, layer test, network tests
 * Separate functions into multiple .h and .cpp files
+* Dataset getters used as least as possible -> training NeuralNetwork internal function
+* NeuralLayerDetails.type in switch statement in layer creation/loading for feedforward Neurons
 */

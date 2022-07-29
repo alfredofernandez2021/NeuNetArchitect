@@ -881,6 +881,103 @@ bool NeuralNetwork::isReadyForTesting()
 	return true;
 }
 
+void NeuralNetwork::train()
+{
+	//int batchSize, learningRate; todo:implement
+	int minOutputValue, maxOutputValue;
+	int selection, answer, correctDeterminations = 0;
+	double* inputGrid = nullptr;
+	double* errorVector = nullptr;
+
+	if (!isReadyForTraining())
+	{
+		throw DatasetNotLoadedException("Training dataset not yet loaded");
+	}
+
+	//checks if network input dimensions matches dataset sample dimensions
+	if (getInputCount() != trainingSamples[0].size() * trainingSamples[0][0].size())
+	{
+		throw DatasetMismatchException("Mismatch between dataset input samples and network input count");
+	}
+
+	//checks if network output length matches cardinality of dataset labels
+	//todo: update hard-coded number
+	if (getOutputCount() != 10)
+	{
+		throw DatasetMismatchException("Mismatch between dataset label type count and network output count");
+	}
+
+	//perform training om all training samples
+	inputGrid = new double[getInputCount()];
+	errorVector = new double[getOutputCount()];
+
+	//for each image in the set
+	for (auto i = 0; i < trainingSamples.size(); i++)
+	{
+		//for each column in an image
+		for (auto j = 0; j < trainingSamples[0].size(); j++)
+		{
+			//for each pixel in a column
+			for (auto k = 0; k < trainingSamples[0][0].size(); k++)
+			{
+				//load a pixel
+				inputGrid[j * trainingSamples[0].size() + k] = trainingSamples[i][j][k];
+			}
+		}
+
+		//propagate network forwards to calculate outputs from inputs
+		propagateForwards(inputGrid);
+
+		//get index of entry that scored the highest, from 0 to 9
+		//todo: sections assumes index number will always match the answer
+		answer = getIndexOfMaxEntry(getOutputs());
+
+		//if network guessed the correct answer, count successful attempt
+		if (answer == (int)trainingLabels[i])
+		{
+			correctDeterminations++;
+		}
+
+		//periodically displays current network performance
+		//todo: possibly make this not hard-coded?
+		if (i % 200 == 0 && i > 0)
+		{
+			std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
+			std::cout << "answer: " << answer << "\t" << "correct: " << (int)trainingLabels[i] << std::endl;
+			std::cout << std::endl;
+		}
+
+		//$$$work in progress section for training linear neural network
+		//todo: get linear training work more probablistically and abstract section for different neuron types
+		minOutputValue = getValueOfMinEntry(getOutputs());
+		maxOutputValue = getValueOfMaxEntry(getOutputs());
+
+		//calculate error vector
+		for (auto l = 0; l < getOutputCount(); l++)
+		{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
+			if (l == (int)trainingLabels[i])
+			{
+				errorVector[l] = getOutputRespectiveCost(1000, l);
+			}
+			else
+			{
+				errorVector[l] = getOutputRespectiveCost(-100, l);
+			}
+		}//$$$end of work in progress section
+
+		//perform backpropagation given an error vector
+		//todo: make errorVector come from cost function
+		//todo: make more cost functions to accomodate step and linear neurons
+		propagateBackwards(errorVector);
+	}
+
+	delete[] inputGrid;
+	delete[] errorVector;
+
+	//display final network training score
+	std::cout << "Final score: " << (double)correctDeterminations / (double)trainingLabels.size() << std::endl;
+}
+
 //returns dataset training samples to use during network training
 std::vector<std::vector<std::vector<unsigned char>>> NeuralNetwork::getTrainingSamples()
 {
@@ -1442,34 +1539,11 @@ MenuStates datasetSelection(NeuralNetwork* network)
 //asks user to define higher-level hyperparameters and commences training
 MenuStates trainingSelection(NeuralNetwork* network)
 {
-	int batchSize, learningRate;
-	int minOutputValue, maxOutputValue;
-	int selection, answer, correctDeterminations = 0;
-	double* inputGrid = nullptr;
-	double* errorVector = nullptr;
+	int selection;
 
-	std::vector<std::vector<std::vector<unsigned char>>> trainingSamples = network->getTrainingSamples();
-	std::vector<unsigned char> trainingLabels = network->getTrainingLabels();
-
-	try {
-		//checks if training dataset has previously been loaded
-		if (!network->isReadyForTraining())
-		{
-			throw DatasetNotLoadedException("Training dataset not yet loaded");
-		}
-
-		//checks if network input dimensions matches dataset sample dimensions
-		if (network->getInputCount() != trainingSamples[0].size() * trainingSamples[0][0].size())
-		{
-			throw DatasetMismatchException("Mismatch between dataset input samples and network input count");
-		}
-
-		//checks if network output length matches cardinality of dataset labels
-		//todo: update hard-coded number
-		if (network->getOutputCount() != 10)
-		{
-			throw DatasetMismatchException("Mismatch between dataset label type count and network output count");
-		}
+	try 
+	{ 
+		network->train(); 
 	}
 	catch (DatasetNotLoadedException exception)
 	{
@@ -1491,76 +1565,6 @@ MenuStates trainingSelection(NeuralNetwork* network)
 
 		return MenuStates::Manage;
 	}
-
-    //perform training om all training samples
-	inputGrid = new double[network->getInputCount()];
-	errorVector = new double[network->getOutputCount()];
-
-	//for each image in the set
-	for (auto i = 0; i < trainingSamples.size(); i++)
-	{	
-		//for each column in an image
-		for (auto j = 0; j < trainingSamples[0].size(); j++)
-		{	
-			//for each pixel in a column
-			for (auto k = 0; k < trainingSamples[0][0].size(); k++)
-			{
-				//load a pixel
-				inputGrid[j * trainingSamples[0].size() + k] = trainingSamples[i][j][k];
-			}
-		}
-
-		//propagate network forwards to calculate outputs from inputs
-		network->propagateForwards(inputGrid);
-
-		//get index of entry that scored the highest, from 0 to 9
-		//todo: sections assumes index number will always match the answer
-		answer = getIndexOfMaxEntry(network->getOutputs());
-
-		//if network guessed the correct answer, count successful attempt
-		if (answer == (int)trainingLabels[i])
-		{
-			correctDeterminations++;
-		}
-
-		//periodically displays current network performance
-		//todo: possibly make this not hard-coded?
-		if (i % 200 == 0 && i > 0)
-		{
-			std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
-			std::cout << "answer: " << answer << "\t" << "correct: " << (int)trainingLabels[i] << std::endl;
-			std::cout << std::endl;
-		}
-
-		//$$$work in progress section for training linear neural network
-		//todo: get linear training work more probablistically and abstract section for different neuron types
-		minOutputValue = getValueOfMinEntry(network->getOutputs());
-		maxOutputValue = getValueOfMaxEntry(network->getOutputs());
-
-		//calculate error vector
-		for (auto l = 0; l < network->getOutputCount(); l++)
-		{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-			if (l == (int)trainingLabels[i])
-			{
-				errorVector[l] = network->getOutputRespectiveCost(1000, l);
-			}
-			else
-			{
-				errorVector[l] = network->getOutputRespectiveCost(-100, l);
-			}
-		}//$$$end of work in progress section
-
-		//perform backpropagation given an error vector
-		//todo: make errorVector come from cost function
-		//todo: make more cost functions to accomodate step and linear neurons
-		network->propagateBackwards(errorVector);
-	}
-
-	delete[] inputGrid;
-	delete[] errorVector;
-
-	//display final network training score
-	std::cout << "Final score: " << (double)correctDeterminations / (double)trainingLabels.size() << std::endl;
 
 	std::cout << std::endl << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;
