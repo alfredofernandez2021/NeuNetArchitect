@@ -921,7 +921,7 @@ void NeuralNetwork::train()
 			for (auto k = 0; k < trainingSamples[0][0].size(); k++)
 			{
 				//load a pixel
-				inputGrid[j * trainingSamples[0].size() + k] = trainingSamples[i][j][k];
+				inputGrid[j * trainingSamples[0].size() + k] = (int)trainingSamples[i][j][k];
 			}
 		}
 
@@ -961,7 +961,7 @@ void NeuralNetwork::train()
 			}
 			else
 			{
-				errorVector[l] = getOutputRespectiveCost(-100, l);
+				errorVector[l] = getOutputRespectiveCost(1000, l);
 			}
 		}//$$$end of work in progress section
 
@@ -976,6 +976,74 @@ void NeuralNetwork::train()
 
 	//display final network training score
 	std::cout << "Final score: " << (double)correctDeterminations / (double)trainingLabels.size() << std::endl;
+}
+
+void NeuralNetwork::test()
+{
+	int answer, correctDeterminations = 0;
+	double* inputGrid = nullptr;
+
+	std::cout << std::endl;
+	std::cout << "Testing:" << std::endl;
+
+	//checks if testing data has previously been loaded
+	if (isReadyForTesting())
+	{
+		throw DatasetNotLoadedException("Testing dataset not yet loaded");
+	}
+
+	//checks if network input dimensions matches dataset sample dimensions
+	if (getInputCount() != testingSamples[0].size() * testingSamples[0][0].size())
+	{
+		throw DatasetMismatchException("Mismatch between dataset input samples and network input count");
+	}
+
+	//checks if network output length matches cardinality of dataset labels
+	//todo: update hard-coded number
+	if (getOutputCount() != 10)
+	{
+		throw DatasetMismatchException("Mismatch between dataset label type count and network output count");
+	}
+
+	//perform testing om all testing samples
+	inputGrid = new double[getInputCount()];
+
+	//for each image in the set
+	for (auto i = 0; i < testingSamples.size(); i++)
+	{	//for each column in an image
+		for (auto j = 0; j < testingSamples[0].size(); j++)
+		{	//for each pixel in a column
+			for (auto k = 0; k < testingSamples[0][0].size(); k++)
+			{
+				//load a pixel
+				inputGrid[j * testingSamples[0].size() + k] = (int)testingSamples[i][j][k];
+			}
+		}
+
+		//propagate network forwards to calculate outputs from inputs
+		propagateForwards(inputGrid);
+
+		//get index of entry that scored the highest, from 0 to 9
+		answer = getIndexOfMaxEntry(getOutputs());
+
+		//if network guessed the correct answer, count successful attempt
+		if (answer == (int)testingLabels[i])
+		{
+			correctDeterminations++;
+		}
+
+		//periodically displays current network performance
+		//todo: possibly make this not hard-coded?
+		if (i % 100 == 0 && i > 0)
+		{
+			std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
+		}
+	}
+
+	delete[] inputGrid;
+
+	//display final network training score
+	std::cout << "Final score: " << (double)correctDeterminations / (double)testingLabels.size() << std::endl;
 }
 
 //returns dataset training samples to use during network training
@@ -1575,34 +1643,10 @@ MenuStates trainingSelection(NeuralNetwork* network)
 //completes testing of neural network with latest learned-parameter values
 MenuStates testingSelection(NeuralNetwork* network)
 {
-	int selection, answer, correctDeterminations = 0;
-	double* inputGrid = nullptr;
-
-	std::vector<std::vector<std::vector<unsigned char>>> testingSamples = network->getTestingSamples();
-	std::vector<unsigned char> testingLabels = network->getTestingLabels();
-
-	try {
-		std::cout << std::endl;
-		std::cout << "Testing:" << std::endl;
-
-		//checks if testing data has previously been loaded
-		if (!network->isReadyForTesting())
-		{
-			throw DatasetNotLoadedException("Testing dataset not yet loaded");
-		}
-
-		//checks if network input dimensions matches dataset sample dimensions
-		if (network->getInputCount() != testingSamples[0].size() * testingSamples[0][0].size())
-		{
-			throw DatasetMismatchException("Mismatch between dataset input samples and network input count");
-		}
-
-		//checks if network output length matches cardinality of dataset labels
-		//todo: update hard-coded number
-		if (network->getOutputCount() != 10)
-		{
-			throw DatasetMismatchException("Mismatch between dataset label type count and network output count");
-		}
+	int selection;
+	try 
+	{
+		network->test();
 	}
 	catch (DatasetNotLoadedException exception)
 	{
@@ -1624,47 +1668,6 @@ MenuStates testingSelection(NeuralNetwork* network)
 
 		return MenuStates::Manage;
 	}
-
-    //perform testing om all testing samples
-	inputGrid = new double[network->getInputCount()];
-
-	//for each image in the set
-	for (auto i = 0; i < testingSamples.size(); i++)
-	{	//for each column in an image
-		for (auto j = 0; j < testingSamples[0].size(); j++)
-		{	//for each pixel in a column
-			for (auto k = 0; k < testingSamples[0][0].size(); k++)
-			{
-				//load a pixel
-				inputGrid[j * testingSamples[0].size() + k] = testingSamples[i][j][k];
-			}
-		}
-
-		//propagate network forwards to calculate outputs from inputs
-		network->propagateForwards(inputGrid);
-
-		//get index of entry that scored the highest, from 0 to 9
-		answer = getIndexOfMaxEntry(network->getOutputs());
-
-		//if network guessed the correct answer, count successful attempt
-		if (answer == (int)testingLabels[i])
-		{
-			correctDeterminations++;
-		}
-
-		//periodically displays current network performance
-		//todo: possibly make this not hard-coded?
-		if (i % 100 == 0 && i > 0)
-		{
-			std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
-		}
-	}
-
-	delete[] inputGrid;
-
-	//display final network training score
-	std::cout << "Final score: " << (double)correctDeterminations / (double)testingLabels.size() << std::endl;
-
 
 	std::cout << std::endl << "Type 0 to exit:" << std::endl;
 	std::cin >> selection;

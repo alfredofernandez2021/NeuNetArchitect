@@ -352,6 +352,9 @@ public:
 	//perform training on training dataset
 	void train();
 
+	//perform testing on testing dataset
+	void test();
+
 	//gives dataset training samples to use during network training
 	std::vector<std::vector<std::vector<unsigned char>>> getTrainingSamples();
 
