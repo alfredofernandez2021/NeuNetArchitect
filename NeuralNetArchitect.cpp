@@ -955,6 +955,7 @@ void NeuralNetwork::train()
 		//calculate error vector
 		for (auto l = 0; l < getOutputCount(); l++)
 		{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
+			//todo: Fix this
 			if (l == (int)trainingLabels[i])
 			{
 				errorVector[l] = getOutputRespectiveCost(1000, l);
