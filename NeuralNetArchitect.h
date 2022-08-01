@@ -97,6 +97,7 @@ public:
 
 class ReLUNeuron : public Neuron 
 {
+
 public:
 
 	//constructor called for hidden ReLU neurons during network creation
@@ -120,6 +121,9 @@ public:
 
 class SigmoidNeuron : public Neuron
 {
+
+public:
+
 	//constructor called for hidden ReLU neurons during network creation
 	SigmoidNeuron(int neuronInputListCount, Neuron* inputNeurons);
 
@@ -184,11 +188,11 @@ public:
 
 	//constructor called for hidden layers during network creation
 	//todo: add layer type parameter
-	NeuralLayer(int neuronCount, NeuralLayer* inputLayer);
+	NeuralLayer(int neuronCount, NeuralLayer* inputLayer, int activationType);
 
 	//constructor called for hidden layers during network loading, with stored neuron parameter values passed in
 	//todo: add layer type parameter
-	NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<std::vector<double>> weightValues, std::vector<double> biasValues);
+	NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<std::vector<double>> weightValues, std::vector<double> biasValues, int activationType);
 
 	//copy constructor for creating layers of the same state as the one passed in
 	//todo: add layer type parameter

@@ -432,7 +432,7 @@ NeuralLayer::NeuralLayer(int inputLength, int inputWidth) : neuronArrayLength(in
 }
 
 //constructor for initializing hidden layers during network creation
-NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer)
+NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, int activationType)
 {
 	neuronArrayLength = neuronCount;
 	neuronArrayWidth = 1;
@@ -443,15 +443,37 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer)
 	neurons = new Neuron[neuronCount];
 	if (neurons == nullptr) throw std::bad_alloc();
 
-	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+	switch (activationType)
 	{
-		neurons[i] = Neuron(inputNeuronCount, inputNeurons);
+	case 1:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons[i] = Neuron(inputNeuronCount, inputNeurons);
+		}
+		break;
+	case 2:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons[i] = ReLUNeuron(inputNeuronCount, inputNeurons);
+		}
+		break;
+	case 3:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons[i] = SigmoidNeuron(inputNeuronCount, inputNeurons);
+		}
+		break;
+	default:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons[i] = Neuron(inputNeuronCount, inputNeurons);
+		}
+		break;
 	}
-
 }
 
 //constructor for hidden layers during network loading
-NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<std::vector<double>> weightValues, std::vector<double> biasValues)
+NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<std::vector<double>> weightValues, std::vector<double> biasValues, int activationType)
 {
 	neuronArrayLength = neuronCount;
 	neuronArrayWidth = 1;
@@ -464,7 +486,33 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 	{
-		neurons[i] = Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]);
+		switch (activationType)
+		{
+		case 1:
+			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+			{
+				neurons[i] = Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]);
+			}
+			break;
+		case 2:
+			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+			{
+				neurons[i] = ReLUNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]);
+			}
+			break;
+		case 3:
+			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+			{
+				neurons[i] = SigmoidNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]);
+			}
+			break;
+		default:
+			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+			{
+				neurons[i] = Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]);
+			}
+			break;
+		}
 	}
 }
 
@@ -753,7 +801,7 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 	//initialize NeuralLayers and have array elements point to them
 	for (auto i = 1; i < layerCount; i++)
 	{
-		this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1]);
+		this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].activationType);
 	}
 
 	//save layer states
@@ -788,15 +836,7 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 	//initialize NeuralLayers and have array elements point to them
 	for (auto i = 1; i < layerCount; i++)
 	{
-		switch (layerDetails[i].activationType)
-		{
-		case 1:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
-			break;
-		default:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
-			break;
-		}
+		this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons, layerDetails[i].activationType);
 	}
 
 	//save layer states
