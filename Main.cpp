@@ -87,3 +87,13 @@ int main()
 * Dataset getters used as least as possible -> training NeuralNetwork internal function
 * NeuralLayerDetails.type in switch statement in layer creation/loading for feedforward Neurons
 */
+
+/* Derived Neurons todo list:
+* Define all necessary SigmoidNeuron and ReLUNeuron constructors
+* Relocate NeuralNetwork layer type switch statement to NeuralLayer
+* Ensure nothing is being left out from derived classes
+* SigmoidNeuron and ReLUNeuron unit tests
+* Creation menu flexibility for derived Neuron classes
+* Ensure loading menu functionality for derived Neuron Classes
+* Test LinearInput->ReLU->Sigmoid NeuralNetwork
+*/

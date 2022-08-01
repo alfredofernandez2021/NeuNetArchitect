@@ -97,6 +97,14 @@ public:
 
 class ReLUNeuron : public Neuron 
 {
+public:
+
+	//constructor called for hidden ReLU neurons during network creation
+	ReLUNeuron(int neuronInputListCount, Neuron* inputNeurons);
+
+	//constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
+	ReLUNeuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue);
+
 	//gives how much a particular input affects the evaluation of the network's cost function
 	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const;
 
@@ -112,6 +120,12 @@ class ReLUNeuron : public Neuron
 
 class SigmoidNeuron : public Neuron
 {
+	//constructor called for hidden ReLU neurons during network creation
+	SigmoidNeuron(int neuronInputListCount, Neuron* inputNeurons);
+
+	//constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
+	SigmoidNeuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue);
+
 	//gives how much a particular input affects the evaluation of the network's cost function
 	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const;
 
@@ -124,6 +138,14 @@ class SigmoidNeuron : public Neuron
 	//Defines exterior rectified linear activation function of ReLU neuron
 	virtual void activate(const double input = 0.0);
 };
+
+//enumeration to number-code the names of the menu states
+//enum class LayerActivationFunction : unsigned int
+//{
+//	Linear = 0,
+//	ReLU = 1,
+//	Sigmoid = 2,
+//};
 
 /**********************************************************************************************************************************************
  NeuralLayer's activation is either the vector of the outputs of its neurons, or the input values that were directly passed in
@@ -225,7 +247,7 @@ double derivedMSECost(double targetValue, double estimatedValue, int outputCount
  **********************************************************************************************************************************************/
 struct layerCreationInfo
 {
-	int type;
+	int activationType;
 	int neuronCount;
 };
 
@@ -239,7 +261,7 @@ struct layerCreationInfo
  **********************************************************************************************************************************************/
 struct layerLoadingInfo
 {
-	int type;
+	int activationType;
 	int neuronCount;
 	std::vector<std::vector<double>> weightsOfNeurons;
 	std::vector<double> biasOfNeurons;

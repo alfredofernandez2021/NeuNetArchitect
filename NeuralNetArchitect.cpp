@@ -281,7 +281,15 @@ std::string Neuron::getNeuronType()
 	return getInputCount() == 0 ? "Input" : "Linear";
 }
 
-//ReLU start
+
+//constructor called for hidden ReLU neurons during network creation
+ReLUNeuron::ReLUNeuron(int neuronInputListCount, Neuron* inputNeurons)
+	: Neuron(neuronInputListCount, inputNeurons){}
+
+//constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
+ReLUNeuron::ReLUNeuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue)
+	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue){}
+
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
 double ReLUNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
 {
@@ -318,9 +326,16 @@ void ReLUNeuron::activate(const double input)
 		activation = input;
 	}
 }
-//ReLU end
 
-//sigmoid start
+
+//constructor called for hidden Sigmoid neurons during network creation
+SigmoidNeuron::SigmoidNeuron(int neuronInputListCount, Neuron* inputNeurons)
+	: Neuron(neuronInputListCount, inputNeurons) {}
+
+//constructor called for hidden Sigmoid neurons during network loading, with previously-stored parameter values passed in
+SigmoidNeuron::SigmoidNeuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue)
+	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) {}
+
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
 double SigmoidNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
 {
@@ -358,7 +373,7 @@ void SigmoidNeuron::activate(const double input)
 		activation = input;
 	}
 }
-//sigmoid end
+
 
 //Set error of neurons with activations directly used to calculate cost dC/da
 void NeuralLayer::setError(double costArray[])
@@ -369,7 +384,6 @@ void NeuralLayer::setError(double costArray[])
 			neurons[i].setError(costArray[i]);
 	}
 }
-
 
 //nudge input layer activations with derivatives of cost function dC/da * da/di
 void NeuralLayer::injectErrorBackwards()
@@ -739,15 +753,7 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 	//initialize NeuralLayers and have array elements point to them
 	for (auto i = 1; i < layerCount; i++)
 	{
-		switch (layerDetails[i].type)
-		{
-		case 1:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1]);
-			break;
-		default:
-			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1]);
-			break;
-		}
+		this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1]);
 	}
 
 	//save layer states
@@ -782,7 +788,7 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 	//initialize NeuralLayers and have array elements point to them
 	for (auto i = 1; i < layerCount; i++)
 	{
-		switch (layerDetails[i].type)
+		switch (layerDetails[i].activationType)
 		{
 		case 1:
 			this->neuralLayers[i] = NeuralLayer(layerDetails[i].neuronCount, &neuralLayers[i - 1], layerDetails[i].weightsOfNeurons, layerDetails[i].biasOfNeurons);
@@ -1100,7 +1106,7 @@ void NeuralNetwork::saveLayerStates()
 {
 	for (auto i = 0; i < getLayerCount(); i++)
 	{
-		layerStates[i].type = neuralLayers[i].getNeuralLayerType();
+		layerStates[i].activationType = neuralLayers[i].getNeuralLayerType();
 		layerStates[i].neuronCount = neuralLayers[i].getNeuronArrayCount();
 		layerStates[i].weightsOfNeurons = neuralLayers[i].getNeuronWeights();
 		layerStates[i].biasOfNeurons = neuralLayers[i].getNeuronBiases();
@@ -1173,7 +1179,7 @@ void storeNetwork(NeuralNetwork* network, std::string& fileName)
 	for (auto i = 0; i < networkDepth; i++)
 	{
 		//adds non-neuron layer details as chidlren to property subtree root
-		layerPropertySubTree.put("activationType", layerStates[i].type);
+		layerPropertySubTree.put("activationType", layerStates[i].activationType);
 		layerPropertySubTree.put("neuronCount", layerStates[i].neuronCount);
 
 		//defines and inserts neuron detail subtrees as children to layer ptree's 'neurons' member
@@ -1236,7 +1242,7 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 	for (const boost::property_tree::ptree::value_type& layer : networkPropertyTree.get_child("network.layers"))
 	{
 		//defines non-neuron layer state details
-		layerStates[i].type = layer.second.get<int>("activationType");
+		layerStates[i].activationType = layer.second.get<int>("activationType");
 		layerStates[i].neuronCount = layer.second.get<int>("neuronCount");
 
 		//defines neuron state details
@@ -1485,7 +1491,7 @@ MenuStates createSelection(NeuralNetwork** network)
 	std::cout << std::endl;
 
 	//initialize input layer
-	layerDetails[0].type = 1;
+	layerDetails[0].activationType = 1;
 	layerDetails[0].neuronCount = inputLength * inputWidth;
 
 	//define each layer
@@ -1495,7 +1501,7 @@ MenuStates createSelection(NeuralNetwork** network)
 
 		//define activation type
 		std::cout << "\tActivation type: ";
-		std::cin >> layerDetails[i].type;
+		std::cin >> layerDetails[i].activationType;
 		std::cout << std::endl;
 
 		//defines hidden layers
