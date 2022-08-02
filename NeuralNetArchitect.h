@@ -107,16 +107,19 @@ public:
 	ReLUNeuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue);
 
 	//gives how much a particular input affects the evaluation of the network's cost function
-	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const;
+	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const override;
 
 	//gives how much a particular weight affects the evaluation of the network's cost function
-	virtual double getWeightRespectiveDerivation(const int inputNeuronIndex) const;
+	virtual double getWeightRespectiveDerivation(const int inputNeuronIndex) const override;
 
 	//gives how much the neuron's bias affects the evaluation of the network's cost function
-	virtual double getBiasRespectiveDerivation() const;
+	virtual double getBiasRespectiveDerivation() const override;
 
 	//Defines exterior rectified linear activation function of ReLU neuron
-	virtual void activate(const double input = 0.0);
+	virtual void activate(const double input = 0.0) override;
+
+	//gives the activation type of the neuron
+	virtual std::string getNeuronType();
 };
 
 class SigmoidNeuron : public Neuron
@@ -141,6 +144,9 @@ public:
 
 	//Defines exterior rectified linear activation function of ReLU neuron
 	virtual void activate(const double input = 0.0);
+
+	//gives the activation type of the neuron
+	virtual std::string getNeuronType() override;
 };
 
 //enumeration to number-code the names of the menu states

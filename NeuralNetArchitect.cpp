@@ -284,7 +284,9 @@ std::string Neuron::getNeuronType()
 
 //constructor called for hidden ReLU neurons during network creation
 ReLUNeuron::ReLUNeuron(int neuronInputListCount, Neuron* inputNeurons)
-	: Neuron(neuronInputListCount, inputNeurons){}
+	: Neuron(neuronInputListCount, inputNeurons) {
+	std::cout << "Created" << std::endl;
+}
 
 //constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
 ReLUNeuron::ReLUNeuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue)
@@ -325,6 +327,12 @@ void ReLUNeuron::activate(const double input)
 	{
 		activation = input;
 	}
+}
+
+//returns the activation type of the neuron -unused?
+std::string ReLUNeuron::getNeuronType()
+{
+	return "ReLU";
 }
 
 
@@ -374,6 +382,11 @@ void SigmoidNeuron::activate(const double input)
 	}
 }
 
+//returns the activation type of the neuron -unused?
+std::string SigmoidNeuron::getNeuronType()
+{
+	return "Sigmoid";
+}
 
 //Set error of neurons with activations directly used to calculate cost dC/da
 void NeuralLayer::setError(double costArray[])
@@ -453,7 +466,7 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, int activatio
 		break;
 	case 2:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-		{
+		{//todo: _vfptr of returned ReLUNeuron is correct, but neurons[i] only points to base functions
 			neurons[i] = ReLUNeuron(inputNeuronCount, inputNeurons);
 		}
 		break;
