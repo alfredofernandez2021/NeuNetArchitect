@@ -1047,7 +1047,7 @@ void NeuralNetwork::test()
 	std::cout << "Testing:" << std::endl;
 
 	//checks if testing data has previously been loaded
-	if (isReadyForTesting())
+	if (!isReadyForTesting())
 	{
 		throw DatasetNotLoadedException("Testing dataset not yet loaded");
 	}
