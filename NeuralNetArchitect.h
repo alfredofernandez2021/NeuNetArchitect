@@ -119,7 +119,7 @@ public:
 	virtual void activate(const double input = 0.0) override;
 
 	//gives the activation type of the neuron
-	virtual std::string getNeuronType();
+	virtual std::string getNeuronType() override;
 };
 
 class SigmoidNeuron : public Neuron
