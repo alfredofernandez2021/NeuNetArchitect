@@ -16,7 +16,7 @@ double Neuron::getActivationFunctionInput() const
 	double sumOfProducts = 0;
 	for (auto i = 0; i < neuronInputListCount; i++)
 	{
-		sumOfProducts += weights[i] * inputNeurons[i].getActivation();
+		sumOfProducts += weights[i] * inputNeurons[i]->getActivation();
 	}
 
 	return sumOfProducts + bias;
@@ -41,7 +41,7 @@ double Neuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
 {
 	assert(inputNeuronIndex < neuronInputListCount && inputNeuronIndex >= 0);
 
-	return getActivationNudgeSum() * inputNeurons[inputNeuronIndex].getActivation();
+	return getActivationNudgeSum() * inputNeurons[inputNeuronIndex]->getActivation();
 }
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
@@ -59,7 +59,7 @@ void Neuron::nudgeActivation(double nudge)
 }
 
 //constructor called for input neurons of activation value directly determined by dataset samples
-Neuron::Neuron() : weights(nullptr), weightsMomentum(nullptr), inputNeurons(nullptr)
+Neuron::Neuron() : weights(nullptr), weightsMomentum(nullptr)
 {
 	this->neuronInputListCount = 0;
 
@@ -69,7 +69,7 @@ Neuron::Neuron() : weights(nullptr), weightsMomentum(nullptr), inputNeurons(null
 }
 
 //constructor called for hidden neurons during network creation
-Neuron::Neuron(int neuronInputListCount, Neuron* inputNeurons)
+Neuron::Neuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
 {
 	this->neuronInputListCount = neuronInputListCount;
 	this->inputNeurons = inputNeurons;
@@ -99,7 +99,7 @@ Neuron::Neuron(int neuronInputListCount, Neuron* inputNeurons)
 }
 
 //constructor called for hidden neurons during network loading, with stored weights and bias values passed in
-Neuron::Neuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue)
+Neuron::Neuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
 {
 	this->neuronInputListCount = neuronInputListCount;
 	this->inputNeurons = inputNeurons;
@@ -176,7 +176,10 @@ Neuron& Neuron::operator=(const Neuron& original)
 //custom destructor for neurons to free array memory and unlink from input neurons
 Neuron::~Neuron()
 {
-	inputNeurons = nullptr;
+	for (std::vector<Neuron*>::iterator it = inputNeurons.begin(); it != inputNeurons.end(); ++it)
+	{
+		*it = nullptr;
+	}
 
 	delete[] weights;
 	delete[] weightsMomentum;
@@ -206,7 +209,7 @@ void Neuron::injectInputRespectiveCostDerivation() const
 {
 	for (auto i = 0; i < neuronInputListCount; i++)
 	{
-		inputNeurons[i].nudgeActivation(getActivationRespectiveDerivation(i));
+		inputNeurons[i]->nudgeActivation(getActivationRespectiveDerivation(i));
 	}
 }
 
@@ -283,13 +286,13 @@ std::string Neuron::getNeuronType()
 
 
 //constructor called for hidden ReLU neurons during network creation
-ReLUNeuron::ReLUNeuron(int neuronInputListCount, Neuron* inputNeurons)
+ReLUNeuron::ReLUNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
 	: Neuron(neuronInputListCount, inputNeurons) {
 	std::cout << "Created" << std::endl;
 }
 
 //constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
-ReLUNeuron::ReLUNeuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue)
+ReLUNeuron::ReLUNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
 	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue){}
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
@@ -305,7 +308,7 @@ double ReLUNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) con
 {
 	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
 
-	return (getActivation() > 0) ? getActivationNudgeSum() * inputNeurons[inputNeuronIndex].getActivation() : 0;
+	return (getActivation() > 0) ? getActivationNudgeSum() * inputNeurons[inputNeuronIndex]->getActivation() : 0;
 }
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
@@ -337,11 +340,11 @@ std::string ReLUNeuron::getNeuronType()
 
 
 //constructor called for hidden Sigmoid neurons during network creation
-SigmoidNeuron::SigmoidNeuron(int neuronInputListCount, Neuron* inputNeurons)
+SigmoidNeuron::SigmoidNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
 	: Neuron(neuronInputListCount, inputNeurons) {}
 
 //constructor called for hidden Sigmoid neurons during network loading, with previously-stored parameter values passed in
-SigmoidNeuron::SigmoidNeuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue)
+SigmoidNeuron::SigmoidNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
 	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) {}
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
@@ -357,7 +360,7 @@ double SigmoidNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) 
 {
 	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
 
-	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * inputNeurons[inputNeuronIndex].getActivation();
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * inputNeurons[inputNeuronIndex]->getActivation();
 }
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
@@ -394,7 +397,7 @@ void NeuralLayer::setError(double costArray[])
 	if (costArray != nullptr)
 	{
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-			neurons[i].setError(costArray[i]);
+			neurons[i]->setError(costArray[i]);
 	}
 }
 
@@ -402,7 +405,7 @@ void NeuralLayer::setError(double costArray[])
 void NeuralLayer::injectErrorBackwards()
 {
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-		neurons[i].injectInputRespectiveCostDerivation();
+		neurons[i]->injectInputRespectiveCostDerivation();
 }
 
 //apply learned weights and bias updates
@@ -410,9 +413,9 @@ void NeuralLayer::updateParameters(int batchSize, double learningRate, double mo
 {
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 	{
-		neurons[i].updateWeights(batchSize, learningRate, momentumRetention);
+		neurons[i]->updateWeights(batchSize, learningRate, momentumRetention);
 
-		neurons[i].updateBias(batchSize, learningRate, momentumRetention);
+		neurons[i]->updateBias(batchSize, learningRate, momentumRetention);
 	}
 }
 
@@ -420,13 +423,12 @@ void NeuralLayer::updateParameters(int batchSize, double learningRate, double mo
 void NeuralLayer::clearNudges()
 {
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-		neurons[i].resetNudges();
+		neurons[i]->resetNudges();
 }
 
 //default constructor - todo: remove?
 NeuralLayer::NeuralLayer()
 {
-	neurons = nullptr;
 	neuronArrayLength = 0;
 	neuronArrayWidth = 0;
 	previousLayer = nullptr;
@@ -435,12 +437,9 @@ NeuralLayer::NeuralLayer()
 //constructor for initializing input layers
 NeuralLayer::NeuralLayer(int inputLength, int inputWidth) : neuronArrayLength(inputLength), neuronArrayWidth(inputWidth), previousLayer(nullptr)
 {
-	neurons = new Neuron[inputLength * inputWidth];
-	if (neurons == nullptr) throw std::bad_alloc();
-
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 	{
-		neurons[i] = Neuron();
+		neurons.push_back(new Neuron());
 	}
 }
 
@@ -452,34 +451,32 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, int activatio
 	previousLayer = inputLayer;
 
 	int inputNeuronCount = previousLayer->getNeuronArrayCount();
-	Neuron* inputNeurons = previousLayer->getNeurons();
-	neurons = new Neuron[neuronCount];
-	if (neurons == nullptr) throw std::bad_alloc();
+	std::vector<Neuron *> inputNeurons = previousLayer->getNeurons();
 
 	switch (activationType)
 	{
 	case 1:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
-			neurons[i] = Neuron(inputNeuronCount, inputNeurons);
+			neurons.push_back(new Neuron(inputNeuronCount, inputNeurons));
 		}
 		break;
 	case 2:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{//todo: _vfptr of returned ReLUNeuron is correct, but neurons[i] only points to base functions
-			neurons[i] = ReLUNeuron(inputNeuronCount, inputNeurons);
+			neurons.push_back(new ReLUNeuron(inputNeuronCount, inputNeurons));
 		}
 		break;
 	case 3:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
-			neurons[i] = SigmoidNeuron(inputNeuronCount, inputNeurons);
+			neurons.push_back(new SigmoidNeuron(inputNeuronCount, inputNeurons));
 		}
 		break;
 	default:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
-			neurons[i] = Neuron(inputNeuronCount, inputNeurons);
+			neurons.push_back(new Neuron(inputNeuronCount, inputNeurons));
 		}
 		break;
 	}
@@ -493,9 +490,7 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 	previousLayer = inputLayer;
 
 	int inputNeuronCount = previousLayer->getNeuronArrayCount();
-	Neuron* inputNeurons = previousLayer->getNeurons();
-	neurons = new Neuron[neuronCount];
-	if (neurons == nullptr) throw std::bad_alloc();
+	std::vector<Neuron *> inputNeurons = previousLayer->getNeurons();
 
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 	{
@@ -504,25 +499,25 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 		case 1:
 			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 			{
-				neurons[i] = Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]);
+				neurons.push_back(new Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
 			}
 			break;
 		case 2:
 			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 			{
-				neurons[i] = ReLUNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]);
+				neurons.push_back(new ReLUNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
 			}
 			break;
 		case 3:
 			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 			{
-				neurons[i] = SigmoidNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]);
+				neurons.push_back(new SigmoidNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
 			}
 			break;
 		default:
 			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 			{
-				neurons[i] = Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]);
+				neurons.push_back(new Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
 			}
 			break;
 		}
@@ -530,20 +525,18 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 }
 
 //copy constructor for layer deep copies - todo: accomodate for several Neuron types?
-NeuralLayer::NeuralLayer(const NeuralLayer& original)
+//necessary?
+/*/NeuralLayer::NeuralLayer(const NeuralLayer& original)
 {
 	neuronArrayLength = original.neuronArrayLength;
 	neuronArrayWidth = original.neuronArrayWidth;
 	previousLayer = original.previousLayer;
 
-	neurons = new Neuron[neuronArrayLength * neuronArrayWidth];
-	if (neurons == nullptr) throw std::bad_alloc();
-
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 	{
-		neurons[i] = Neuron(original.neurons[i]);
+		neurons.push_back(new Neuron(original.neurons[i]));
 	}
-}
+}*/
 
 //operator = overloading for initializing and returning of object deep copy - todo: accomodate for several Neuron types?
 NeuralLayer& NeuralLayer::operator=(const NeuralLayer& original)
@@ -551,14 +544,12 @@ NeuralLayer& NeuralLayer::operator=(const NeuralLayer& original)
 	neuronArrayLength = original.neuronArrayLength;
 	neuronArrayWidth = original.neuronArrayWidth;
 	previousLayer = original.previousLayer;
+	neurons = original.getNeurons();
 
-	neurons = new Neuron[neuronArrayLength * neuronArrayWidth];
-	if (neurons == nullptr) throw std::bad_alloc();
-
-	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-	{
-		neurons[i] = Neuron(original.neurons[i]);
-	}
+	//for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+	//{
+	//	neurons.push_back(new Neuron(*(original.neurons[i])));
+	//}
 
 	return (*this);
 }
@@ -566,7 +557,7 @@ NeuralLayer& NeuralLayer::operator=(const NeuralLayer& original)
 //custom destructor for NeuralLayer objects for complete memory deallocation
 NeuralLayer::~NeuralLayer()
 {
-	delete[] neurons;
+	neurons.clear();
 
 	previousLayer = nullptr;
 }
@@ -578,7 +569,7 @@ void NeuralLayer::propagateForward(double inputValues[])
 	{
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
-			neurons[i].activate(inputValues[i]);
+			neurons[i]->activate(inputValues[i]);
 		}
 	}
 
@@ -586,7 +577,7 @@ void NeuralLayer::propagateForward(double inputValues[])
 	{
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
-			neurons[i].activate();
+			neurons[i]->activate();
 		}
 	}
 
@@ -622,7 +613,7 @@ int NeuralLayer::getNeuronArrayCount() const
 }
 
 //returns array of pointers to neurons contained within this layer
-Neuron* NeuralLayer::getNeurons() const
+std::vector<Neuron *> NeuralLayer::getNeurons() const
 {
 	return neurons;
 }
@@ -640,7 +631,7 @@ std::vector<double> NeuralLayer::getNeuronActivations() const
 
 	for (auto i = 0; i < getNeuronArrayCount(); i++)
 	{
-		neuronActivations.push_back(getNeurons()[i].getActivation());
+		neuronActivations.push_back(getNeurons()[i]->getActivation());
 	}
 
 	return neuronActivations;
@@ -653,7 +644,7 @@ std::vector<std::vector<double>> NeuralLayer::getNeuronWeights() const
 
 	for (auto i = 0; i < getNeuronArrayCount(); i++)
 	{
-		neuronWeights.push_back(getNeurons()[i].getWeights());
+		neuronWeights.push_back(getNeurons()[i]->getWeights());
 	}
 
 	return neuronWeights;
@@ -666,7 +657,7 @@ std::vector<double> NeuralLayer::getNeuronBiases() const
 
 	for (auto i = 0; i < getNeuronArrayCount(); i++)
 	{
-		neuronBiases.push_back(getNeurons()[i].getBias());
+		neuronBiases.push_back(getNeurons()[i]->getBias());
 	}
 
 	return neuronBiases;

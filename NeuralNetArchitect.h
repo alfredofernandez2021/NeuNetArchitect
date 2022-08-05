@@ -16,7 +16,7 @@ class Neuron
 
 protected:
 	int neuronInputListCount;
-	Neuron* inputNeurons;
+	std::vector<Neuron*> inputNeurons;
 	double activation, activationNudgeSum;
 	double* weights, * weightsMomentum;
 	double bias, biasMomentum;
@@ -44,10 +44,10 @@ public:
 	Neuron();
 
 	//constructor called for hidden neurons during network creation
-	Neuron(int neuronInputListCount, Neuron* inputNeurons);
+	Neuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons);
 
 	//constructor called for hidden neurons during network loading, with previously-stored parameter values passed in
-	Neuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue);
+	Neuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue);
 
 	//copy constructor for neurons for copying an existing neuron's state
 	Neuron(const Neuron& original);
@@ -101,10 +101,10 @@ class ReLUNeuron : public Neuron
 public:
 
 	//constructor called for hidden ReLU neurons during network creation
-	ReLUNeuron(int neuronInputListCount, Neuron* inputNeurons);
+	ReLUNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons);
 
 	//constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
-	ReLUNeuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue);
+	ReLUNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue);
 
 	//gives how much a particular input affects the evaluation of the network's cost function
 	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const override;
@@ -128,10 +128,10 @@ class SigmoidNeuron : public Neuron
 public:
 
 	//constructor called for hidden ReLU neurons during network creation
-	SigmoidNeuron(int neuronInputListCount, Neuron* inputNeurons);
+	SigmoidNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons);
 
 	//constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
-	SigmoidNeuron(int neuronInputListCount, Neuron* inputNeurons, std::vector<double> weightValues, double biasValue);
+	SigmoidNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue);
 
 	//gives how much a particular input affects the evaluation of the network's cost function
 	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const override;
@@ -170,7 +170,7 @@ class NeuralLayer
 
 protected:
 	int neuronArrayLength, neuronArrayWidth;
-	Neuron* neurons;
+	std::vector<Neuron*> neurons;
 	NeuralLayer* previousLayer;
 
 	//Set error of neurons with activations directly used to calculate cost
@@ -227,7 +227,7 @@ public:
 	int getNeuronArrayCount() const;
 
 	//gives array of addresses to neurons contained within layer
-	Neuron* getNeurons() const;
+	std::vector<Neuron*> getNeurons() const;
 
 	//gives address of layer that is feeding into this layer
 	NeuralLayer* getPreviousLayer() const;
