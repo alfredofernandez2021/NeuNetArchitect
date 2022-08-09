@@ -377,7 +377,7 @@ void SigmoidNeuron::activate(const double input)
 {
 	if (neuronInputListCount > 0)
 	{
-		activation = 1 / ( 1 + exp( -1 * getActivationFunctionInput()));
+		activation = 1 / ( 1 + exp( -1 * (getActivationFunctionInput()/100)));
 	}
 	else
 	{
@@ -1491,7 +1491,7 @@ MenuStates createSelection(NeuralNetwork** network)
 	//define learning rate hyperparameter, the percent of the current learning step error gradient that will update learned parameters
 	std::cout << "What is the learning rate of this network? ";
 	std::cin >> learningParameters.learningRate;
-	learningParameters.learningRate = 0.0001;
+	learningParameters.learningRate = 0.001;
 	std::cout << std::endl;
 
 	//define learning decay, the gradual decrease in learning rate of the network after each batch
