@@ -98,4 +98,5 @@ int main()
 * Ensure loading menu functionality for derived Neuron Classes
 * Test LinearInput->ReLU||Sigmoid NeuralNetwork on MNIST -> !!!
 * Ensure proper Neuron* to std::vector<Neuron*> conversion -> !!!
+* Fix Overflow/Underflow issues preventing learning
 */
