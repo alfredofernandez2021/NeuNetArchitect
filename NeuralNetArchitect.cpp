@@ -999,7 +999,6 @@ void NeuralNetwork::train()
 
 		//$$$work in progress section for training linear neural network
 		//todo: get linear training work more probablistically and abstract section for different neuron types
-		minOutputValue = getValueOfMinEntry(getOutputs());
 		maxOutputValue = getValueOfMaxEntry(getOutputs());
 
 		//calculate error vector
@@ -1008,11 +1007,11 @@ void NeuralNetwork::train()
 			//todo: Fix this
 			if (l == (int)trainingLabels[i])
 			{
-				errorVector[l] = getOutputRespectiveCost(1000, l);
+				errorVector[l] = getOutputRespectiveCost( 1, l);
 			}
 			else
 			{
-				errorVector[l] = getOutputRespectiveCost(1000, l);
+				errorVector[l] = getOutputRespectiveCost( 0, l);
 			}
 		}//$$$end of work in progress section
 
@@ -1321,7 +1320,8 @@ NeuralNetwork* loadNetworkPointer(const std::string& fileName)
 //returns the index of the most positive vector element
 int getIndexOfMaxEntry(std::vector<double> Vector)
 {
-	double maxValue = -DBL_MAX, maxIndex = -1;
+	double maxValue = -DBL_MAX;
+	int maxIndex = -1;
 
 	for (auto i = 0; i < Vector.size(); i++)
 	{
@@ -1341,7 +1341,8 @@ int getIndexOfMaxEntry(std::vector<double> Vector)
 //returns the value of the most positive vector element, todo: temp function
 int getValueOfMaxEntry(std::vector<double> Vector)
 {
-	double maxValue = -DBL_MAX, maxIndex = -1;
+	double maxValue = -DBL_MAX;
+	int maxIndex = -1;
 
 	for (auto i = 0; i < Vector.size(); i++)
 	{
@@ -1361,7 +1362,8 @@ int getValueOfMaxEntry(std::vector<double> Vector)
 //returns the value of the most negative vector element, todo: temp function
 int getValueOfMinEntry(std::vector<double> Vector)
 {
-	double minValue = DBL_MAX, minIndex = -1;
+	double minValue = DBL_MAX;
+	int minIndex = -1;
 
 	for (auto i = 0; i < Vector.size(); i++)
 	{
@@ -1489,7 +1491,7 @@ MenuStates createSelection(NeuralNetwork** network)
 	//define learning rate hyperparameter, the percent of the current learning step error gradient that will update learned parameters
 	std::cout << "What is the learning rate of this network? ";
 	std::cin >> learningParameters.learningRate;
-	learningParameters.learningRate = 0.0000001;
+	learningParameters.learningRate = 0.0001;
 	std::cout << std::endl;
 
 	//define learning decay, the gradual decrease in learning rate of the network after each batch

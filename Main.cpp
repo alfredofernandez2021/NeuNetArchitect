@@ -91,10 +91,11 @@ int main()
 /* Derived Neurons todo list:
 * Define all necessary SigmoidNeuron and ReLUNeuron constructors (Neurons)
 * Relocate NeuralNetwork layer type switch statement to NeuralLayer
-* Activation function enum (linear, sig, ReLU) ->
+* Activation function enum (linear, sig, ReLU) -> !!!
 * Ensure nothing is being left out from derived classes
-* SigmoidNeuron and ReLUNeuron unit tests->
+* SigmoidNeuron and ReLUNeuron unit tests -> !!!
 * Creation menu flexibility for derived Neuron classes
 * Ensure loading menu functionality for derived Neuron Classes
-* Test LinearInput->ReLU||Sigmoid NeuralNetwork on MNIST
+* Test LinearInput->ReLU||Sigmoid NeuralNetwork on MNIST -> !!!
+* Ensure proper Neuron* to std::vector<Neuron*> conversion -> !!!
 */
