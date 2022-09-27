@@ -377,7 +377,7 @@ void SigmoidNeuron::activate(const double input)
 {
 	if (neuronInputListCount > 0)
 	{
-		activation = 1 / ( 1 + exp( -1 * (getActivationFunctionInput()/1000)));
+		activation = 1 / ( 1 + exp( -1 * (getActivationFunctionInput())));
 	}
 	else
 	{
@@ -814,6 +814,9 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 
 	//save layer states
 	layerStates = new layerLoadingInfo[layerCount];
+
+	offsetNormalizer = 0;
+	scalingNormalizer = 1;
 }
 
 //constructor for loading NeuralNetworks
@@ -849,6 +852,9 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 
 	//save layer states
 	layerStates = new layerLoadingInfo[layerCount];
+
+	offsetNormalizer = 0;
+	scalingNormalizer = 1;
 }
 
 //returns a vector of the activation values of the final layer of the network
@@ -919,9 +925,51 @@ void NeuralNetwork::updateTestingLabels()
 	testingLabels = getMNISTLabelVector(true);
 }
 
-//Normalize sample values to be mean=0 and stdv=1
-void normalizeSamples()
+//Updates offset and scaling normalizers to be mean and standard deviation, to normalize inputs to mean=0 and stdv=1
+void NeuralNetwork::updateNormalizers()
 {
+	double sum = 0, mean = 0, variance = 0, stdv = 0;
+	double varianceNumerator = 0;
+	int valuesInASample = testingSamples[0].size() * testingSamples[0][0].size();
+
+	//determine the mean of a subset of total samples
+	for (auto i = 0; i < testingSamples.size(); i++)
+	{
+		for (auto j = 0; j < testingSamples[i].size(); j++)
+		{
+			for (auto k = 0; k < testingSamples[i][j].size(); k++)
+			{
+				sum += testingSamples[i][j][k];
+			}
+		}
+
+		//partially determine mean after each sample to prevent overflow
+		mean += sum / testingSamples.size();
+		sum = 0;
+	}
+
+	//determine the variance given the mean
+	for (auto i = 0; i < testingSamples.size(); i++)
+	{
+		for (auto j = 0; j < testingSamples[i].size(); j++)
+		{
+			for (auto k = 0; k < testingSamples[i][j].size(); k++)
+			{
+				sum += testingSamples[i][j][k];
+			}
+		}
+
+		//partially determine variance numerator after each sample to prevent overflow
+		varianceNumerator += (mean - sum / valuesInASample) * (mean - sum / valuesInASample);
+		sum = 0;
+	}
+
+	//finish calculating variance and calculate standard deviation
+	variance = varianceNumerator / (testingSamples.size() + 1);
+	stdv = std::sqrt(variance);
+
+	offsetNormalizer = mean;
+	scalingNormalizer = stdv;
 
 }
 
@@ -981,7 +1029,7 @@ void NeuralNetwork::train()
 			for (auto k = 0; k < trainingSamples[0][0].size(); k++)
 			{
 				//load a pixel
-				inputGrid[j * trainingSamples[0].size() + k] = (int)trainingSamples[i][j][k];
+				inputGrid[j * trainingSamples[0].size() + k] = ((double)trainingSamples[i][j][k] - offsetNormalizer)/scalingNormalizer;
 			}
 		}
 
@@ -1076,7 +1124,7 @@ void NeuralNetwork::test()
 			for (auto k = 0; k < testingSamples[0][0].size(); k++)
 			{
 				//load a pixel
-				inputGrid[j * testingSamples[0].size() + k] = (int)testingSamples[i][j][k];
+				inputGrid[j * testingSamples[0].size() + k] = ((double)trainingSamples[i][j][k] - offsetNormalizer) / scalingNormalizer;
 			}
 		}
 
@@ -1662,6 +1710,8 @@ MenuStates datasetSelection(NeuralNetwork* network)
 	network->updateTrainingLabels();
 	network->updateTestingSamples();
 	network->updateTestingLabels();
+
+	network->updateNormalizers();
 
 	//returns to manage menu
 	return MenuStates::Manage;

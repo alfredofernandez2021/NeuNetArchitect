@@ -338,6 +338,7 @@ private:
 	int outputCount;
 	NeuralLayer* neuralLayers;
 	double (*derivedCostFunction)(double, double, int);
+	double offsetNormalizer, scalingNormalizer;
 	layerLoadingInfo* layerStates;
 	hyperParameters learningParameters;
 	std::vector<std::vector<std::vector<unsigned char>>> trainingSamples;
@@ -376,7 +377,7 @@ public:
 	void updateTestingLabels();
 
 	//Normalize values in loaded samples to reduce overflow
-	void normalizeSamples();
+	void updateNormalizers();
 
 	//indicates if dataset training samples and labels have been loaded
 	bool isReadyForTraining();
