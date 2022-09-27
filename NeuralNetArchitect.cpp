@@ -377,7 +377,7 @@ void SigmoidNeuron::activate(const double input)
 {
 	if (neuronInputListCount > 0)
 	{
-		activation = 1 / ( 1 + exp( -1 * (getActivationFunctionInput()/100)));
+		activation = 1 / ( 1 + exp( -1 * (getActivationFunctionInput()/1000)));
 	}
 	else
 	{
@@ -718,6 +718,8 @@ std::vector<unsigned char> getMNISTLabelVector(bool testing)
 			file.read((char*)&currentLabel, sizeof(currentLabel));
 			labels.push_back(currentLabel);
 		}
+
+		file.close();
 	}
 
 	return labels;
@@ -771,6 +773,8 @@ std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool te
 			images.push_back(columnsOfAnImage);
 			columnsOfAnImage.clear();
 		}
+
+		file.close();
 	}
 
 	return images;
@@ -913,6 +917,12 @@ void NeuralNetwork::updateTestingSamples()
 void NeuralNetwork::updateTestingLabels()
 {
 	testingLabels = getMNISTLabelVector(true);
+}
+
+//Normalize sample values to be mean=0 and stdv=1
+void normalizeSamples()
+{
+
 }
 
 //indicates if dataset training samples and labels have been loaded

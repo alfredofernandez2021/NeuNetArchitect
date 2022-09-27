@@ -375,6 +375,9 @@ public:
 	//loads testing labels from dataset
 	void updateTestingLabels();
 
+	//Normalize values in loaded samples to reduce overflow
+	void normalizeSamples();
+
 	//indicates if dataset training samples and labels have been loaded
 	bool isReadyForTraining();
 

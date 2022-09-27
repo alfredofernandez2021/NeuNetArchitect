@@ -20,10 +20,11 @@ int main()
 
 	return 0;
 }
-// 2 1 4 1 1 0 1 2 0 1 0				the first network		(propagation checking)
-// 2 2 4 1 1 0 1 2 0 1 0				the usual network		(loading + learning correctness)
-// 784 10 2 0 0							MNIST linear network	(dataset confirmation)
-// 784 10 2 1 0.0001 0 1 1 0 0 1 0 1	MNIST linear network	(hyperparameters prompted)
+// 2 1 4 1 1 0 1 2 0 1 0						the first network				(propagation checking)
+// 2 2 4 1 1 0 1 2 0 1 0						the usual network				(loading + learning correctness)
+// 784 10 2 0 0									MNIST linear network			(dataset confirmation)
+// 784 10 2 1 0.0001 0 1 1 0 0 1 0 1			MNIST linear network			(hyperparameters prompted)
+// 784 10 3 1 0.0001 0 1 1 0 0 1 0 2 20 3		MNIST In->20ReLU->10Sig
 
 /* Cleanup todo:
 * Move to .hpp and .cpp file setup																			--DONE
