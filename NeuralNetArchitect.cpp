@@ -492,35 +492,32 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 	int inputNeuronCount = previousLayer->getNeuronArrayCount();
 	std::vector<Neuron *> inputNeurons = previousLayer->getNeurons();
 
-	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+	switch (activationType)
 	{
-		switch (activationType)
+	case 1:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
-		case 1:
-			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-			{
-				neurons.push_back(new Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
-			}
-			break;
-		case 2:
-			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-			{
-				neurons.push_back(new ReLUNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
-			}
-			break;
-		case 3:
-			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-			{
-				neurons.push_back(new SigmoidNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
-			}
-			break;
-		default:
-			for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-			{
-				neurons.push_back(new Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
-			}
-			break;
+			neurons.push_back(new Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
 		}
+		break;
+	case 2:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new ReLUNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
+		}
+		break;
+	case 3:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new SigmoidNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
+		}
+		break;
+	default:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new Neuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
+		}
+		break;
 	}
 }
 
