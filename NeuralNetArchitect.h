@@ -170,6 +170,7 @@ class NeuralLayer
 
 protected:
 	int neuronArrayLength, neuronArrayWidth;
+	int neuronType;
 	std::vector<Neuron*> neurons;
 	NeuralLayer* previousLayer;
 

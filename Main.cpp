@@ -87,6 +87,7 @@ int main()
 * Separate functions into multiple .h and .cpp files
 * Dataset getters used as least as possible -> training NeuralNetwork internal function
 * NeuralLayerDetails.type in switch statement in layer creation/loading for feedforward Neurons
+* Exploding output problem when training on loaded NN
 */
 
 /* Derived Neurons todo list:

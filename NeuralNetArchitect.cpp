@@ -437,6 +437,8 @@ NeuralLayer::NeuralLayer()
 //constructor for initializing input layers
 NeuralLayer::NeuralLayer(int inputLength, int inputWidth) : neuronArrayLength(inputLength), neuronArrayWidth(inputWidth), previousLayer(nullptr)
 {
+	neuronType = 1;
+
 	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 	{
 		neurons.push_back(new Neuron());
@@ -449,11 +451,12 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, int activatio
 	neuronArrayLength = neuronCount;
 	neuronArrayWidth = 1;
 	previousLayer = inputLayer;
+	neuronType = activationType;
 
 	int inputNeuronCount = previousLayer->getNeuronArrayCount();
 	std::vector<Neuron *> inputNeurons = previousLayer->getNeurons();
 
-	switch (activationType)
+	switch (neuronType)
 	{
 	case 1:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
@@ -488,11 +491,12 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 	neuronArrayLength = neuronCount;
 	neuronArrayWidth = 1;
 	previousLayer = inputLayer;
+	neuronType = activationType;
 
 	int inputNeuronCount = previousLayer->getNeuronArrayCount();
 	std::vector<Neuron *> inputNeurons = previousLayer->getNeurons();
 
-	switch (activationType)
+	switch (neuronType)
 	{
 	case 1:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
@@ -542,6 +546,7 @@ NeuralLayer& NeuralLayer::operator=(const NeuralLayer& original)
 	neuronArrayWidth = original.neuronArrayWidth;
 	previousLayer = original.previousLayer;
 	neurons = original.getNeurons();
+	neuronType = original.getNeuralLayerType();
 
 	//for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 	//{
@@ -663,7 +668,7 @@ std::vector<double> NeuralLayer::getNeuronBiases() const
 //returns the activation type of the neurons contained within this layer
 int NeuralLayer::getNeuralLayerType() const
 {
-	return 1;
+	return neuronType;
 }
 
 //the derivation of the mean-squared-error function in respect to the activation of an output neuron - todo: rework this for derivations?
