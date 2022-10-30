@@ -95,7 +95,7 @@ public:
 
 };
 
-class ReLUNeuron : public Neuron 
+class ReLUNeuron : public Neuron
 {
 
 public:
@@ -463,7 +463,7 @@ enum class MenuStates : unsigned int
 void exitSelection();
 
 //lists main menu options and prompts user to select one
-MenuStates mainSelection(NeuralNetwork* &network);
+MenuStates mainSelection(NeuralNetwork*& network);
 
 //todo: improve this
 //prints description of project and provides a high-level guide

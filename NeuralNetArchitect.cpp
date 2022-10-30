@@ -31,7 +31,7 @@ double Neuron::getActivationNudgeSum() const
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
 double Neuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
 {
-	assert(inputNeuronIndex < neuronInputListCount && inputNeuronIndex >= 0);
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
 
 	return getActivationNudgeSum() * weights[inputNeuronIndex];
 }
@@ -39,7 +39,7 @@ double Neuron::getActivationRespectiveDerivation(const int inputNeuronIndex) con
 //Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
 double Neuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
 {
-	assert(inputNeuronIndex < neuronInputListCount && inputNeuronIndex >= 0);
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
 
 	return getActivationNudgeSum() * inputNeurons[inputNeuronIndex]->getActivation();
 }
@@ -293,7 +293,7 @@ ReLUNeuron::ReLUNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeuro
 
 //constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
 ReLUNeuron::ReLUNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
-	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue){}
+	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) {}
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
 double ReLUNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
@@ -369,7 +369,7 @@ double SigmoidNeuron::getBiasRespectiveDerivation() const
 
 	assert(neuronInputListCount >= 0);
 
-	return getActivationNudgeSum() * getActivation() * ( 1 - getActivation() ) * 1.0;
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * 1.0;
 }
 
 //Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
@@ -377,7 +377,7 @@ void SigmoidNeuron::activate(const double input)
 {
 	if (neuronInputListCount > 0)
 	{
-		activation = 1 / ( 1 + exp( -1 * (getActivationFunctionInput())));
+		activation = 1 / (1 + exp(-1 * (getActivationFunctionInput())));
 	}
 	else
 	{
@@ -454,7 +454,7 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, int activatio
 	neuronType = activationType;
 
 	int inputNeuronCount = previousLayer->getNeuronArrayCount();
-	std::vector<Neuron *> inputNeurons = previousLayer->getNeurons();
+	std::vector<Neuron*> inputNeurons = previousLayer->getNeurons();
 
 	switch (neuronType)
 	{
@@ -494,7 +494,7 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 	neuronType = activationType;
 
 	int inputNeuronCount = previousLayer->getNeuronArrayCount();
-	std::vector<Neuron *> inputNeurons = previousLayer->getNeurons();
+	std::vector<Neuron*> inputNeurons = previousLayer->getNeurons();
 
 	switch (neuronType)
 	{
@@ -615,7 +615,7 @@ int NeuralLayer::getNeuronArrayCount() const
 }
 
 //returns array of pointers to neurons contained within this layer
-std::vector<Neuron *> NeuralLayer::getNeurons() const
+std::vector<Neuron*> NeuralLayer::getNeurons() const
 {
 	return neurons;
 }
@@ -1031,7 +1031,7 @@ void NeuralNetwork::train()
 			for (auto k = 0; k < trainingSamples[0][0].size(); k++)
 			{
 				//load a pixel
-				inputGrid[j * trainingSamples[0].size() + k] = ((double)trainingSamples[i][j][k] - offsetNormalizer)/scalingNormalizer;
+				inputGrid[j * trainingSamples[0].size() + k] = ((double)trainingSamples[i][j][k] - offsetNormalizer) / scalingNormalizer;
 			}
 		}
 
@@ -1050,10 +1050,10 @@ void NeuralNetwork::train()
 
 		//periodically displays current network performance
 		//todo: possibly make this not hard-coded?
-		if (i % 200 == 0 && i > 0)
+		if (i % 10 == 0 && i > 0)
 		{
 			std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
-			std::cout << "answer: " << answer << "\t" << "correct: " << (int)trainingLabels[i] << std::endl;
+			std::cout << "maxValue: " << getOutputs()[answer] << "\t" << "answer: " << answer << "\t" << "correct: " << (int)trainingLabels[i] << std::endl;
 			std::cout << std::endl;
 		}
 
@@ -1067,11 +1067,11 @@ void NeuralNetwork::train()
 			//todo: Fix this
 			if (l == (int)trainingLabels[i])
 			{
-				errorVector[l] = getOutputRespectiveCost( 1, l);
+				errorVector[l] = getOutputRespectiveCost(1, l);
 			}
 			else
 			{
-				errorVector[l] = getOutputRespectiveCost( 0, l);
+				errorVector[l] = getOutputRespectiveCost(0, l);
 			}
 		}//$$$end of work in progress section
 
@@ -1448,7 +1448,7 @@ void exitSelection()
 }
 
 //lists main menu options and prompts user to select one
-MenuStates mainSelection(NeuralNetwork* &network)
+MenuStates mainSelection(NeuralNetwork*& network)
 {
 	int selection;
 
@@ -1551,7 +1551,7 @@ MenuStates createSelection(NeuralNetwork** network)
 	//define learning rate hyperparameter, the percent of the current learning step error gradient that will update learned parameters
 	std::cout << "What is the learning rate of this network? ";
 	std::cin >> learningParameters.learningRate;
-	learningParameters.learningRate = 0.001;
+	learningParameters.learningRate = 0.00001;
 	std::cout << std::endl;
 
 	//define learning decay, the gradual decrease in learning rate of the network after each batch
@@ -1724,9 +1724,9 @@ MenuStates trainingSelection(NeuralNetwork* network)
 {
 	int selection;
 
-	try 
-	{ 
-		network->train(); 
+	try
+	{
+		network->train();
 	}
 	catch (DatasetNotLoadedException exception)
 	{
@@ -1759,7 +1759,7 @@ MenuStates trainingSelection(NeuralNetwork* network)
 MenuStates testingSelection(NeuralNetwork* network)
 {
 	int selection;
-	try 
+	try
 	{
 		network->test();
 	}
@@ -1843,63 +1843,63 @@ void manageNeuralNetwork()
 	{
 		switch (menuFSMState)
 		{
-		
-		//Exits menu FSM
+
+			//Exits menu FSM
 		case MenuStates::Exit:
 			exitSelection();
 			return;
-		
-		//Enters main menu
+
+			//Enters main menu
 		case MenuStates::Main:
 			menuFSMState = mainSelection(network);
 			break;
 
-		//Enters introduction page
+			//Enters introduction page
 		case MenuStates::Intro:
 			menuFSMState = introSelection();
 			break;
 
-		//Enters NeuralNetwork creation sequence
+			//Enters NeuralNetwork creation sequence
 		case MenuStates::Create:
 			menuFSMState = createSelection(&network);
 			break;
 
-		//Ask for file and load NeuralNetwork
+			//Ask for file and load NeuralNetwork
 		case MenuStates::Load:
 			menuFSMState = loadSelection(&network);
 			break;
 
-		//Enters manage menu
+			//Enters manage menu
 		case MenuStates::Manage:
 			menuFSMState = manageSelection();
 			break;
 
-		//Enters dataset selection
+			//Enters dataset selection
 		case MenuStates::Dataset:
 			menuFSMState = datasetSelection(network);
 			break;
 
-		//Begins training by using training dataset
+			//Begins training by using training dataset
 		case MenuStates::Training:
 			menuFSMState = trainingSelection(network);
 			break;
 
-		//Begins testing by using testing dataset
+			//Begins testing by using testing dataset
 		case MenuStates::Testing:
 			menuFSMState = testingSelection(network);
 			break;
 
-		//Saves NeuralNetwork to xml
+			//Saves NeuralNetwork to xml
 		case MenuStates::Save:
 			menuFSMState = saveSelection(network);
 			break;
 
-		//Enters help page
+			//Enters help page
 		case MenuStates::Help:
 			menuFSMState = helpSelection();
 			break;
 
-		//Print an error if this state is reached
+			//Print an error if this state is reached
 		default:
 			menuFSMState = defaultSelection();
 			break;
