@@ -180,9 +180,6 @@ protected:
 	//nudge preceeding layer activation depending on how much they affect the network's cost function evaluation
 	void injectErrorBackwards();
 
-	//apply learned weights and bias updates
-	void updateParameters(int batchSize, double learningRate, double momentumRetention);
-
 	//clears all stored nudges to layer's activation
 	void clearNudges();
 
@@ -216,7 +213,13 @@ public:
 	void propagateForward(double inputValues[] = nullptr);
 
 	//inject error vector to previous layer depending on this layer's error vector
-	void propagateBackward(int batchSize, double learningRate, double momentumRetention, double* costArray = nullptr);
+	void propagateBackward(int batchSize, double learningRate, double momentumRetention, double* costArray);
+
+	//inject error vector to previous layer depending on this layer's error vector
+	void propagateBackward(int batchSize, double learningRate, double momentumRetention);
+
+	//apply learned weights and bias updates
+	void updateParameters(int batchSize, double learningRate, double momentumRetention);
 
 	//gives number of neurons contained within a column of this layer
 	int getNeuronArrayLength() const;

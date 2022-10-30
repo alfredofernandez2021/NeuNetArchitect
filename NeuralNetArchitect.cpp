@@ -586,8 +586,16 @@ void NeuralLayer::propagateForward(double inputValues[])
 //inject error to previous layer and apply learned parameter updates to this layer
 void NeuralLayer::propagateBackward(int batchSize, double learningRate, double momentumRetention, double* costArray)
 {
-	if(costArray != nullptr) setError(costArray);
+	setError(costArray);
 
+	injectErrorBackwards(); //todo: skip for 2nd layer?
+
+	updateParameters(batchSize, learningRate, momentumRetention);
+}
+
+//inject error to previous layer and apply learned parameter updates to this layer
+void NeuralLayer::propagateBackward(int batchSize, double learningRate, double momentumRetention)
+{
 	injectErrorBackwards(); //todo: skip for 2nd layer?
 
 	updateParameters(batchSize, learningRate, momentumRetention);
@@ -882,10 +890,13 @@ void NeuralNetwork::propagateBackwards(double* costArray)
 	neuralLayers[layerCount - 1].propagateBackward(learningParameters.batchSize, learningParameters.learningRate, learningParameters.momentumRetention, costArray);
 
 	//performs backpropagation for all preceeding layers
-	for (auto i = layerCount - 2; i > 0; i--)
+	for (auto i = layerCount - 2; i > 1; i--)
 	{
-		neuralLayers[i].propagateBackward(learningParameters.batchSize, learningParameters.learningRate, learningParameters.momentumRetention, nullptr);
+		neuralLayers[i].propagateBackward(learningParameters.batchSize, learningParameters.learningRate, learningParameters.momentumRetention);
 	}
+
+	//todo: maybe add some out of bounds check for this
+	neuralLayers[1].updateParameters(learningParameters.batchSize, learningParameters.learningRate, learningParameters.momentumRetention);
 }
 
 //changes number of samples network expects to process before being told to learn
@@ -1047,7 +1058,7 @@ void NeuralNetwork::train()
 
 		//periodically displays current network performance
 		//todo: possibly make this not hard-coded?
-		if (i % 10 == 0 && i > 0)
+		if (i % 100 == 0 && i > 0)
 		{
 			std::cout << "Current score: " << (double)correctDeterminations / (double)i << std::endl;
 			std::cout << "maxValue: " << getOutputs()[answer] << "\t" << "answer: " << answer << "\t" << "correct: " << (int)trainingLabels[i] << std::endl;
@@ -1062,13 +1073,13 @@ void NeuralNetwork::train()
 		for (auto l = 0; l < getOutputCount(); l++)
 		{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
 			//todo: Fix this
-			if (l == (int)trainingLabels[i])
+			if (l == (int)trainingLabels[i] )
 			{
-				errorVector[l] = getOutputRespectiveCost(1, l);
+				errorVector[l] = getOutputRespectiveCost(5, l);
 			}
 			else
 			{
-				errorVector[l] = getOutputRespectiveCost(0, l);
+				errorVector[l] = getOutputRespectiveCost(-5, l);
 			}
 		}//$$$end of work in progress section
 
