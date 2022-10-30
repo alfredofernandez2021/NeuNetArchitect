@@ -394,11 +394,8 @@ std::string SigmoidNeuron::getNeuronType()
 //Set error of neurons with activations directly used to calculate cost dC/da
 void NeuralLayer::setError(double costArray[])
 {
-	if (costArray != nullptr)
-	{
-		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-			neurons[i]->setError(costArray[i]);
-	}
+	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		neurons[i]->setError(costArray[i]);
 }
 
 //nudge input layer activations with derivatives of cost function dC/da * da/di
@@ -589,7 +586,7 @@ void NeuralLayer::propagateForward(double inputValues[])
 //inject error to previous layer and apply learned parameter updates to this layer
 void NeuralLayer::propagateBackward(int batchSize, double learningRate, double momentumRetention, double* costArray)
 {
-	setError(costArray);
+	if(costArray != nullptr) setError(costArray);
 
 	injectErrorBackwards(); //todo: skip for 2nd layer?
 
@@ -887,7 +884,7 @@ void NeuralNetwork::propagateBackwards(double* costArray)
 	//performs backpropagation for all preceeding layers
 	for (auto i = layerCount - 2; i > 0; i--)
 	{
-		neuralLayers[i].propagateBackward(learningParameters.batchSize, learningParameters.learningRate, learningParameters.momentumRetention);
+		neuralLayers[i].propagateBackward(learningParameters.batchSize, learningParameters.learningRate, learningParameters.momentumRetention, nullptr);
 	}
 }
 
