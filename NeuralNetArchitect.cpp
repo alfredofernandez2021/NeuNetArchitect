@@ -391,6 +391,185 @@ std::string SigmoidNeuron::getNeuronType()
 	return "Sigmoid";
 }
 
+//IN PROGRESS SECTION START
+
+//derive limit definition of Dirac Delta
+//complete functions
+//constructor called for hidden Sigmoid neurons during network creation
+BinaryNeuron::BinaryNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
+	: Neuron(neuronInputListCount, inputNeurons) {}
+
+//constructor called for hidden Sigmoid neurons during network loading, with previously-stored parameter values passed in
+BinaryNeuron::BinaryNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
+	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) {}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
+double BinaryNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * weights[inputNeuronIndex];
+}
+
+//Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
+double BinaryNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * inputNeurons[inputNeuronIndex]->getActivation();
+}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
+double BinaryNeuron::getBiasRespectiveDerivation() const
+{
+
+	assert(neuronInputListCount >= 0);
+
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * 1.0;
+}
+
+//Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
+void BinaryNeuron::activate(const double input)
+{
+	if (neuronInputListCount > 0)
+	{
+		activation = (getActivationFunctionInput() > 0 ) ? 1 : 0;
+	}
+	else
+	{
+		activation = input;
+	}
+}
+
+//returns the activation type of the neuron -unused?
+std::string BinaryNeuron::getNeuronType()
+{
+	return "Binary";
+}
+
+
+//review Softmax combination solution
+//modify constructors to use weight 1 for all connections
+//finish functions
+//constructor called for hidden Sigmoid neurons during network creation
+ExponentialNeuron::ExponentialNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
+	: Neuron(neuronInputListCount, inputNeurons) {}
+
+//constructor called for hidden Sigmoid neurons during network loading, with previously-stored parameter values passed in
+ExponentialNeuron::ExponentialNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
+	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) {}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
+double ExponentialNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return getActivationNudgeSum() * getActivation() * weights[inputNeuronIndex];
+}
+
+//Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
+double ExponentialNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return getActivationNudgeSum() * getActivation() * inputNeurons[inputNeuronIndex]->getActivation();
+}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
+double ExponentialNeuron::getBiasRespectiveDerivation() const
+{
+
+	assert(neuronInputListCount >= 0);
+
+	return getActivationNudgeSum() * getActivation() * 1.0;
+}
+
+//Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
+void ExponentialNeuron::activate(const double input)
+{
+	if (neuronInputListCount > 0)
+	{
+		activation = exp( getActivationFunctionInput() );
+	}
+	else
+	{
+		activation = input;
+	}
+}
+
+//returns the activation type of the neuron -unused?
+std::string ExponentialNeuron::getNeuronType()
+{
+	return "Exponential";
+}
+
+
+//finish functions
+//constructor called for hidden Sigmoid neurons during network creation
+SoftmaxNeuron::SoftmaxNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, int numeratorIndex)
+	: Neuron(neuronInputListCount, inputNeurons) {}
+
+//constructor called for hidden Sigmoid neurons during network loading, with previously-stored parameter values passed in
+SoftmaxNeuron::SoftmaxNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue, int numeratorIndex)
+	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) {}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
+double SoftmaxNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return getActivationNudgeSum() * getActivation() * weights[inputNeuronIndex];
+}
+
+//Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
+double SoftmaxNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return getActivationNudgeSum() * getActivation() * inputNeurons[inputNeuronIndex]->getActivation();
+}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
+double SoftmaxNeuron::getBiasRespectiveDerivation() const
+{
+
+	assert(neuronInputListCount >= 0);
+
+	return getActivationNudgeSum() * getActivation() * 1.0;
+}
+
+//Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
+void SoftmaxNeuron::activate(const double input)
+{
+	if (neuronInputListCount > 0)
+	{
+		activation = exp(getActivationFunctionInput());
+	}
+	else
+	{
+		activation = input;
+	}
+}
+
+//returns the activation type of the neuron -unused?
+std::string SoftmaxNeuron::getNeuronType()
+{
+	return "Exponential";
+}
+
+
+void SoftmaxNeuron::updateBias(int batchSize, double learningRate, double momentumRetention)
+{
+	return;
+}
+
+void SoftmaxNeuron::updateWeights(int batchSize, double learningRate, double momentumRetention)
+{
+	return;
+}
+//IN PROGRESS SECTION END
+
+
 //Set error of neurons with activations directly used to calculate cost dC/da
 void NeuralLayer::setError(double costArray[])
 {
