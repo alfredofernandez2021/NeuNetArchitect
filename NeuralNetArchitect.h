@@ -234,10 +234,18 @@ public:
 	virtual std::string getNeuronType() override;
 
 	//Has no effect for ExponentialNeuron, nop function
-	virtual void updateWeights(int batchSize, double learningRate, double momentumRetention);
+	virtual void updateWeights(int batchSize, double learningRate, double momentumRetention) override;
 
 	//Has no effect for ExponentialNeuron, nop function
-	virtual void updateBias(int batchSize, double learningRate, double momentumRetention);
+	virtual void updateBias(int batchSize, double learningRate, double momentumRetention) override;
+
+	double getNumerator();
+
+	double getDenominator();
+
+	double getNumeratorRespectiveDerivation() const;
+
+	double getDenominatorRespectiveDerivation(int inputNeuronIndex) const;
 };
 
 //IN PROGRESS SECTION END
