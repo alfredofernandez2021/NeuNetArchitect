@@ -239,13 +239,13 @@ public:
 	//Has no effect for ExponentialNeuron, nop function
 	virtual void updateBias(int batchSize, double learningRate, double momentumRetention) override;
 
-	double getNumerator();
+	double getNumerator() const;
 
-	double getDenominator();
+	double getDenominator() const;
 
 	double getNumeratorRespectiveDerivation() const;
 
-	double getDenominatorRespectiveDerivation(int inputNeuronIndex) const;
+	double getDenominatorRespectiveDerivation() const;
 };
 
 //IN PROGRESS SECTION END

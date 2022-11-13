@@ -573,12 +573,12 @@ void SoftmaxNeuron::updateWeights(int batchSize, double learningRate, double mom
 	return;
 }
 
-double SoftmaxNeuron::getNumerator()
+double SoftmaxNeuron::getNumerator() const
 {
 	return inputNeurons[numeratorInputIndex]->getActivation();
 }
 
-double SoftmaxNeuron::getDenominator()
+double SoftmaxNeuron::getDenominator() const
 {
 	double previousLayerActivationSum = 0;
 
@@ -592,12 +592,12 @@ double SoftmaxNeuron::getDenominator()
 
 double SoftmaxNeuron::getNumeratorRespectiveDerivation() const
 {
-	return 1.0;
+	return getDenominatorRespectiveDerivation() + 1.0 / getDenominator();
 }
 
-double SoftmaxNeuron::getDenominatorRespectiveDerivation(int inputNeuronIndex) const
+double SoftmaxNeuron::getDenominatorRespectiveDerivation() const
 {
-	return 1.0;
+	return -1.0 * getNumerator() / (getDenominator() * getDenominator());
 }
 
 //IN PROGRESS SECTION END
