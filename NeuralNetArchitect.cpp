@@ -433,7 +433,7 @@ void BinaryNeuron::activate(const double input)
 {
 	if (neuronInputListCount > 0)
 	{
-		activation = (getActivationFunctionInput() > 0 ) ? true : false;
+		activation = (getActivationFunctionInput() > 0) ? true : false;
 	}
 	else
 	{
@@ -489,7 +489,7 @@ void ExponentialNeuron::activate(const double input)
 {
 	if (neuronInputListCount > 0)
 	{
-		activation = exp( getActivationFunctionInput() );
+		activation = exp(getActivationFunctionInput());
 	}
 	else
 	{
@@ -507,7 +507,7 @@ std::string ExponentialNeuron::getNeuronType()
 //finish functions
 //constructor called for hidden Sigmoid neurons during network creation
 SoftmaxNeuron::SoftmaxNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, int numeratorIndex)
-	: Neuron(neuronInputListCount, inputNeurons) 
+	: Neuron(neuronInputListCount, inputNeurons)
 {
 	for (auto i = 0; i < neuronInputListCount; i++)
 	{
@@ -948,6 +948,7 @@ std::vector<unsigned char> getMNISTLabelVector(bool testing)
 //returns vector of all available testing or training samples in the dataset
 std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool testing)
 {
+	long checksum = 0;
 	std::vector<std::vector<std::vector<unsigned char>>> images;
 	std::vector<std::vector<unsigned char>> columnsOfAnImage;
 	std::vector<unsigned char> pixelsOfAColumn;
@@ -958,7 +959,7 @@ std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool te
 	unsigned int magicNumber, numberOfImages, rowsPerImage, columnsPerImage;
 	unsigned char currentPixel;
 
-	std::ifstream file(fullPath);
+	std::ifstream file(fullPath, std::ios::binary);
 
 	if (file.is_open())
 	{
@@ -983,10 +984,13 @@ std::vector<std::vector<std::vector<unsigned char>>> getMNISTImageVector(bool te
 				{
 					file.read((char*)&currentPixel, sizeof(currentPixel));
 					pixelsOfAColumn.push_back(currentPixel);
+					checksum += currentPixel;
+					//currentPixel = 0;
 				}
 
 				columnsOfAnImage.push_back(pixelsOfAColumn);
 				pixelsOfAColumn.clear();
+				checksum = 0;
 			}
 
 			images.push_back(columnsOfAnImage);
@@ -1285,7 +1289,7 @@ void NeuralNetwork::train()
 		for (auto l = 0; l < getOutputCount(); l++)
 		{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
 			//todo: Fix this
-			if (l == (int)trainingLabels[i] )
+			if (l == (int)trainingLabels[i])
 			{
 				errorVector[l] = getOutputRespectiveCost(5, l);
 			}
