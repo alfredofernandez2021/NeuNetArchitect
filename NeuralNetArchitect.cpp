@@ -524,7 +524,7 @@ double SoftmaxNeuron::getActivationRespectiveDerivation(const int inputNeuronInd
 {
 	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
 
-	return (inputNeuronIndex == numeratorInputIndex) ? getNumeratorRespectiveDerivation() : getDenominatorRespectiveDerivation(inputNeuronIndex);
+	return (inputNeuronIndex == numeratorInputIndex) ? getNumeratorRespectiveDerivation() : getDenominatorRespectiveDerivation();
 }
 
 //Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
