@@ -1760,7 +1760,7 @@ MenuStates createSelection(NeuralNetwork** network)
 	//define learning rate hyperparameter, the percent of the current learning step error gradient that will update learned parameters
 	std::cout << "What is the learning rate of this network? ";
 	std::cin >> learningParameters.learningRate;
-	learningParameters.learningRate = 0.00001;
+	learningParameters.learningRate = 0.001;
 	std::cout << std::endl;
 
 	//define learning decay, the gradual decrease in learning rate of the network after each batch
