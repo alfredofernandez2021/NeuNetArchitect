@@ -1335,7 +1335,7 @@ void NeuralNetwork::test()
 			for (auto k = 0; k < testingSamples[0][0].size(); k++)
 			{
 				//load a pixel
-				inputGrid[j * testingSamples[0].size() + k] = ((double)trainingSamples[i][j][k] - offsetNormalizer) / scalingNormalizer;
+				inputGrid[j * testingSamples[0].size() + k] = ((double)testingSamples[i][j][k] - offsetNormalizer) / scalingNormalizer;
 			}
 		}
 
