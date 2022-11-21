@@ -1154,8 +1154,8 @@ void NeuralNetwork::updateTestingLabels()
 //Updates offset and scaling normalizers to be mean and standard deviation, to normalize inputs to mean=0 and stdv=1
 void NeuralNetwork::updateNormalizers()
 {
-	double sum = 0, mean = 0, variance = 0, stdv = 0;
-	double varianceNumerator = 0;
+	long long sum = 0;
+	long double mean, variance, stdv;
 	int valuesInASample = testingSamples[0].size() * testingSamples[0][0].size();
 
 	//determine the mean of a subset of total samples
@@ -1168,35 +1168,20 @@ void NeuralNetwork::updateNormalizers()
 				sum += testingSamples[i][j][k];
 			}
 		}
-
-		//partially determine mean after each sample to prevent overflow
-		mean += sum / testingSamples.size();
-		sum = 0;
 	}
 
-	//determine the variance given the mean
-	for (auto i = 0; i < testingSamples.size(); i++)
-	{
-		for (auto j = 0; j < testingSamples[i].size(); j++)
-		{
-			for (auto k = 0; k < testingSamples[i][j].size(); k++)
-			{
-				sum += testingSamples[i][j][k];
-			}
-		}
+	//calculate sample mean after each sample to prevent overflow
+	mean = sum / (long double)(testingSamples.size() * valuesInASample);
 
-		//partially determine variance numerator after each sample to prevent overflow
-		varianceNumerator += (mean - sum / valuesInASample) * (mean - sum / valuesInASample);
-		sum = 0;
-	}
+	//calculate sample variance
+	variance = (mean - sum / valuesInASample) * (mean - sum / valuesInASample) / (testingSamples.size() + 1);
 
-	//finish calculating variance and calculate standard deviation
-	variance = varianceNumerator / (testingSamples.size() + 1);
+	//calculate sample standard deviation
 	stdv = std::sqrt(variance);
 
+	//set normalizers to neccesary values to achieve sample mean 0 and sample stdv 1
 	offsetNormalizer = mean;
 	scalingNormalizer = stdv;
-
 }
 
 //indicates if dataset training samples and labels have been loaded
