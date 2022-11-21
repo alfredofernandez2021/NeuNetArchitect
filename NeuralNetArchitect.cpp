@@ -1130,24 +1130,28 @@ void NeuralNetwork::updateLearningRate(int newLearningRate)
 //loads training samples from dataset
 void NeuralNetwork::updateTrainingSamples()
 {
+	trainingSamples.clear();
 	trainingSamples = getMNISTImageVector(false);
 }
 
 //loads training labels from dataset
 void NeuralNetwork::updateTrainingLabels()
 {
+	trainingLabels.clear();
 	trainingLabels = getMNISTLabelVector(false);
 }
 
 //loads testing samples from dataset
 void NeuralNetwork::updateTestingSamples()
 {
+	testingSamples.clear();
 	testingSamples = getMNISTImageVector(true);
 }
 
 //loads testing labels from dataset
 void NeuralNetwork::updateTestingLabels()
 {
+	testingLabels.clear();
 	testingLabels = getMNISTLabelVector(true);
 }
 
@@ -1204,7 +1208,7 @@ void NeuralNetwork::train()
 {
 	//int batchSize, learningRate; todo:implement
 	int minOutputValue, maxOutputValue;
-	int selection, answer, correctDeterminations = 0;
+	int answer, correctDeterminations = 0;
 	double* inputGrid = nullptr;
 	double* errorVector = nullptr;
 
