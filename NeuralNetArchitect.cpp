@@ -685,6 +685,24 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, int activatio
 			neurons.push_back(new SigmoidNeuron(inputNeuronCount, inputNeurons));
 		}
 		break;
+	case 4:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new BinaryNeuron(inputNeuronCount, inputNeurons));
+		}
+		break;
+	case 5:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new ExponentialNeuron(inputNeuronCount, inputNeurons));
+		}
+		break;
+	case 6:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new SoftmaxNeuron(inputNeuronCount, inputNeurons, i));
+		}
+		break;
 	default:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
@@ -723,6 +741,24 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
 			neurons.push_back(new SigmoidNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
+		}
+		break;
+	case 4:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new BinaryNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
+		}
+		break;
+	case 5:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new ExponentialNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
+		}
+		break;
+	case 6:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new SoftmaxNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i], i));
 		}
 		break;
 	default:
@@ -1824,7 +1860,11 @@ MenuStates createSelection(NeuralNetwork** network)
 		std::cout << std::endl;
 
 		//defines hidden layers
-		if (i + 1 < numberOfLayers)
+		if (layerDetails[i].activationType == 6)
+		{
+			layerDetails[i].neuronCount = layerDetails[i - 1].neuronCount;
+		}
+		else if (i + 1 < numberOfLayers)
 		{
 			std::cout << "\tNeuron count: ";
 			std::cin >> layerDetails[i].neuronCount;
@@ -1835,7 +1875,6 @@ MenuStates createSelection(NeuralNetwork** network)
 		{
 			layerDetails[i].neuronCount = outputCount;
 		}
-
 	}
 
 	//create network and point to intialized NeuralNetwork
