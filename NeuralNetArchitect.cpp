@@ -770,20 +770,6 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 	}
 }
 
-//copy constructor for layer deep copies - todo: accomodate for several Neuron types?
-//necessary?
-/*/NeuralLayer::NeuralLayer(const NeuralLayer& original)
-{
-	neuronArrayLength = original.neuronArrayLength;
-	neuronArrayWidth = original.neuronArrayWidth;
-	previousLayer = original.previousLayer;
-
-	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-	{
-		neurons.push_back(new Neuron(original.neurons[i]));
-	}
-}*/
-
 //operator = overloading for initializing and returning of object deep copy - todo: accomodate for several Neuron types?
 NeuralLayer& NeuralLayer::operator=(const NeuralLayer& original)
 {
