@@ -511,11 +511,16 @@ SoftmaxNeuron::SoftmaxNeuron(int neuronInputListCount, std::vector<Neuron*> inpu
 	{
 		weights[i] = 1.0;
 	}
+
+	numeratorInputIndex = numeratorIndex;
 }
 
 //constructor called for hidden Logistic neurons during network loading, with previously-stored parameter values passed in
 SoftmaxNeuron::SoftmaxNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue, int numeratorIndex)
-	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) {}
+	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) 
+{
+	numeratorInputIndex = numeratorIndex;
+}
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
 double SoftmaxNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
