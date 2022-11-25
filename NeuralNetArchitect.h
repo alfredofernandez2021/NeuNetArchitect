@@ -122,16 +122,16 @@ public:
 	virtual std::string getNeuronType() override;
 };
 
-class SigmoidNeuron : public Neuron
+class LogisticNeuron : public Neuron
 {
 
 public:
 
 	//constructor called for hidden ReLU neurons during network creation
-	SigmoidNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons);
+	LogisticNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons);
 
 	//constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
-	SigmoidNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue);
+	LogisticNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue);
 
 	//gives how much a particular input affects the evaluation of the network's cost function
 	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const override;
@@ -255,7 +255,7 @@ public:
 //{
 //	Linear = 0,
 //	ReLU = 1,
-//	Sigmoid = 2,
+//	Logistic = 2,
 //};
 
 /**********************************************************************************************************************************************

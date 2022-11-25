@@ -15,8 +15,8 @@ int main()
 {
 	manageNeuralNetwork();
 
-	//todo: Input Neuron to Sigmoid Neuron, and ReLU neuron unit tests
-	//Neuron neuron = SigmoidNeuron();
+	//todo: Input Neuron to Logistic Neuron, and ReLU neuron unit tests
+	//Neuron neuron = LogisticNeuron();
 
 	return 0;
 }
@@ -57,7 +57,7 @@ int main()
 */
 
 /* Expansion todo:
-* Sigmoid neuron/layer
+* Logistic neuron/layer
 * ReLU neuron/layer
 * ...
 * Softplus neuron/layer
@@ -83,7 +83,7 @@ int main()
 * Provide debugging entry to neuralNetwork saving - activation value
 * Begin forensic saving at some point
 * Neuron class inheritance for sigmoid and ReLU -- DONE
-* SigmoidNeuron and ReLUNeuron unit tests, layer test, network tests
+* LogisticNeuron and ReLUNeuron unit tests, layer test, network tests
 * Separate functions into multiple .h and .cpp files
 * Dataset getters used as least as possible -> training NeuralNetwork internal function
 * NeuralLayerDetails.type in switch statement in layer creation/loading for feedforward Neurons
@@ -91,14 +91,14 @@ int main()
 */
 
 /* Derived Neurons todo list:
-* Define all necessary SigmoidNeuron and ReLUNeuron constructors (Neurons)
+* Define all necessary LogisticNeuron and ReLUNeuron constructors (Neurons)
 * Relocate NeuralNetwork layer type switch statement to NeuralLayer
 * Activation function enum (linear, sig, ReLU) -> !!!
 * Ensure nothing is being left out from derived classes
-* SigmoidNeuron and ReLUNeuron unit tests -> !!!
+* LogisticNeuron and ReLUNeuron unit tests -> !!!
 * Creation menu flexibility for derived Neuron classes
 * Ensure loading menu functionality for derived Neuron Classes
-* Test LinearInput->ReLU||Sigmoid NeuralNetwork on MNIST -> !!!
+* Test LinearInput->ReLU||Logistic NeuralNetwork on MNIST -> !!!
 * Ensure proper Neuron* to std::vector<Neuron*> conversion -> !!!
 * Fix Overflow/Underflow issues preventing learning
 */
