@@ -366,7 +366,6 @@ double SigmoidNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
 double SigmoidNeuron::getBiasRespectiveDerivation() const
 {
-
 	assert(neuronInputListCount >= 0);
 
 	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * 1.0;
@@ -408,7 +407,7 @@ double BinaryNeuron::getActivationRespectiveDerivation(const int inputNeuronInde
 {
 	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
 
-	return getActivationNudgeSum() * exp(-1 * getActivationFunctionInput() * getActivationFunctionInput()) * weights[inputNeuronIndex];
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * weights[inputNeuronIndex];
 }
 
 //Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
@@ -416,16 +415,15 @@ double BinaryNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) c
 {
 	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
 
-	return getActivationNudgeSum() * exp(-1 * getActivationFunctionInput() * getActivationFunctionInput()) * inputNeurons[inputNeuronIndex]->getActivation();
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * inputNeurons[inputNeuronIndex]->getActivation();
 }
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
 double BinaryNeuron::getBiasRespectiveDerivation() const
 {
-
 	assert(neuronInputListCount >= 0);
 
-	return getActivationNudgeSum() * exp(-1 * getActivationFunctionInput() * getActivationFunctionInput()) * 1.0;
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * 1.0;
 }
 
 //Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
