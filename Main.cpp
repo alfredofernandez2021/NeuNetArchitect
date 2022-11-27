@@ -20,11 +20,11 @@ int main()
 
 	return 0;
 }
-// 2 1 4 1 1 0 1 2 0 1 0						the first network				(propagation checking)
-// 2 2 4 1 1 0 1 2 0 1 0						the usual network				(loading + learning correctness)
-// 784 10 2 0 0									MNIST linear network			(dataset confirmation)
-// 784 10 2 1 0.0001 0 1 1 0 0 1 0 1			MNIST linear network			(hyperparameters prompted)
-// 784 10 3 1 0.0001 0 1 1 0 0 1 0 2 20 3		MNIST In->20ReLU->10Sig
+// 784 10 2 1 0.0001 0 1 1 0 0 1 0 1			MNIST linear network			(75% success asymptote)
+// 784 10 2 1 0.0001 0 1 1 0 0 1 0 2			MNIST ReLU network				(20% success asymptote)
+// 784 10 2 2 0.0001 0 1 1 0 0 1 0 3			MNIST In->10Sig with BCE		(45% success asymptote, 10^-5)
+// 784 10 3 2 0.0001 0 1 1 0 0 1 0 2 20 3		MNIST In->20ReLU->10Sig			(10% success declining)
+// 784 10 3 2 0.0001 0 1 1 0 0 1 0 5 10 6		MNIST In->Softmax with BCE		(2% success)
 
 /* Cleanup todo:
 * Move to .hpp and .cpp file setup																			--DONE

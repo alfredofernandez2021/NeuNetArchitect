@@ -287,9 +287,7 @@ std::string Neuron::getNeuronType()
 
 //constructor called for hidden ReLU neurons during network creation
 ReLUNeuron::ReLUNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
-	: Neuron(neuronInputListCount, inputNeurons) {
-	std::cout << "Created" << std::endl;
-}
+	: Neuron(neuronInputListCount, inputNeurons) {}
 
 //constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
 ReLUNeuron::ReLUNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
@@ -919,6 +917,12 @@ double derivedMSECost(double targetValue, double estimatedValue, int outputCount
 	return (-2.0 / (double)outputCount) * (targetValue - estimatedValue);
 }
 
+//the derivation of the binary-cross-entropy function in respect to the activation of an output neuron - todo: rework this for derivations?
+double derivedBCECost(double targetValue, double estimatedValue, int outputCount)
+{
+	return (-1.0 / (double)outputCount) * (targetValue/estimatedValue - (1-targetValue)/(1-estimatedValue));
+}
+
 //flips byte ordering integer to convert between high and low endian formats
 unsigned int flipIntegerByteOrdering(int original)
 {
@@ -1044,6 +1048,9 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 	case 1:
 		this->derivedCostFunction = derivedMSECost;
 		break;
+	case 2:
+		this->derivedCostFunction = derivedBCECost;
+		break;
 	default:
 		this->derivedCostFunction = derivedMSECost;
 		break;
@@ -1081,6 +1088,9 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 	{
 	case 1:
 		this->derivedCostFunction = derivedMSECost;
+		break;
+	case 2:
+		this->derivedCostFunction = derivedBCECost;
 		break;
 	default:
 		this->derivedCostFunction = derivedMSECost;
@@ -1301,8 +1311,8 @@ void NeuralNetwork::train()
 
 		//calculate error vector
 		for (auto l = 0; l < getOutputCount(); l++)
-		{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-			//todo: Fix this
+		{
+			//todo: Fix this, variable target values for different function... classification vs regression vs multiclassification
 			if (l == (int)trainingLabels[i])
 			{
 				errorVector[l] = getOutputRespectiveCost(5, l);
@@ -1782,7 +1792,7 @@ MenuStates createSelection(NeuralNetwork** network)
 	//define cost function that will calculate network's error upon calculating an output
 	std::cout << "Which cost function should be used to calculate error? ";
 	std::cin >> costSelection;
-	costSelection = 1;
+	//costSelection = 1;
 	std::cout << std::endl;
 
 	//begin defining hyperparameters
@@ -1823,7 +1833,7 @@ MenuStates createSelection(NeuralNetwork** network)
 	std::cout << std::endl;
 
 	//define minimum network error needed to exclude a training image from being learned on
-	std::cout << "What is the minimun network error needed to prevent learning on a sample? ";
+	std::cout << "What is the minimum network error needed to prevent learning on a sample? ";
 	std::cin >> learningParameters.outlierMinError;
 	learningParameters.outlierMinError = 1.0;
 	std::cout << std::endl;
