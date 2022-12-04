@@ -510,6 +510,8 @@ SoftmaxNeuron::SoftmaxNeuron(int neuronInputListCount, std::vector<Neuron*> inpu
 		weights[i] = 1.0;
 	}
 
+	bias = 0.0;
+
 	numeratorInputIndex = numeratorIndex;
 }
 
@@ -539,7 +541,6 @@ double SoftmaxNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
 double SoftmaxNeuron::getBiasRespectiveDerivation() const
 {
-
 	assert(neuronInputListCount >= 0);
 
 	return 0.0;
@@ -599,6 +600,74 @@ double SoftmaxNeuron::getNumeratorRespectiveDerivation() const
 double SoftmaxNeuron::getDenominatorRespectiveDerivation() const
 {
 	return -1.0 * getNumerator() / (getDenominator() * getDenominator());
+}
+
+
+//constructor called for hidden Logistic neurons during network creation
+NoisyNeuron::NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, double variance)
+	: Neuron(neuronInputListCount, inputNeurons)
+{
+	for (auto i = 0; i < neuronInputListCount; i++)
+	{
+		weights[i] = 1.0;
+	}
+
+	bias = 0.0;
+
+	this->variance = variance;
+}
+
+//constructor called for hidden Logistic neurons during network loading, with previously-stored parameter values passed in
+NoisyNeuron::NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue, double variance)
+	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue)
+{//todo: where to specify single connection? in layer neuron type switch statement or within NoisyNeuron class? Remove inputIndex variable if former
+	this->variance = variance;
+}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
+double NoisyNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return 1.0;
+}
+
+//Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
+double NoisyNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return 0.0;
+}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
+double NoisyNeuron::getBiasRespectiveDerivation() const
+{
+	assert(neuronInputListCount >= 0);
+
+	return 0.0;
+}
+
+//Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
+void NoisyNeuron::activate(const double input)
+{//todo: only connect to input neuron and finish this function
+	activation = inputNeurons[inputIndex]->getActivation() + 8080;
+}
+
+//returns the activation type of the neuron -unused?
+std::string NoisyNeuron::getNeuronType()
+{
+	return "Noisy";
+}
+
+void NoisyNeuron::updateBias(int batchSize, double learningRate, double momentumRetention)
+{
+	return;
+}
+
+void NoisyNeuron::updateWeights(int batchSize, double learningRate, double momentumRetention)
+{
+	return;
 }
 
 //IN PROGRESS SECTION END
@@ -704,6 +773,12 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, int activatio
 			neurons.push_back(new SoftmaxNeuron(inputNeuronCount, inputNeurons, i));
 		}
 		break;
+	case 7:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new NoisyNeuron(1, { inputNeurons[i] }, 0.0));
+		}
+		break;
 	default:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
@@ -760,6 +835,12 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
 			neurons.push_back(new SoftmaxNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i], i));
+		}
+		break;
+	case 7:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new NoisyNeuron(inputNeuronCount, { inputNeurons[i] }, weightValues[i], biasValues[i], 0.0));
 		}
 		break;
 	default:
