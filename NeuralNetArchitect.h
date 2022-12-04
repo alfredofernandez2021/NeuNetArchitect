@@ -207,7 +207,6 @@ public:
 
 class SoftmaxNeuron : public Neuron
 {
-
 	int numeratorInputIndex;
 
 public:
@@ -251,17 +250,17 @@ public:
 
 class NoisyNeuron : public Neuron
 {
-
-	int inputIndex;
-	double variance;
+	double noiseStandardDeviation;
+	std::mt19937 generator;
+	std::normal_distribution<double> gaussianDistribution;
 
 public:
 
 	//constructor called for hidden ReLU neurons during network creation
-	NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, double variance);
+	NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, double noiseStandardDeviation);
 
 	//constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
-	NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue, double variance);
+	NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue, double noiseStandardDeviation);
 
 	//gives how much a particular input affects the evaluation of the network's cost function
 	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const override;

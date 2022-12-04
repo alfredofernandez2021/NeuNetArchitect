@@ -77,14 +77,14 @@ Neuron::Neuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
 	//Initialize tools for randomly generating numbers that follow a gaussian distribution
 	std::random_device randomDevice{};
 	std::mt19937 generator{ randomDevice() };
-	std::normal_distribution<double> randomGaussianDistributor{ 0.0, std::sqrt(2 / (double)neuronInputListCount) };
+	std::normal_distribution<double> gaussianDistribution{ 0.0, std::sqrt(2 / (double)neuronInputListCount) };
 
 	//Initializes weights using He-et-al method
 	weights = new double[neuronInputListCount];
 	if (weights == nullptr) throw std::bad_alloc();
 	for (auto i = 0; i < neuronInputListCount; i++)
 	{
-		weights[i] = randomGaussianDistributor(generator);
+		weights[i] = gaussianDistribution(generator);
 	}
 
 	//Sets weight residual-momentum values to 0
@@ -604,7 +604,7 @@ double SoftmaxNeuron::getDenominatorRespectiveDerivation() const
 
 
 //constructor called for hidden Logistic neurons during network creation
-NoisyNeuron::NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, double variance)
+NoisyNeuron::NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, double noiseStandardDeviation)
 	: Neuron(neuronInputListCount, inputNeurons)
 {
 	for (auto i = 0; i < neuronInputListCount; i++)
@@ -614,14 +614,28 @@ NoisyNeuron::NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeu
 
 	bias = 0.0;
 
-	this->variance = variance;
+	this->noiseStandardDeviation = noiseStandardDeviation;
+
+	std::random_device randomDevice{};
+	std::mt19937 generator{ randomDevice() };
+	std::normal_distribution<double> gaussianDistribution{ 0.0, noiseStandardDeviation };
+
+	this->generator = generator;
+	this->gaussianDistribution = gaussianDistribution;
 }
 
 //constructor called for hidden Logistic neurons during network loading, with previously-stored parameter values passed in
-NoisyNeuron::NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue, double variance)
+NoisyNeuron::NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue, double noiseStandardDeviation)
 	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue)
 {//todo: where to specify single connection? in layer neuron type switch statement or within NoisyNeuron class? Remove inputIndex variable if former
-	this->variance = variance;
+	this->noiseStandardDeviation = noiseStandardDeviation;
+
+	std::random_device randomDevice{};
+	std::mt19937 generator{ randomDevice() };
+	std::normal_distribution<double> gaussianDistribution{ 0.0, noiseStandardDeviation };
+
+	this->generator = generator;
+	this->gaussianDistribution = gaussianDistribution;
 }
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
@@ -651,7 +665,7 @@ double NoisyNeuron::getBiasRespectiveDerivation() const
 //Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
 void NoisyNeuron::activate(const double input)
 {//todo: only connect to input neuron and finish this function
-	activation = inputNeurons[inputIndex]->getActivation() + 8080;
+	activation = inputNeurons[0]->getActivation() + gaussianDistribution(generator);
 }
 
 //returns the activation type of the neuron -unused?
@@ -1940,7 +1954,7 @@ MenuStates createSelection(NeuralNetwork** network)
 		std::cout << std::endl;
 
 		//defines hidden layers
-		if (layerDetails[i].activationType == 6)
+		if (layerDetails[i].activationType == 6 || layerDetails[i].activationType == 7)
 		{
 			layerDetails[i].neuronCount = layerDetails[i - 1].neuronCount;
 		}
