@@ -1018,6 +1018,12 @@ double derivedBCECost(double targetValue, double estimatedValue, int outputCount
 	return (-1.0 / (double)outputCount) * (targetValue/estimatedValue - (1-targetValue)/(1-estimatedValue));
 }
 
+//the derivation of the general-cross-entropy function in respect to the activation of an output neuron - todo: rework this for derivations?
+double derivedGCECost(double estimatedLikelihood, double outputIndex, double actualClass)
+{
+	return (outputIndex == actualClass) ? log(estimatedLikelihood) : 0;
+}
+
 //flips byte ordering integer to convert between high and low endian formats
 unsigned int flipIntegerByteOrdering(int original)
 {
