@@ -122,16 +122,16 @@ public:
 	virtual std::string getNeuronType() override;
 };
 
-class SigmoidNeuron : public Neuron
+class LogisticNeuron : public Neuron
 {
 
 public:
 
 	//constructor called for hidden ReLU neurons during network creation
-	SigmoidNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons);
+	LogisticNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons);
 
 	//constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
-	SigmoidNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue);
+	LogisticNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue);
 
 	//gives how much a particular input affects the evaluation of the network's cost function
 	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const override;
@@ -207,7 +207,6 @@ public:
 
 class SoftmaxNeuron : public Neuron
 {
-
 	int numeratorInputIndex;
 
 public:
@@ -248,6 +247,43 @@ public:
 	double getDenominatorRespectiveDerivation() const;
 };
 
+
+class NoisyNeuron : public Neuron
+{
+	double noiseStandardDeviation;
+	std::mt19937 generator;
+	std::normal_distribution<double> gaussianDistribution;
+
+public:
+
+	//constructor called for hidden ReLU neurons during network creation
+	NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, double noiseStandardDeviation);
+
+	//constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
+	NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue, double noiseStandardDeviation);
+
+	//gives how much a particular input affects the evaluation of the network's cost function
+	virtual double getActivationRespectiveDerivation(const int inputNeuronIndex) const override;
+
+	//gives how much a particular weight affects the evaluation of the network's cost function
+	virtual double getWeightRespectiveDerivation(const int inputNeuronIndex) const override;
+
+	//gives how much the neuron's bias affects the evaluation of the network's cost function
+	virtual double getBiasRespectiveDerivation() const override;
+
+	//Defines exterior rectified linear activation function of ReLU neuron
+	virtual void activate(const double input = 0.0) override;
+
+	//gives the activation type of the neuron
+	virtual std::string getNeuronType() override;
+
+	//Has no effect for ExponentialNeuron, nop function
+	virtual void updateWeights(int batchSize, double learningRate, double momentumRetention) override;
+
+	//Has no effect for ExponentialNeuron, nop function
+	virtual void updateBias(int batchSize, double learningRate, double momentumRetention) override;
+};
+
 //IN PROGRESS SECTION END
 
 //enumeration to number-code the names of the menu states
@@ -255,7 +291,7 @@ public:
 //{
 //	Linear = 0,
 //	ReLU = 1,
-//	Sigmoid = 2,
+//	Logistic = 2,
 //};
 
 /**********************************************************************************************************************************************

@@ -77,14 +77,14 @@ Neuron::Neuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
 	//Initialize tools for randomly generating numbers that follow a gaussian distribution
 	std::random_device randomDevice{};
 	std::mt19937 generator{ randomDevice() };
-	std::normal_distribution<double> randomGaussianDistributor{ 0.0, std::sqrt(2 / (double)neuronInputListCount) };
+	std::normal_distribution<double> gaussianDistribution{ 0.0, std::sqrt(2 / (double)neuronInputListCount) };
 
 	//Initializes weights using He-et-al method
 	weights = new double[neuronInputListCount];
 	if (weights == nullptr) throw std::bad_alloc();
 	for (auto i = 0; i < neuronInputListCount; i++)
 	{
-		weights[i] = randomGaussianDistributor(generator);
+		weights[i] = gaussianDistribution(generator);
 	}
 
 	//Sets weight residual-momentum values to 0
@@ -287,9 +287,7 @@ std::string Neuron::getNeuronType()
 
 //constructor called for hidden ReLU neurons during network creation
 ReLUNeuron::ReLUNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
-	: Neuron(neuronInputListCount, inputNeurons) {
-	std::cout << "Created" << std::endl;
-}
+	: Neuron(neuronInputListCount, inputNeurons) {}
 
 //constructor called for hidden ReLU neurons during network loading, with previously-stored parameter values passed in
 ReLUNeuron::ReLUNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
@@ -339,16 +337,16 @@ std::string ReLUNeuron::getNeuronType()
 }
 
 
-//constructor called for hidden Sigmoid neurons during network creation
-SigmoidNeuron::SigmoidNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
+//constructor called for hidden Logistic neurons during network creation
+LogisticNeuron::LogisticNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
 	: Neuron(neuronInputListCount, inputNeurons) {}
 
-//constructor called for hidden Sigmoid neurons during network loading, with previously-stored parameter values passed in
-SigmoidNeuron::SigmoidNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
+//constructor called for hidden Logistic neurons during network loading, with previously-stored parameter values passed in
+LogisticNeuron::LogisticNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
 	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) {}
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
-double SigmoidNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
+double LogisticNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
 {
 	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
 
@@ -356,7 +354,7 @@ double SigmoidNeuron::getActivationRespectiveDerivation(const int inputNeuronInd
 }
 
 //Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
-double SigmoidNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
+double LogisticNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
 {
 	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
 
@@ -364,16 +362,15 @@ double SigmoidNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) 
 }
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
-double SigmoidNeuron::getBiasRespectiveDerivation() const
+double LogisticNeuron::getBiasRespectiveDerivation() const
 {
-
 	assert(neuronInputListCount >= 0);
 
 	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * 1.0;
 }
 
 //Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
-void SigmoidNeuron::activate(const double input)
+void LogisticNeuron::activate(const double input)
 {
 	if (neuronInputListCount > 0)
 	{
@@ -386,20 +383,20 @@ void SigmoidNeuron::activate(const double input)
 }
 
 //returns the activation type of the neuron -unused?
-std::string SigmoidNeuron::getNeuronType()
+std::string LogisticNeuron::getNeuronType()
 {
-	return "Sigmoid";
+	return "Logistic";
 }
 
 //IN PROGRESS SECTION START
 
 //derive limit definition of Dirac Delta
 //complete functions
-//constructor called for hidden Sigmoid neurons during network creation
+//constructor called for hidden Logistic neurons during network creation
 BinaryNeuron::BinaryNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
 	: Neuron(neuronInputListCount, inputNeurons) {}
 
-//constructor called for hidden Sigmoid neurons during network loading, with previously-stored parameter values passed in
+//constructor called for hidden Logistic neurons during network loading, with previously-stored parameter values passed in
 BinaryNeuron::BinaryNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
 	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) {}
 
@@ -408,7 +405,7 @@ double BinaryNeuron::getActivationRespectiveDerivation(const int inputNeuronInde
 {
 	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
 
-	return getActivationNudgeSum() * exp(-1 * getActivationFunctionInput() * getActivationFunctionInput()) * weights[inputNeuronIndex];
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * weights[inputNeuronIndex];
 }
 
 //Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
@@ -416,16 +413,15 @@ double BinaryNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) c
 {
 	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
 
-	return getActivationNudgeSum() * exp(-1 * getActivationFunctionInput() * getActivationFunctionInput()) * inputNeurons[inputNeuronIndex]->getActivation();
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * inputNeurons[inputNeuronIndex]->getActivation();
 }
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
 double BinaryNeuron::getBiasRespectiveDerivation() const
 {
-
 	assert(neuronInputListCount >= 0);
 
-	return getActivationNudgeSum() * exp(-1 * getActivationFunctionInput() * getActivationFunctionInput()) * 1.0;
+	return getActivationNudgeSum() * getActivation() * (1 - getActivation()) * 1.0;
 }
 
 //Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
@@ -451,11 +447,11 @@ std::string BinaryNeuron::getNeuronType()
 //review Softmax combination solution
 //modify constructors to use weight 1 for all connections
 //finish functions
-//constructor called for hidden Sigmoid neurons during network creation
+//constructor called for hidden Logistic neurons during network creation
 ExponentialNeuron::ExponentialNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons)
 	: Neuron(neuronInputListCount, inputNeurons) {}
 
-//constructor called for hidden Sigmoid neurons during network loading, with previously-stored parameter values passed in
+//constructor called for hidden Logistic neurons during network loading, with previously-stored parameter values passed in
 ExponentialNeuron::ExponentialNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue)
 	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) {}
 
@@ -505,7 +501,7 @@ std::string ExponentialNeuron::getNeuronType()
 
 
 //finish functions
-//constructor called for hidden Sigmoid neurons during network creation
+//constructor called for hidden Logistic neurons during network creation
 SoftmaxNeuron::SoftmaxNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, int numeratorIndex)
 	: Neuron(neuronInputListCount, inputNeurons)
 {
@@ -513,11 +509,18 @@ SoftmaxNeuron::SoftmaxNeuron(int neuronInputListCount, std::vector<Neuron*> inpu
 	{
 		weights[i] = 1.0;
 	}
+
+	bias = 0.0;
+
+	numeratorInputIndex = numeratorIndex;
 }
 
-//constructor called for hidden Sigmoid neurons during network loading, with previously-stored parameter values passed in
+//constructor called for hidden Logistic neurons during network loading, with previously-stored parameter values passed in
 SoftmaxNeuron::SoftmaxNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue, int numeratorIndex)
-	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) {}
+	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue) 
+{
+	numeratorInputIndex = numeratorIndex;
+}
 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
 double SoftmaxNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
@@ -538,7 +541,6 @@ double SoftmaxNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) 
 //Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
 double SoftmaxNeuron::getBiasRespectiveDerivation() const
 {
-
 	assert(neuronInputListCount >= 0);
 
 	return 0.0;
@@ -598,6 +600,88 @@ double SoftmaxNeuron::getNumeratorRespectiveDerivation() const
 double SoftmaxNeuron::getDenominatorRespectiveDerivation() const
 {
 	return -1.0 * getNumerator() / (getDenominator() * getDenominator());
+}
+
+
+//constructor called for hidden Logistic neurons during network creation
+NoisyNeuron::NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, double noiseStandardDeviation)
+	: Neuron(neuronInputListCount, inputNeurons)
+{
+	for (auto i = 0; i < neuronInputListCount; i++)
+	{
+		weights[i] = 1.0;
+	}
+
+	bias = 0.0;
+
+	this->noiseStandardDeviation = noiseStandardDeviation;
+
+	std::random_device randomDevice{};
+	std::mt19937 generator{ randomDevice() };
+	std::normal_distribution<double> gaussianDistribution{ 0.0, noiseStandardDeviation };
+
+	this->generator = generator;
+	this->gaussianDistribution = gaussianDistribution;
+}
+
+//constructor called for hidden Logistic neurons during network loading, with previously-stored parameter values passed in
+NoisyNeuron::NoisyNeuron(int neuronInputListCount, std::vector<Neuron*> inputNeurons, std::vector<double> weightValues, double biasValue, double noiseStandardDeviation)
+	: Neuron(neuronInputListCount, inputNeurons, weightValues, biasValue)
+{//todo: where to specify single connection? in layer neuron type switch statement or within NoisyNeuron class? Remove inputIndex variable if former
+	this->noiseStandardDeviation = noiseStandardDeviation;
+
+	std::random_device randomDevice{};
+	std::mt19937 generator{ randomDevice() };
+	std::normal_distribution<double> gaussianDistribution{ 0.0, noiseStandardDeviation };
+
+	this->generator = generator;
+	this->gaussianDistribution = gaussianDistribution;
+}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/di = dC/di
+double NoisyNeuron::getActivationRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return 1.0;
+}
+
+//Calculates partial derivative of cost function in respect to indexed weight: dC/da * da/dw = dC/dw
+double NoisyNeuron::getWeightRespectiveDerivation(const int inputNeuronIndex) const
+{
+	assert(inputNeuronIndex < neuronInputListCount&& inputNeuronIndex >= 0);
+
+	return 0.0;
+}
+
+//Calculates partial derivative of cost function in respect to indexed input neuron activation: dC/da * da/db = dC/db
+double NoisyNeuron::getBiasRespectiveDerivation() const
+{
+	assert(neuronInputListCount >= 0);
+
+	return 0.0;
+}
+
+//Defines ReLU exterior activation function of neuron, ReLU(sumOfProducts(weights,inputActivations) + bias)
+void NoisyNeuron::activate(const double input)
+{//todo: only connect to input neuron and finish this function
+	activation = inputNeurons[0]->getActivation() + gaussianDistribution(generator);
+}
+
+//returns the activation type of the neuron -unused?
+std::string NoisyNeuron::getNeuronType()
+{
+	return "Noisy";
+}
+
+void NoisyNeuron::updateBias(int batchSize, double learningRate, double momentumRetention)
+{
+	return;
+}
+
+void NoisyNeuron::updateWeights(int batchSize, double learningRate, double momentumRetention)
+{
+	return;
 }
 
 //IN PROGRESS SECTION END
@@ -682,7 +766,7 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, int activatio
 	case 3:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
-			neurons.push_back(new SigmoidNeuron(inputNeuronCount, inputNeurons));
+			neurons.push_back(new LogisticNeuron(inputNeuronCount, inputNeurons));
 		}
 		break;
 	case 4:
@@ -701,6 +785,12 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, int activatio
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
 			neurons.push_back(new SoftmaxNeuron(inputNeuronCount, inputNeurons, i));
+		}
+		break;
+	case 7:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new NoisyNeuron(1, { inputNeurons[i] }, 0.0));
 		}
 		break;
 	default:
@@ -740,7 +830,7 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 	case 3:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
-			neurons.push_back(new SigmoidNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
+			neurons.push_back(new LogisticNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i]));
 		}
 		break;
 	case 4:
@@ -761,6 +851,12 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 			neurons.push_back(new SoftmaxNeuron(inputNeuronCount, inputNeurons, weightValues[i], biasValues[i], i));
 		}
 		break;
+	case 7:
+		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
+		{
+			neurons.push_back(new NoisyNeuron(inputNeuronCount, { inputNeurons[i] }, weightValues[i], biasValues[i], 0.0));
+		}
+		break;
 	default:
 		for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
 		{
@@ -769,20 +865,6 @@ NeuralLayer::NeuralLayer(int neuronCount, NeuralLayer* inputLayer, std::vector<s
 		break;
 	}
 }
-
-//copy constructor for layer deep copies - todo: accomodate for several Neuron types?
-//necessary?
-/*/NeuralLayer::NeuralLayer(const NeuralLayer& original)
-{
-	neuronArrayLength = original.neuronArrayLength;
-	neuronArrayWidth = original.neuronArrayWidth;
-	previousLayer = original.previousLayer;
-
-	for (auto i = 0; i < neuronArrayLength * neuronArrayWidth; i++)
-	{
-		neurons.push_back(new Neuron(original.neurons[i]));
-	}
-}*/
 
 //operator = overloading for initializing and returning of object deep copy - todo: accomodate for several Neuron types?
 NeuralLayer& NeuralLayer::operator=(const NeuralLayer& original)
@@ -930,6 +1012,18 @@ double derivedMSECost(double targetValue, double estimatedValue, int outputCount
 	return (-2.0 / (double)outputCount) * (targetValue - estimatedValue);
 }
 
+//the derivation of the binary-cross-entropy function in respect to the activation of an output neuron - todo: rework this for derivations?
+double derivedBCECost(double targetValue, double estimatedValue, int outputCount)
+{
+	return (-1.0 / (double)outputCount) * (targetValue/estimatedValue - (1-targetValue)/(1-estimatedValue));
+}
+
+//the derivation of the general-cross-entropy function in respect to the activation of an output neuron - todo: rework this for derivations?
+double derivedGCECost(double estimatedLikelihood, double outputIndex, double actualClass)
+{
+	return (outputIndex == actualClass) ? log(estimatedLikelihood) : 0;
+}
+
 //flips byte ordering integer to convert between high and low endian formats
 unsigned int flipIntegerByteOrdering(int original)
 {
@@ -1055,6 +1149,9 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 	case 1:
 		this->derivedCostFunction = derivedMSECost;
 		break;
+	case 2:
+		this->derivedCostFunction = derivedBCECost;
+		break;
 	default:
 		this->derivedCostFunction = derivedMSECost;
 		break;
@@ -1092,6 +1189,9 @@ NeuralNetwork::NeuralNetwork(int layerCount, int inputLength, int inputWidth, in
 	{
 	case 1:
 		this->derivedCostFunction = derivedMSECost;
+		break;
+	case 2:
+		this->derivedCostFunction = derivedBCECost;
 		break;
 	default:
 		this->derivedCostFunction = derivedMSECost;
@@ -1312,8 +1412,8 @@ void NeuralNetwork::train()
 
 		//calculate error vector
 		for (auto l = 0; l < getOutputCount(); l++)
-		{//todo: Cost function would go here, default to partial dC/da of MSE Cost Function
-			//todo: Fix this
+		{
+			//todo: Fix this, variable target values for different function... classification vs regression vs multiclassification
 			if (l == (int)trainingLabels[i])
 			{
 				errorVector[l] = getOutputRespectiveCost(5, l);
@@ -1793,7 +1893,7 @@ MenuStates createSelection(NeuralNetwork** network)
 	//define cost function that will calculate network's error upon calculating an output
 	std::cout << "Which cost function should be used to calculate error? ";
 	std::cin >> costSelection;
-	costSelection = 1;
+	//costSelection = 1;
 	std::cout << std::endl;
 
 	//begin defining hyperparameters
@@ -1834,7 +1934,7 @@ MenuStates createSelection(NeuralNetwork** network)
 	std::cout << std::endl;
 
 	//define minimum network error needed to exclude a training image from being learned on
-	std::cout << "What is the minimun network error needed to prevent learning on a sample? ";
+	std::cout << "What is the minimum network error needed to prevent learning on a sample? ";
 	std::cin >> learningParameters.outlierMinError;
 	learningParameters.outlierMinError = 1.0;
 	std::cout << std::endl;
@@ -1860,7 +1960,7 @@ MenuStates createSelection(NeuralNetwork** network)
 		std::cout << std::endl;
 
 		//defines hidden layers
-		if (layerDetails[i].activationType == 6)
+		if (layerDetails[i].activationType == 6 || layerDetails[i].activationType == 7)
 		{
 			layerDetails[i].neuronCount = layerDetails[i - 1].neuronCount;
 		}
